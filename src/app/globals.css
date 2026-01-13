@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
 :root {
+  --primary-orange: #f97316;
+  --primary-purple: #7c3aed;
   --background: #ffffff;
   --foreground: #171717;
+  --card-bg: #ffffff;
+  --input-bg: #f9fafb;
+  --input-border: #e5e7eb;
+  --text-muted: #6b7280;
 }
 
 @theme inline {
@@ -14,13 +20,88 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0f0f11;
+    --foreground: #f9fafb;
+    --card-bg: #18181b;
+    --input-bg: #27272a;
+    --input-border: #3f3f46;
+    --text-muted: #a1a1aa;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Gradient background */
+.gradient-bg {
+  background: linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-orange) 100%);
+}
+
+/* Glass card effect */
+.glass-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--input-border);
+}
+
+/* Input styling */
+input, textarea, select {
+  background-color: var(--input-bg) !important;
+  color: var(--foreground) !important;
+  border-color: var(--input-border) !important;
+  transition: all 0.2s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--primary-purple) !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 1 !important;
+}
+
+/* Button styles */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-orange) 100%);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 40px rgba(124, 58, 237, 0.3);
+}
+
+/* Checkbox styling */
+input[type="checkbox"]:checked {
+  background-color: var(--primary-purple) !important;
+  border-color: var(--primary-purple) !important;
+}
+
+/* Section headers */
+.section-header {
+  background: linear-gradient(90deg, var(--primary-purple), var(--primary-orange));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Subtle animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+/* Glow effect on cards */
+.glow {
+  box-shadow: 0 0 60px rgba(124, 58, 237, 0.1), 0 0 100px rgba(249, 115, 22, 0.05);
 }

@@ -14,18 +14,22 @@ const SOLUTIONS = [
 ]
 
 const AGENT_COUNTS = [
-  'Under 100',
-  '100-249',
-  '250-499',
-  '500-999',
-  '1000+',
+  '1-19',
+  '20-49',
+  '50-100',
+  '101 to 249',
+  '250 to 499',
+  '500 to 999',
+  '1000 to 2499',
+  '2500 to 4999',
+  '5000+',
 ]
 
 const TIMELINES = [
-  'Immediate',
-  '1-3 months',
-  '3-6 months',
-  '6+ months',
+  '0-3 months',
+  '4-6 months',
+  '6-12 months',
+  '12+ months',
 ]
 
 export default function RegistrationForm() {
@@ -34,7 +38,6 @@ export default function RegistrationForm() {
   const [error, setError] = useState('')
 
   const [formData, setFormData] = useState({
-    // Customer Info
     customer_first_name: '',
     customer_last_name: '',
     customer_job_title: '',
@@ -50,12 +53,10 @@ export default function RegistrationForm() {
     implementation_timeline: '',
     solutions_interested: [] as string[],
     opportunity_description: '',
-    // Partner Info (TA)
     ta_full_name: '',
     ta_email: '',
     ta_phone: '',
     ta_company_name: '',
-    // TSD Info
     tsd_name: '',
     tsd_contact_name: '',
     tsd_contact_email: '',
@@ -80,7 +81,6 @@ export default function RegistrationForm() {
     setLoading(true)
     setError('')
 
-    // Validate at least one solution selected
     if (formData.solutions_interested.length === 0) {
       setError('Please select at least one solution')
       setLoading(false)
@@ -108,28 +108,41 @@ export default function RegistrationForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white shadow-lg rounded-lg p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Partner Deal Registration</h1>
-            <p className="mt-2 text-gray-600">Register a new opportunity with AmplifAI</p>
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background gradient orbs */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl"></div>
+
+      <div className="max-w-3xl mx-auto relative z-10">
+        <div className="glass-card glow rounded-2xl p-8 animate-fade-in">
+          {/* Header */}
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl gradient-bg mb-4">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h1 className="text-3xl font-bold section-header">Partner Deal Registration</h1>
+            <p className="mt-2 text-[var(--text-muted)]">Register a new opportunity with AmplifAI</p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-red-600">{error}</p>
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <p className="text-red-500 text-center">{error}</p>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Customer Information */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 pb-2 border-b">Customer Information</h2>
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold section-header flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center text-white text-sm">1</span>
+                Customer Information
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    First Name <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium mb-2">
+                    First Name <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -138,12 +151,12 @@ export default function RegistrationForm() {
                     onChange={handleChange}
                     required
                     placeholder="John"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Last Name <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium mb-2">
+                    Last Name <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -152,12 +165,12 @@ export default function RegistrationForm() {
                     onChange={handleChange}
                     required
                     placeholder="Smith"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Job Title <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium mb-2">
+                    Job Title <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -166,12 +179,12 @@ export default function RegistrationForm() {
                     onChange={handleChange}
                     required
                     placeholder="Contact Center Manager"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Company Name <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium mb-2">
+                    Company Name <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -180,12 +193,12 @@ export default function RegistrationForm() {
                     onChange={handleChange}
                     required
                     placeholder="SMSC Gaming Enterprise"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium mb-2">
+                    Email <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="email"
@@ -194,96 +207,95 @@ export default function RegistrationForm() {
                     onChange={handleChange}
                     required
                     placeholder="jsmith@company.com"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone
-                  </label>
+                  <label className="block text-sm font-medium mb-2">Phone</label>
                   <input
                     type="tel"
                     name="customer_phone"
                     value={formData.customer_phone}
                     onChange={handleChange}
                     placeholder="952-445-9000"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Street Address
-                  </label>
+                  <label className="block text-sm font-medium mb-2">Street Address</label>
                   <input
                     type="text"
                     name="customer_street_address"
                     value={formData.customer_street_address}
                     onChange={handleChange}
                     placeholder="2400 Mystic Lake Blvd"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <label className="block text-sm font-medium mb-2">City</label>
                   <input
                     type="text"
                     name="customer_city"
                     value={formData.customer_city}
                     onChange={handleChange}
                     placeholder="Prior Lake"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">State/Region</label>
+                  <label className="block text-sm font-medium mb-2">State/Region</label>
                   <input
                     type="text"
                     name="customer_state"
                     value={formData.customer_state}
                     onChange={handleChange}
                     placeholder="MN"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
+                  <label className="block text-sm font-medium mb-2">Postal Code</label>
                   <input
                     type="text"
                     name="customer_postal_code"
                     value={formData.customer_postal_code}
                     onChange={handleChange}
                     placeholder="55372"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                  <label className="block text-sm font-medium mb-2">Country</label>
                   <input
                     type="text"
                     name="customer_country"
                     value={formData.customer_country}
                     onChange={handleChange}
                     placeholder="USA"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
               </div>
             </div>
 
             {/* Opportunity Details */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 pb-2 border-b">Opportunity Details</h2>
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold section-header flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center text-white text-sm">2</span>
+                Opportunity Details
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Number of Contact Center Agents <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium mb-2">
+                    Number of Contact Center Agents <span className="text-orange-500">*</span>
                   </label>
                   <select
                     name="agent_count"
                     value={formData.agent_count}
                     onChange={handleChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   >
                     <option value="">Please Select</option>
                     {AGENT_COUNTS.map(count => (
@@ -292,14 +304,12 @@ export default function RegistrationForm() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Implementation Timeline
-                  </label>
+                  <label className="block text-sm font-medium mb-2">Implementation Timeline</label>
                   <select
                     name="implementation_timeline"
                     value={formData.implementation_timeline}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   >
                     <option value="">Please Select</option>
                     {TIMELINES.map(timeline => (
@@ -308,28 +318,28 @@ export default function RegistrationForm() {
                   </select>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Which solutions are they looking for: (multiple select) <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium mb-2">
+                    Which solutions are they looking for? <span className="text-orange-500">*</span>
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-3 p-4 rounded-xl border-2 border-[var(--input-border)] bg-[var(--input-bg)]">
                     {SOLUTIONS.map(solution => (
-                      <label key={solution} className="flex items-center space-x-2 cursor-pointer">
+                      <label key={solution} className="flex items-center space-x-3 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={formData.solutions_interested.includes(solution)}
                           onChange={() => handleSolutionChange(solution)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="w-5 h-5 rounded border-2 border-[var(--input-border)] cursor-pointer"
                         />
-                        <span className="text-sm text-gray-700">{solution}</span>
+                        <span className="text-sm group-hover:text-purple-500 transition-colors">{solution}</span>
                       </label>
                     ))}
                   </div>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Opportunity Description <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium mb-2">
+                    Opportunity Description <span className="text-orange-500">*</span>
                   </label>
-                  <p className="text-sm text-gray-500 mb-2">
+                  <p className="text-sm text-[var(--text-muted)] mb-2">
                     Please enter the customer&apos;s use case, challenges, and/or goals. You can also list any other solutions we would integrate with or competing against.
                   </p>
                   <textarea
@@ -339,19 +349,22 @@ export default function RegistrationForm() {
                     required
                     rows={4}
                     placeholder="Customer's use case, challenges, goals, current solutions, and any competition..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none resize-none"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Partner Information (TA) */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 pb-2 border-b">Partner Information (Trusted Advisor)</h2>
+            {/* Partner Information */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold section-header flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center text-white text-sm">3</span>
+                Partner Information (Trusted Advisor)
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    TA Full Name <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium mb-2">
+                    TA Full Name <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -360,12 +373,12 @@ export default function RegistrationForm() {
                     onChange={handleChange}
                     required
                     placeholder="Mallory Santucci"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    TA Company Name <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium mb-2">
+                    TA Company Name <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -374,12 +387,12 @@ export default function RegistrationForm() {
                     onChange={handleChange}
                     required
                     placeholder="SHI"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    TA Email <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium mb-2">
+                    TA Email <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="email"
@@ -388,32 +401,33 @@ export default function RegistrationForm() {
                     onChange={handleChange}
                     required
                     placeholder="mallory_santucci@shi.com"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    TA Phone
-                  </label>
+                  <label className="block text-sm font-medium mb-2">TA Phone</label>
                   <input
                     type="tel"
                     name="ta_phone"
                     value={formData.ta_phone}
                     onChange={handleChange}
                     placeholder="555-555-5555"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
               </div>
             </div>
 
             {/* TSD Information */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 pb-2 border-b">TSD Information (Technology Service Distributor)</h2>
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold section-header flex items-center gap-2">
+                <span className="w-8 h-8 rounded-lg gradient-bg flex items-center justify-center text-white text-sm">4</span>
+                TSD Information
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    TSD Name <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium mb-2">
+                    TSD Name <span className="text-orange-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -422,50 +436,61 @@ export default function RegistrationForm() {
                     onChange={handleChange}
                     required
                     placeholder="Avant"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    TSD Contact Name
-                  </label>
+                  <label className="block text-sm font-medium mb-2">TSD Contact Name</label>
                   <input
                     type="text"
                     name="tsd_contact_name"
                     value={formData.tsd_contact_name}
                     onChange={handleChange}
                     placeholder="Emely Irula"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    TSD Contact Email
-                  </label>
+                  <label className="block text-sm font-medium mb-2">TSD Contact Email</label>
                   <input
                     type="email"
                     name="tsd_contact_email"
                     value={formData.tsd_contact_email}
                     onChange={handleChange}
                     placeholder="eirula@goavant.net"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 rounded-xl border-2 focus:outline-none"
                   />
                 </div>
               </div>
             </div>
 
             {/* Submit Button */}
-            <div className="pt-4">
+            <div className="pt-6">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-4 px-6 btn-primary text-white font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                {loading ? 'Submitting...' : 'Submit Deal Registration'}
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Submitting...
+                  </span>
+                ) : (
+                  'Submit Deal Registration'
+                )}
               </button>
             </div>
           </form>
         </div>
+
+        {/* Footer */}
+        <p className="text-center text-sm text-[var(--text-muted)] mt-6">
+          Powered by AmplifAI
+        </p>
       </div>
     </div>
   )
