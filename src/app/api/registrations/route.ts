@@ -22,8 +22,11 @@ export async function POST(request: NextRequest) {
     const required = [
       'customer_first_name',
       'customer_last_name',
+      'customer_job_title',
       'customer_company_name',
       'customer_email',
+      'agent_count',
+      'opportunity_description',
       'ta_full_name',
       'ta_email',
       'ta_company_name',

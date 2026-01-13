@@ -80,6 +80,13 @@ export default function RegistrationForm() {
     setLoading(true)
     setError('')
 
+    // Validate at least one solution selected
+    if (formData.solutions_interested.length === 0) {
+      setError('Please select at least one solution')
+      setLoading(false)
+      return
+    }
+
     try {
       const res = await fetch('/api/registrations', {
         method: 'POST',
@@ -150,13 +157,14 @@ export default function RegistrationForm() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Job Title
+                    Job Title <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     name="customer_job_title"
                     value={formData.customer_job_title}
                     onChange={handleChange}
+                    required
                     placeholder="Contact Center Manager"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -268,15 +276,16 @@ export default function RegistrationForm() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Number of Contact Center Agents
+                    Number of Contact Center Agents <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="agent_count"
                     value={formData.agent_count}
                     onChange={handleChange}
+                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">Select...</option>
+                    <option value="">Please Select</option>
                     {AGENT_COUNTS.map(count => (
                       <option key={count} value={count}>{count}</option>
                     ))}
@@ -292,7 +301,7 @@ export default function RegistrationForm() {
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">Select...</option>
+                    <option value="">Please Select</option>
                     {TIMELINES.map(timeline => (
                       <option key={timeline} value={timeline}>{timeline}</option>
                     ))}
@@ -300,7 +309,7 @@ export default function RegistrationForm() {
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Solutions Interested In
+                    Which solutions are they looking for: (multiple select) <span className="text-red-500">*</span>
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     {SOLUTIONS.map(solution => (
@@ -318,12 +327,16 @@ export default function RegistrationForm() {
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Opportunity Description
+                    Opportunity Description <span className="text-red-500">*</span>
                   </label>
+                  <p className="text-sm text-gray-500 mb-2">
+                    Please enter the customer&apos;s use case, challenges, and/or goals. You can also list any other solutions we would integrate with or competing against.
+                  </p>
                   <textarea
                     name="opportunity_description"
                     value={formData.opportunity_description}
                     onChange={handleChange}
+                    required
                     rows={4}
                     placeholder="Customer's use case, challenges, goals, current solutions, and any competition..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
