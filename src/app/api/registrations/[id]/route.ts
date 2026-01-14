@@ -32,7 +32,58 @@ export async function PATCH(
 
     let updateData: Record<string, unknown> = {}
 
-    if (action === 'approve') {
+    if (action === 'update') {
+      // Handle field updates (for editing registration details)
+      const {
+        customer_first_name,
+        customer_last_name,
+        customer_job_title,
+        customer_company_name,
+        customer_email,
+        customer_phone,
+        customer_street_address,
+        customer_city,
+        customer_state,
+        customer_postal_code,
+        customer_country,
+        agent_count,
+        implementation_timeline,
+        solutions_interested,
+        opportunity_description,
+        ta_full_name,
+        ta_email,
+        ta_phone,
+        ta_company_name,
+        tsd_name,
+        tsd_contact_name,
+        tsd_contact_email,
+      } = body
+
+      updateData = {
+        customer_first_name,
+        customer_last_name,
+        customer_job_title,
+        customer_company_name,
+        customer_email,
+        customer_phone,
+        customer_street_address,
+        customer_city,
+        customer_state,
+        customer_postal_code,
+        customer_country,
+        agent_count,
+        implementation_timeline,
+        solutions_interested,
+        opportunity_description,
+        ta_full_name,
+        ta_email,
+        ta_phone,
+        ta_company_name,
+        tsd_name,
+        tsd_contact_name,
+        tsd_contact_email,
+      }
+    } else if (action === 'approve') {
       updateData = {
         status: 'approved',
         reviewed_at: new Date().toISOString(),

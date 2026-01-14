@@ -53,27 +53,27 @@ CREATE TABLE deal_registrations (
   webhook_response TEXT
 );
 
--- Account Executives table
-CREATE TABLE account_executives (
+-- Sales Reps table (formerly account_executives)
+CREATE TABLE sales_reps (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL
 );
 
--- Insert default AEs
-INSERT INTO account_executives (name, email) VALUES
+-- Insert default Sales Reps
+INSERT INTO sales_reps (name, email) VALUES
   ('Oliver Gohring', 'ogohring@amplifai.com'),
   ('Curt Tilly', 'ctilly@amplifai.com');
 
--- Known TSDs for fuzzy matching
-CREATE TABLE known_tsds (
+-- Known Partners for fuzzy matching (formerly known_tsds)
+CREATE TABLE known_partners (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT UNIQUE NOT NULL,
   email_domains TEXT[] -- Array of domains like ['goavant.net', 'avant.net']
 );
 
--- Insert known TSDs
-INSERT INTO known_tsds (name, email_domains) VALUES
+-- Insert known Partners
+INSERT INTO known_partners (name, email_domains) VALUES
   ('Avant', ARRAY['goavant.net', 'avant.net']),
   ('Telarus', ARRAY['telarus.com']),
   ('Intelisys', ARRAY['intelisys.com']),
@@ -101,8 +101,8 @@ CREATE TRIGGER update_deal_registrations_updated_at
 -- Row Level Security (optional but recommended)
 -- Enable RLS
 ALTER TABLE deal_registrations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE account_executives ENABLE ROW LEVEL SECURITY;
-ALTER TABLE known_tsds ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sales_reps ENABLE ROW LEVEL SECURITY;
+ALTER TABLE known_partners ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Allow anonymous inserts for form submissions
 CREATE POLICY "Allow anonymous inserts" ON deal_registrations
@@ -116,10 +116,10 @@ CREATE POLICY "Allow authenticated reads" ON deal_registrations
 CREATE POLICY "Allow authenticated updates" ON deal_registrations
   FOR UPDATE USING (true);
 
--- Policy: Allow reads on account_executives
-CREATE POLICY "Allow reads on AEs" ON account_executives
+-- Policy: Allow reads on sales_reps
+CREATE POLICY "Allow reads on sales_reps" ON sales_reps
   FOR SELECT USING (true);
 
--- Policy: Allow reads on known_tsds
-CREATE POLICY "Allow reads on TSDs" ON known_tsds
+-- Policy: Allow reads on known_partners
+CREATE POLICY "Allow reads on known_partners" ON known_partners
   FOR SELECT USING (true);
