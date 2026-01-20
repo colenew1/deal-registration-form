@@ -67,7 +67,8 @@ export async function POST(request: NextRequest) {
         tsd_name: body.tsd_name,
         tsd_contact_name: body.tsd_contact_name || null,
         tsd_contact_email: body.tsd_contact_email || null,
-        source: 'form',
+        source: body.source === 'email_import' ? 'email_import' : 'form',
+        original_email_content: body.original_email_content || null,
         status: 'pending',
       }])
       .select()
