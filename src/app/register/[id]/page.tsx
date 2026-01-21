@@ -877,7 +877,7 @@ export default function PrefilledRegistrationForm({ params }: { params: Promise<
           {/* Footer */}
           <footer className="text-center py-8">
             <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
-              Need help? Contact <a href="mailto:partners@amplifai.com" className="hover:underline" style={{ color: 'var(--primary-600)' }}>partners@amplifai.com</a>
+              Need help? Contact <a href="mailto:greynolds@amplifai.com" className="hover:underline" style={{ color: 'var(--primary-600)' }}>greynolds@amplifai.com</a>
             </p>
             <p className="text-sm mt-2" style={{ color: 'var(--foreground-muted)' }}>
               Powered by AmplifAI

@@ -117,11 +117,11 @@ export default function ThankYou() {
               <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
                 Have questions? Contact{' '}
                 <a
-                  href="mailto:partners@amplifai.com"
+                  href="mailto:greynolds@amplifai.com"
                   style={{ color: 'var(--primary-600)' }}
                   className="hover:underline font-medium"
                 >
-                  partners@amplifai.com
+                  greynolds@amplifai.com
                 </a>
               </p>
             </div>
