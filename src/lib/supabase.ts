@@ -1,16 +1,63 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-// Create client only if we have the required env vars
-let supabaseInstance: SupabaseClient | null = null
+// Browser client (for client components)
+export function createClientComponentClient() {
+  return createBrowserClient(supabaseUrl, supabaseAnonKey)
+}
+
+// Server client (for server components and route handlers)
+export async function createServerComponentClient() {
+  const cookieStore = await cookies()
+
+  return createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll()
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          )
+        } catch {
+          // Server Component - ignore (can't set cookies in RSC)
+        }
+      },
+    },
+  })
+}
+
+// Admin client (for server-side admin operations - uses service role key)
+export function createAdminClient() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceRoleKey) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured')
+  }
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+}
+
+// Legacy compatibility - for existing code that uses getSupabase()
+let browserClientInstance: ReturnType<typeof createBrowserClient> | null = null
 
 export const getSupabase = () => {
-  if (!supabaseInstance && supabaseUrl && supabaseAnonKey) {
-    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey)
+  if (typeof window === 'undefined') {
+    throw new Error('getSupabase() should only be called on the client side. Use createServerComponentClient() for server components.')
   }
-  return supabaseInstance
+  if (!browserClientInstance && supabaseUrl && supabaseAnonKey) {
+    browserClientInstance = createBrowserClient(supabaseUrl, supabaseAnonKey)
+  }
+  return browserClientInstance
 }
 
 // For backwards compatibility - lazy initialization
@@ -22,6 +69,24 @@ export const supabase = {
     }
     return client.from(table)
   }
+}
+
+// ============================================
+// Types
+// ============================================
+
+export type UserProfile = {
+  id: string
+  created_at: string
+  updated_at: string
+  role: 'admin' | 'partner'
+  full_name: string
+  email: string
+  company_name: string | null
+  phone: string | null
+  tsd_name: string | null
+  legacy_partner_id: string | null
+  is_active: boolean
 }
 
 export type DealRegistration = {
@@ -59,12 +124,28 @@ export type DealRegistration = {
   original_email_content: string | null
   webhook_sent_at: string | null
   webhook_response: string | null
+  partner_id: string | null
 }
 
 export type AccountExecutive = {
   id: string
   name: string
   email: string
+}
+
+export type Partner = {
+  id: string
+  created_at: string
+  updated_at: string
+  email: string
+  password_hash: string
+  full_name: string
+  company_name: string
+  phone: string | null
+  is_active: boolean
+  last_login_at: string | null
+  tsd_name: string | null
+  auth_user_id: string | null
 }
 
 /**

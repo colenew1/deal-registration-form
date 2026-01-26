@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { createClientComponentClient } from '@/lib/supabase'
 
 const TSD_OPTIONS = [
   'Avant',
@@ -17,6 +18,7 @@ const TSD_OPTIONS = [
 
 export default function PartnerRegister() {
   const router = useRouter()
+  const supabase = createClientComponentClient()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -50,33 +52,69 @@ export default function PartnerRegister() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/partners/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'register',
-          email: formData.email,
-          password: formData.password,
-          full_name: formData.full_name,
-          company_name: formData.company_name,
-          phone: formData.phone,
-          tsd_name: formData.tsd_name,
-        }),
+      // 1. Create auth user with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.full_name,
+            company_name: formData.company_name,
+          }
+        }
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.error || 'Registration failed')
+      if (authError) {
+        setError(authError.message)
         return
       }
 
-      // Store session in localStorage
-      localStorage.setItem('partner_session', JSON.stringify({
-        partner: data.partner,
-        token: data.token,
-      }))
+      if (!authData.user) {
+        setError('Failed to create account. Please try again.')
+        return
+      }
 
+      // 2. Create legacy partners record for backwards compatibility
+      const { data: partnerData, error: partnerError } = await supabase
+        .from('partners')
+        .insert({
+          email: formData.email.toLowerCase(),
+          password_hash: 'migrated_to_supabase_auth',
+          full_name: formData.full_name,
+          company_name: formData.company_name,
+          phone: formData.phone || null,
+          tsd_name: formData.tsd_name || null,
+          auth_user_id: authData.user.id,
+        })
+        .select('id')
+        .single()
+
+      if (partnerError) {
+        console.error('Partner record creation failed:', partnerError)
+        // Don't fail registration if partner record fails - we can fix this later
+      }
+
+      // 3. Create user_profile record
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .insert({
+          id: authData.user.id,
+          role: 'partner',
+          full_name: formData.full_name,
+          email: formData.email.toLowerCase(),
+          company_name: formData.company_name,
+          phone: formData.phone || null,
+          tsd_name: formData.tsd_name || null,
+          legacy_partner_id: partnerData?.id || null,
+        })
+
+      if (profileError) {
+        console.error('Profile creation failed:', profileError)
+        setError('Account created but profile setup failed. Please contact support.')
+        return
+      }
+
+      // 4. Redirect to dashboard
       router.push('/partner/dashboard')
 
     } catch (err) {
@@ -125,6 +163,7 @@ export default function PartnerRegister() {
                 required
                 className="form-input"
                 placeholder="John Smith"
+                disabled={isLoading}
               />
             </div>
 
@@ -140,6 +179,7 @@ export default function PartnerRegister() {
                 required
                 className="form-input"
                 placeholder="Acme Corp"
+                disabled={isLoading}
               />
             </div>
 
@@ -155,6 +195,7 @@ export default function PartnerRegister() {
                 required
                 className="form-input"
                 placeholder="you@company.com"
+                disabled={isLoading}
               />
             </div>
 
@@ -169,6 +210,7 @@ export default function PartnerRegister() {
                 onChange={handleChange}
                 className="form-input"
                 placeholder="(555) 123-4567"
+                disabled={isLoading}
               />
             </div>
 
@@ -181,6 +223,7 @@ export default function PartnerRegister() {
                 value={formData.tsd_name}
                 onChange={handleChange}
                 className="form-select"
+                disabled={isLoading}
               >
                 <option value="">Select your TSD (optional)</option>
                 {TSD_OPTIONS.map(tsd => (
@@ -202,6 +245,7 @@ export default function PartnerRegister() {
                 className="form-input"
                 placeholder="••••••••"
                 minLength={8}
+                disabled={isLoading}
               />
               <p className="mt-1 text-xs" style={{ color: 'var(--foreground-muted)' }}>
                 Minimum 8 characters
@@ -220,6 +264,7 @@ export default function PartnerRegister() {
                 required
                 className="form-input"
                 placeholder="••••••••"
+                disabled={isLoading}
               />
             </div>
 
@@ -239,7 +284,7 @@ export default function PartnerRegister() {
           <div className="mt-6 text-center">
             <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
               Already have an account?{' '}
-              <Link href="/partner/login" className="font-medium hover:underline" style={{ color: 'var(--primary-600)' }}>
+              <Link href="/login" className="font-medium hover:underline" style={{ color: 'var(--primary-600)' }}>
                 Sign in
               </Link>
             </p>

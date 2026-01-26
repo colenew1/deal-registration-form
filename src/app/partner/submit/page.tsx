@@ -3,14 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-
-type Partner = {
-  id: string
-  email: string
-  full_name: string
-  company_name: string
-  tsd_name: string | null
-}
+import { createClientComponentClient, type UserProfile } from '@/lib/supabase'
 
 const AGENT_COUNT_OPTIONS = [
   '1-19',
@@ -54,7 +47,8 @@ const TSD_OPTIONS = [
 
 export default function SubmitDeal() {
   const router = useRouter()
-  const [partner, setPartner] = useState<Partner | null>(null)
+  const supabase = createClientComponentClient()
+  const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -84,25 +78,39 @@ export default function SubmitDeal() {
   })
 
   useEffect(() => {
-    const sessionStr = localStorage.getItem('partner_session')
-    if (!sessionStr) {
-      router.push('/partner/login')
-      return
-    }
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
 
-    try {
-      const session = JSON.parse(sessionStr)
-      setPartner(session.partner)
-      // Pre-fill TSD if partner has one set
-      if (session.partner.tsd_name) {
-        setFormData(prev => ({ ...prev, tsd_name: session.partner.tsd_name }))
+      if (!user) {
+        router.push('/login?redirect=/partner/submit')
+        return
       }
-    } catch {
-      router.push('/partner/login')
-    } finally {
+
+      // Get user profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError || !profileData) {
+        console.error('Error fetching profile:', profileError)
+        router.push('/login')
+        return
+      }
+
+      setProfile(profileData)
+
+      // Pre-fill TSD if profile has one set
+      if (profileData.tsd_name) {
+        setFormData(prev => ({ ...prev, tsd_name: profileData.tsd_name || '' }))
+      }
+
       setIsLoading(false)
     }
-  }, [router])
+
+    checkAuth()
+  }, [router, supabase])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -124,19 +132,25 @@ export default function SubmitDeal() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch('/api/partners/submissions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-partner-id': partner?.id || '',
-        },
-        body: JSON.stringify(formData),
-      })
+      // Submit directly to Supabase
+      const { error: insertError } = await supabase
+        .from('deal_registrations')
+        .insert({
+          ...formData,
+          // Partner info from profile
+          ta_full_name: profile?.full_name || '',
+          ta_email: profile?.email || '',
+          ta_company_name: profile?.company_name || '',
+          // Link to partner
+          partner_id: profile?.legacy_partner_id || null,
+          // Ensure tsd_name is set
+          tsd_name: formData.tsd_name || profile?.tsd_name || 'Unknown',
+          source: 'form',
+        })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.error || 'Failed to submit deal')
+      if (insertError) {
+        console.error('Insert error:', insertError)
+        setError(insertError.message || 'Failed to submit deal')
         return
       }
 
@@ -176,7 +190,7 @@ export default function SubmitDeal() {
             className="text-sm px-3 py-1.5 rounded-lg transition-colors"
             style={{ color: 'var(--foreground-muted)', border: '1px solid var(--card-border)' }}
           >
-            ← Back to Dashboard
+            Back to Dashboard
           </Link>
         </div>
       </header>
@@ -187,7 +201,7 @@ export default function SubmitDeal() {
             Submit New Deal Registration
           </h1>
           <p className="mt-2" style={{ color: 'var(--foreground-muted)' }}>
-            Submitting as <strong>{partner?.full_name}</strong> ({partner?.company_name})
+            Submitting as <strong>{profile?.full_name}</strong> ({profile?.company_name})
           </p>
         </div>
 

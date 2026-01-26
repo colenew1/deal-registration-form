@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { DealRegistration } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
+import { createClientComponentClient, DealRegistration, type UserProfile } from '@/lib/supabase'
 import Link from 'next/link'
 
 const SOLUTIONS = [
@@ -119,6 +120,10 @@ function StatCard({
 }
 
 export default function AdminDashboard() {
+  const router = useRouter()
+  const supabase = createClientComponentClient()
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [isAuthChecking, setIsAuthChecking] = useState(true)
   const [registrations, setRegistrations] = useState<DealRegistration[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
@@ -127,9 +132,47 @@ export default function AdminDashboard() {
   const [editData, setEditData] = useState<Partial<DealRegistration>>({})
   const [saving, setSaving] = useState(false)
 
+  // Check authentication and admin role
   useEffect(() => {
-    fetchRegistrations()
-  }, [])
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        router.push('/login?redirect=/admin')
+        return
+      }
+
+      // Get user profile and check role
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError || !profileData) {
+        console.error('Error fetching profile:', profileError)
+        router.push('/login')
+        return
+      }
+
+      if (profileData.role !== 'admin') {
+        // Not an admin - redirect to partner dashboard
+        router.push('/partner/dashboard')
+        return
+      }
+
+      setProfile(profileData)
+      setIsAuthChecking(false)
+      fetchRegistrations()
+    }
+
+    checkAuth()
+  }, [router, supabase])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
 
   const fetchRegistrations = async () => {
     try {
@@ -223,7 +266,7 @@ export default function AdminDashboard() {
     }
   }
 
-  if (loading) {
+  if (isAuthChecking || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background-subtle)' }}>
         <div className="text-center">
@@ -231,7 +274,7 @@ export default function AdminDashboard() {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p style={{ color: 'var(--foreground-muted)' }}>Loading registrations...</p>
+          <p style={{ color: 'var(--foreground-muted)' }}>{isAuthChecking ? 'Checking authorization...' : 'Loading registrations...'}</p>
         </div>
       </div>
     )
@@ -254,12 +297,21 @@ export default function AdminDashboard() {
                 <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Manage partner registrations</p>
               </div>
             </div>
-            <Link href="/" className="btn btn-secondary">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              New Registration
-            </Link>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>{profile?.full_name}</p>
+                <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>Administrator</p>
+              </div>
+              <Link href="/admin/users" className="btn btn-secondary">
+                Manage Users
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="btn btn-secondary"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
       </header>

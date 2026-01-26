@@ -3,14 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-
-type Partner = {
-  id: string
-  email: string
-  full_name: string
-  company_name: string
-  tsd_name: string | null
-}
+import { createClientComponentClient, type UserProfile } from '@/lib/supabase'
 
 type Submission = {
   id: string
@@ -28,47 +21,69 @@ type Submission = {
 
 export default function PartnerDashboard() {
   const router = useRouter()
-  const [partner, setPartner] = useState<Partner | null>(null)
+  const supabase = createClientComponentClient()
+  const [profile, setProfile] = useState<UserProfile | null>(null)
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
 
-  const fetchSubmissions = useCallback(async (partnerId: string) => {
-    try {
-      const response = await fetch('/api/partners/submissions', {
-        headers: { 'x-partner-id': partnerId },
-      })
-      const data = await response.json()
-      if (response.ok) {
-        setSubmissions(data.submissions || [])
-      }
-    } catch (err) {
-      console.error('Error fetching submissions:', err)
-    }
-  }, [])
-
-  useEffect(() => {
-    // Check for session
-    const sessionStr = localStorage.getItem('partner_session')
-    if (!sessionStr) {
-      router.push('/partner/login')
+  const fetchSubmissions = useCallback(async (legacyPartnerId: string | null) => {
+    if (!legacyPartnerId) {
+      setSubmissions([])
       return
     }
 
     try {
-      const session = JSON.parse(sessionStr)
-      setPartner(session.partner)
-      fetchSubmissions(session.partner.id)
-    } catch {
-      router.push('/partner/login')
-    } finally {
+      const { data, error } = await supabase
+        .from('deal_registrations')
+        .select('id, created_at, status, customer_company_name, customer_first_name, customer_last_name, customer_email, agent_count, solutions_interested, rejection_reason, reviewed_at')
+        .eq('partner_id', legacyPartnerId)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching submissions:', error)
+        return
+      }
+
+      setSubmissions(data || [])
+    } catch (err) {
+      console.error('Error fetching submissions:', err)
+    }
+  }, [supabase])
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        router.push('/login?redirect=/partner/dashboard')
+        return
+      }
+
+      // Get user profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (profileError || !profileData) {
+        console.error('Error fetching profile:', profileError)
+        router.push('/login')
+        return
+      }
+
+      setProfile(profileData)
+      fetchSubmissions(profileData.legacy_partner_id)
       setIsLoading(false)
     }
-  }, [router, fetchSubmissions])
 
-  const handleLogout = () => {
-    localStorage.removeItem('partner_session')
-    router.push('/partner/login')
+    checkAuth()
+  }, [router, supabase, fetchSubmissions])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
   }
 
   const filteredSubmissions = submissions.filter(sub => {
@@ -126,8 +141,8 @@ export default function PartnerDashboard() {
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>{partner?.full_name}</p>
-              <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>{partner?.company_name}</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>{profile?.full_name}</p>
+              <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>{profile?.company_name}</p>
             </div>
             <button
               onClick={handleLogout}
@@ -145,7 +160,7 @@ export default function PartnerDashboard() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl font-semibold" style={{ color: 'var(--foreground)' }}>
-              Welcome back, {partner?.full_name?.split(' ')[0]}
+              Welcome back, {profile?.full_name?.split(' ')[0]}
             </h2>
             <p className="mt-1" style={{ color: 'var(--foreground-muted)' }}>
               Manage your deal registrations

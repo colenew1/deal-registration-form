@@ -1,32 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createServerComponentClient } from '@/lib/supabase'
 
 export async function GET() {
-  const { data, error } = await supabase
-    .from('deal_registrations')
-    .select('*')
-    .order('created_at', { ascending: false })
+  try {
+    const supabase = await createServerComponentClient()
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    // Check if user is authenticated
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check if user is admin
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+    }
+
+    // Fetch all registrations for admin
+    const { data, error } = await supabase
+      .from('deal_registrations')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json(data)
+  } catch (err) {
+    console.error('API error:', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-
-  return NextResponse.json(data)
 }
 
+// POST remains public for guest submissions
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createServerComponentClient()
     const body = await request.json()
 
     // Validate required fields
     const required = [
       'customer_first_name',
       'customer_last_name',
-      'customer_job_title',
       'customer_company_name',
       'customer_email',
-      'agent_count',
-      'opportunity_description',
       'ta_full_name',
       'ta_email',
       'ta_company_name',
@@ -69,6 +94,7 @@ export async function POST(request: NextRequest) {
         tsd_contact_email: body.tsd_contact_email || null,
         source: body.source === 'email_import' ? 'email_import' : 'form',
         original_email_content: body.original_email_content || null,
+        partner_id: body.partner_id || null,
         status: 'pending',
       }])
       .select()
