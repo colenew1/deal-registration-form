@@ -54,12 +54,19 @@ const REQUIRED_FIELDS = [
   { key: 'ta_email', label: 'Partner Email' },
   { key: 'ta_company_name', label: 'Partner Company' },
   { key: 'tsd_name', label: 'TSD' },
+  { key: 'solutions_interested', label: 'Solutions' },
 ]
 
 const ZAPIER_WEBHOOK_URL = process.env.NEXT_PUBLIC_ZAPIER_WEBHOOK_URL || ''
 
 function getMissingFields(deal: Partial<UnifiedDeal>): string[] {
-  return REQUIRED_FIELDS.filter(f => !deal[f.key as keyof UnifiedDeal]).map(f => f.label)
+  return REQUIRED_FIELDS.filter(f => {
+    const val = deal[f.key as keyof UnifiedDeal]
+    if (f.key === 'solutions_interested') {
+      return !val || (Array.isArray(val) && val.length === 0)
+    }
+    return !val
+  }).map(f => f.label)
 }
 
 function mapEmailIntakeStatus(intake: EmailIntake): UnifiedDeal['status'] {
@@ -85,6 +92,7 @@ function emailIntakeToUnified(intake: EmailIntake): UnifiedDeal {
     ta_email: intake.extracted_ta_email || '',
     ta_company_name: intake.extracted_ta_company_name || '',
     tsd_name: intake.extracted_tsd_name || '',
+    solutions_interested: intake.extracted_solutions_interested || [],
   }
   const missingFields = getMissingFields(deal)
   let status = mapEmailIntakeStatus(intake)
@@ -154,6 +162,32 @@ function formSubmissionToUnified(reg: DealRegistration): UnifiedDeal {
   }
 }
 
+// Light mode color palette
+const colors = {
+  bg: '#f8fafc',
+  white: '#ffffff',
+  border: '#e2e8f0',
+  borderLight: '#f1f5f9',
+  text: '#1e293b',
+  textMuted: '#64748b',
+  textLight: '#94a3b8',
+  primary: '#2563eb',
+  primaryHover: '#1d4ed8',
+  primaryLight: '#dbeafe',
+  primaryText: '#1e40af',
+  success: '#16a34a',
+  successLight: '#dcfce7',
+  successText: '#166534',
+  warning: '#d97706',
+  warningLight: '#fef3c7',
+  warningText: '#92400e',
+  error: '#dc2626',
+  errorLight: '#fee2e2',
+  errorText: '#991b1b',
+  purple: '#7c3aed',
+  purpleLight: '#ede9fe',
+}
+
 export default function AdminDashboard() {
   const router = useRouter()
   const supabase = useMemo(() => createClientComponentClient(), [])
@@ -212,7 +246,7 @@ export default function AdminDashboard() {
     archive: deals.filter(d => d.status === 'completed' || d.status === 'rejected').length,
   }), [deals])
 
-  const formatDate = (date: string) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const formatDate = (date: string) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   const formatTime = (date: string) => new Date(date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 
   const handleSave = async () => {
@@ -319,8 +353,8 @@ export default function AdminDashboard() {
 
   if (isAuthChecking || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background-subtle)' }}>
-        <div className="w-6 h-6 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--primary-600)', borderTopColor: 'transparent' }} />
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
+        <div style={{ width: 24, height: 24, border: `2px solid ${colors.primary}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
       </div>
     )
   }
@@ -329,53 +363,58 @@ export default function AdminDashboard() {
   const canSend = missingFields.length === 0 && !selectedDeal?.has_conflicts
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--background-subtle)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
       {/* Header */}
-      <header className="page-header">
-        <div className="container flex items-center justify-between">
-          <h1 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Deal Registrations</h1>
-          <div className="flex items-center gap-4">
-            <span style={{ fontSize: '0.875rem', color: 'var(--foreground-muted)' }}>{profile?.full_name}</span>
-            <Link href="/admin/users" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+      <header style={{ backgroundColor: colors.white, borderBottom: `1px solid ${colors.border}`, padding: '16px 24px' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1 style={{ fontSize: 20, fontWeight: 600, color: colors.text, margin: 0 }}>Deal Registrations</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <span style={{ fontSize: 14, color: colors.textMuted }}>{profile?.full_name}</span>
+            <Link href="/admin/users" style={{ padding: '8px 16px', fontSize: 14, backgroundColor: colors.white, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 6, textDecoration: 'none' }}>
               Manage Users
             </Link>
-            <button onClick={() => supabase.auth.signOut().then(() => router.push('/login'))} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+            <button onClick={() => supabase.auth.signOut().then(() => router.push('/login'))} style={{ padding: '8px 16px', fontSize: 14, backgroundColor: colors.white, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>
               Sign Out
             </button>
           </div>
         </div>
       </header>
 
-      <div className="container" style={{ paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
         {/* Tab Bar */}
-        <div className="flex gap-2 mb-6">
+        <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
           {[
             { id: 'inbox', label: 'Inbox', count: stats.inbox },
-            { id: 'pending_info', label: 'Waiting', count: stats.pending_info },
-            { id: 'ready', label: 'Ready', count: stats.ready },
+            { id: 'pending_info', label: 'Waiting for Info', count: stats.pending_info },
+            { id: 'ready', label: 'Ready to Send', count: stats.ready },
             { id: 'archive', label: 'Archive', count: stats.archive },
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className="btn"
               style={{
-                backgroundColor: activeTab === tab.id ? 'var(--primary-600)' : 'var(--card-bg)',
-                color: activeTab === tab.id ? 'white' : 'var(--foreground)',
-                border: activeTab === tab.id ? 'none' : '1px solid var(--border-color)',
-                padding: '0.5rem 1rem',
-                fontSize: '0.875rem',
+                padding: '10px 20px',
+                fontSize: 14,
+                fontWeight: 500,
+                backgroundColor: activeTab === tab.id ? colors.primary : colors.white,
+                color: activeTab === tab.id ? colors.white : colors.text,
+                border: activeTab === tab.id ? 'none' : `1px solid ${colors.border}`,
+                borderRadius: 8,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
               }}
             >
               {tab.label}
               {tab.count > 0 && (
                 <span style={{
-                  marginLeft: '0.5rem',
-                  padding: '0.125rem 0.5rem',
-                  borderRadius: '9999px',
-                  fontSize: '0.75rem',
+                  padding: '2px 8px',
+                  borderRadius: 12,
+                  fontSize: 12,
                   fontWeight: 600,
-                  backgroundColor: activeTab === tab.id ? 'rgba(255,255,255,0.2)' : 'var(--background-subtle)',
+                  backgroundColor: activeTab === tab.id ? 'rgba(255,255,255,0.2)' : colors.bg,
+                  color: activeTab === tab.id ? colors.white : colors.textMuted,
                 }}>
                   {tab.count}
                 </span>
@@ -384,10 +423,10 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        <div className="flex gap-6">
+        <div style={{ display: 'flex', gap: 24 }}>
           {/* Deal List */}
-          <div style={{ width: selectedDeal ? '50%' : '100%', transition: 'width 0.2s' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ width: selectedDeal ? '40%' : '100%', transition: 'width 0.2s' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {filteredDeals.map(deal => {
                 const missing = getMissingFields(deal)
                 const isSelected = selectedDeal?.id === deal.id
@@ -399,58 +438,57 @@ export default function AdminDashboard() {
                     style={{
                       width: '100%',
                       textAlign: 'left',
-                      padding: '1rem',
-                      borderRadius: '0.75rem',
-                      backgroundColor: isSelected ? 'var(--primary-50)' : 'var(--card-bg)',
-                      border: isSelected ? '2px solid var(--primary-500)' : '1px solid var(--border-color)',
+                      padding: 16,
+                      borderRadius: 8,
+                      backgroundColor: isSelected ? colors.primaryLight : colors.white,
+                      border: isSelected ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
                       cursor: 'pointer',
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                       <div>
-                        <h3 style={{ fontWeight: 500, color: 'var(--foreground)', margin: 0 }}>
+                        <h3 style={{ fontWeight: 600, color: colors.text, margin: 0, fontSize: 15 }}>
                           {deal.customer_company_name || 'Unknown Company'}
                         </h3>
-                        <p style={{ fontSize: '0.875rem', color: 'var(--foreground-muted)', margin: 0 }}>
+                        <p style={{ fontSize: 13, color: colors.textMuted, margin: '4px 0 0' }}>
                           {deal.customer_first_name} {deal.customer_last_name}
-                          {deal.customer_email && ` • ${deal.customer_email}`}
                         </p>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--foreground-muted)', margin: 0 }}>{formatDate(deal.created_at)}</p>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--foreground-muted)', margin: 0 }}>{formatTime(deal.created_at)}</p>
+                        <p style={{ fontSize: 12, color: colors.textMuted, margin: 0 }}>{formatDate(deal.created_at)}</p>
+                        <p style={{ fontSize: 12, color: colors.textLight, margin: '2px 0 0' }}>{formatTime(deal.created_at)}</p>
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      <span style={{ padding: '0.125rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem', fontWeight: 500, backgroundColor: deal.type === 'email_intake' ? 'var(--primary-100)' : 'var(--success-50)', color: deal.type === 'email_intake' ? 'var(--primary-700)' : 'var(--success-600)' }}>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: deal.type === 'email_intake' ? colors.primaryLight : colors.successLight, color: deal.type === 'email_intake' ? colors.primaryText : colors.successText }}>
                         {deal.source_label}
                       </span>
                       {deal.tsd_name && (
-                        <span style={{ padding: '0.125rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem', backgroundColor: 'var(--background-subtle)', color: 'var(--foreground-muted)' }}>
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, backgroundColor: colors.bg, color: colors.textMuted }}>
                           {deal.tsd_name}
                         </span>
                       )}
                       {deal.ta_company_name && (
-                        <span style={{ padding: '0.125rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem', backgroundColor: 'rgba(139, 92, 246, 0.1)', color: '#7c3aed' }}>
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, backgroundColor: colors.purpleLight, color: colors.purple }}>
                           {deal.ta_company_name}
                         </span>
                       )}
                       {missing.length > 0 && deal.status !== 'completed' && deal.status !== 'rejected' && (
-                        <span style={{ padding: '0.125rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem', backgroundColor: 'var(--warning-50)', color: 'var(--warning-600)' }}>
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, backgroundColor: colors.warningLight, color: colors.warningText }}>
                           {missing.length} missing
                         </span>
                       )}
                       {deal.has_conflicts && (
-                        <span style={{ padding: '0.125rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem', backgroundColor: 'var(--error-50)', color: 'var(--error-600)' }}>
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, backgroundColor: colors.errorLight, color: colors.errorText }}>
                           Conflicts
                         </span>
                       )}
                       {deal.status === 'completed' && (
-                        <span style={{ padding: '0.125rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem', backgroundColor: 'var(--success-50)', color: 'var(--success-600)' }}>Sent</span>
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, backgroundColor: colors.successLight, color: colors.successText }}>Sent</span>
                       )}
                       {deal.status === 'rejected' && (
-                        <span style={{ padding: '0.125rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.75rem', backgroundColor: 'var(--error-50)', color: 'var(--error-600)' }}>Rejected</span>
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, backgroundColor: colors.errorLight, color: colors.errorText }}>Rejected</span>
                       )}
                     </div>
                   </button>
@@ -458,7 +496,7 @@ export default function AdminDashboard() {
               })}
 
               {filteredDeals.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--foreground-muted)' }}>
+                <div style={{ textAlign: 'center', padding: 48, color: colors.textMuted, backgroundColor: colors.white, borderRadius: 8, border: `1px solid ${colors.border}` }}>
                   No deals in {activeTab === 'archive' ? 'archive' : activeTab.replace('_', ' ')}
                 </div>
               )}
@@ -467,42 +505,46 @@ export default function AdminDashboard() {
 
           {/* Detail Panel */}
           {selectedDeal && (
-            <div className="card" style={{ width: '50%', overflow: 'hidden' }}>
+            <div style={{ width: '60%', backgroundColor: colors.white, borderRadius: 12, border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
               {/* Panel Header */}
-              <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.bg }}>
                 <div>
-                  <h2 style={{ fontWeight: 600, margin: 0 }}>{selectedDeal.customer_company_name || 'Unknown Company'}</h2>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--foreground-muted)', margin: 0 }}>{selectedDeal.source_label} • {formatDate(selectedDeal.created_at)}</p>
+                  <h2 style={{ fontWeight: 600, margin: 0, fontSize: 18, color: colors.text }}>{selectedDeal.customer_company_name || 'Unknown Company'}</h2>
+                  <p style={{ fontSize: 13, color: colors.textMuted, margin: '4px 0 0' }}>
+                    {selectedDeal.source_label} • {formatDate(selectedDeal.created_at)} at {formatTime(selectedDeal.created_at)}
+                  </p>
                 </div>
-                <button onClick={() => { setSelectedDeal(null); setEditMode(false) }} style={{ padding: '0.25rem', cursor: 'pointer', background: 'none', border: 'none' }}>
-                  <svg style={{ width: '1.25rem', height: '1.25rem', color: 'var(--foreground-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button onClick={() => { setSelectedDeal(null); setEditMode(false) }} style={{ padding: 8, cursor: 'pointer', background: 'none', border: 'none', borderRadius: 6 }}>
+                  <svg style={{ width: 20, height: 20, color: colors.textMuted }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
 
-              <div style={{ padding: '1.5rem', maxHeight: 'calc(100vh - 280px)', overflowY: 'auto' }}>
+              <div style={{ padding: 24, maxHeight: 'calc(100vh - 320px)', overflowY: 'auto' }}>
                 {/* Alerts */}
                 {missingFields.length > 0 && selectedDeal.status !== 'completed' && selectedDeal.status !== 'rejected' && (
-                  <div className="alert alert-error" style={{ marginBottom: '1rem' }}>
-                    <strong>Missing:</strong> {missingFields.join(', ')}
+                  <div style={{ padding: 12, backgroundColor: colors.warningLight, border: `1px solid ${colors.warning}`, borderRadius: 8, marginBottom: 20 }}>
+                    <p style={{ margin: 0, fontSize: 13, color: colors.warningText }}>
+                      <strong>Missing required fields:</strong> {missingFields.join(', ')}
+                    </p>
                   </div>
                 )}
 
                 {selectedDeal.has_conflicts && selectedDeal.conflicts && (
-                  <div style={{ padding: '1rem', backgroundColor: 'var(--error-50)', border: '1px solid var(--error-500)', borderRadius: '0.5rem', marginBottom: '1rem' }}>
-                    <p style={{ fontWeight: 500, color: 'var(--error-600)', marginBottom: '0.75rem' }}>Resolve conflicts:</p>
+                  <div style={{ padding: 16, backgroundColor: colors.errorLight, border: `1px solid ${colors.error}`, borderRadius: 8, marginBottom: 20 }}>
+                    <p style={{ fontWeight: 600, color: colors.errorText, marginBottom: 12, fontSize: 14 }}>Resolve conflicts before sending:</p>
                     {selectedDeal.conflicts.map((c, i) => (
-                      <div key={i} className="card" style={{ padding: '0.75rem', marginBottom: '0.5rem' }}>
-                        <p style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--foreground-muted)', marginBottom: '0.5rem' }}>{c.field.replace(/_/g, ' ')}</p>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                          <button onClick={() => handleResolveConflict(i, false)} className="btn btn-secondary" style={{ padding: '0.5rem', fontSize: '0.75rem', textAlign: 'left' }}>
-                            <span style={{ display: 'block', fontSize: '0.625rem', color: 'var(--foreground-muted)' }}>Yours:</span>
-                            {String(c.admin_value || '-')}
+                      <div key={i} style={{ padding: 12, backgroundColor: colors.white, borderRadius: 6, marginBottom: 8 }}>
+                        <p style={{ fontSize: 12, fontWeight: 600, color: colors.textMuted, marginBottom: 8, textTransform: 'uppercase' }}>{c.field.replace(/_/g, ' ')}</p>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                          <button onClick={() => handleResolveConflict(i, false)} style={{ padding: 10, fontSize: 13, textAlign: 'left', backgroundColor: colors.bg, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>
+                            <span style={{ display: 'block', fontSize: 11, color: colors.textMuted, marginBottom: 4 }}>Your value:</span>
+                            <span style={{ color: colors.text }}>{String(c.admin_value || '-')}</span>
                           </button>
-                          <button onClick={() => handleResolveConflict(i, true)} className="btn btn-primary" style={{ padding: '0.5rem', fontSize: '0.75rem', textAlign: 'left' }}>
-                            <span style={{ display: 'block', fontSize: '0.625rem', opacity: 0.8 }}>Partner:</span>
-                            {String(c.partner_value || '-')}
+                          <button onClick={() => handleResolveConflict(i, true)} style={{ padding: 10, fontSize: 13, textAlign: 'left', backgroundColor: colors.primaryLight, border: `1px solid ${colors.primary}`, borderRadius: 6, cursor: 'pointer' }}>
+                            <span style={{ display: 'block', fontSize: 11, color: colors.primaryText, marginBottom: 4 }}>Partner value:</span>
+                            <span style={{ color: colors.text }}>{String(c.partner_value || '-')}</span>
                           </button>
                         </div>
                       </div>
@@ -512,149 +554,220 @@ export default function AdminDashboard() {
 
                 {/* Original Email */}
                 {selectedDeal.email_body_plain && (
-                  <details style={{ marginBottom: '1.5rem' }}>
-                    <summary style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--foreground-muted)', cursor: 'pointer' }}>Original Email</summary>
-                    <div style={{ marginTop: '0.5rem', padding: '0.75rem', backgroundColor: 'var(--background-subtle)', borderRadius: '0.5rem', fontSize: '0.875rem', whiteSpace: 'pre-wrap', maxHeight: '10rem', overflowY: 'auto' }}>
+                  <details style={{ marginBottom: 24 }}>
+                    <summary style={{ fontSize: 13, fontWeight: 600, color: colors.textMuted, cursor: 'pointer', padding: '8px 0' }}>View Original Email</summary>
+                    <div style={{ marginTop: 8, padding: 12, backgroundColor: colors.bg, borderRadius: 8, fontSize: 13, whiteSpace: 'pre-wrap', maxHeight: 200, overflowY: 'auto', color: colors.text, border: `1px solid ${colors.border}` }}>
                       {selectedDeal.email_body_plain}
                     </div>
                   </details>
                 )}
 
-                {/* Form Sections */}
-                <Section title="Customer">
-                  <Field label="Company" value={editMode ? editData.customer_company_name : selectedDeal.customer_company_name} onChange={v => setEditData(p => ({ ...p, customer_company_name: v }))} editMode={editMode} required />
-                  <div className="grid-form">
-                    <Field label="First Name" value={editMode ? editData.customer_first_name : selectedDeal.customer_first_name} onChange={v => setEditData(p => ({ ...p, customer_first_name: v }))} editMode={editMode} required />
-                    <Field label="Last Name" value={editMode ? editData.customer_last_name : selectedDeal.customer_last_name} onChange={v => setEditData(p => ({ ...p, customer_last_name: v }))} editMode={editMode} required />
-                  </div>
-                  <Field label="Email" value={editMode ? editData.customer_email : selectedDeal.customer_email} onChange={v => setEditData(p => ({ ...p, customer_email: v }))} editMode={editMode} required />
-                  <div className="grid-form">
-                    <Field label="Phone" value={editMode ? editData.customer_phone : selectedDeal.customer_phone} onChange={v => setEditData(p => ({ ...p, customer_phone: v }))} editMode={editMode} />
-                    <Field label="Title" value={editMode ? editData.customer_job_title : selectedDeal.customer_job_title} onChange={v => setEditData(p => ({ ...p, customer_job_title: v }))} editMode={editMode} />
-                  </div>
-                </Section>
-
-                <Section title="Partner">
-                  <Field label="Name" value={editMode ? editData.ta_full_name : selectedDeal.ta_full_name} onChange={v => setEditData(p => ({ ...p, ta_full_name: v }))} editMode={editMode} required />
-                  <Field label="Company" value={editMode ? editData.ta_company_name : selectedDeal.ta_company_name} onChange={v => setEditData(p => ({ ...p, ta_company_name: v }))} editMode={editMode} required />
-                  <div className="grid-form">
-                    <Field label="Email" value={editMode ? editData.ta_email : selectedDeal.ta_email} onChange={v => setEditData(p => ({ ...p, ta_email: v }))} editMode={editMode} required />
-                    <Field label="Phone" value={editMode ? editData.ta_phone : selectedDeal.ta_phone} onChange={v => setEditData(p => ({ ...p, ta_phone: v }))} editMode={editMode} />
-                  </div>
-                </Section>
-
-                <Section title="TSD">
-                  {editMode ? (
-                    <div className="form-group">
-                      <label className="form-label">TSD <span style={{ color: 'var(--error-500)' }}>*</span></label>
-                      <select value={editData.tsd_name || ''} onChange={e => setEditData(p => ({ ...p, tsd_name: e.target.value }))} className="form-input form-select">
-                        <option value="">Select TSD...</option>
-                        {TSD_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                      </select>
+                {/* Main Grid Layout */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                  {/* Customer Section */}
+                  <div style={{ gridColumn: '1 / 2', border: `1px solid ${colors.border}`, borderRadius: 8, overflow: 'hidden' }}>
+                    <div style={{ padding: '10px 16px', backgroundColor: colors.bg, borderBottom: `1px solid ${colors.border}` }}>
+                      <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: colors.text, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Customer</h3>
                     </div>
-                  ) : (
-                    <Field label="TSD" value={selectedDeal.tsd_name} onChange={() => {}} editMode={false} required />
-                  )}
-                </Section>
-
-                <Section title="Opportunity">
-                  <div className="grid-form">
-                    {editMode ? (
-                      <>
-                        <div className="form-group">
-                          <label className="form-label">Agents</label>
-                          <select value={editData.agent_count || ''} onChange={e => setEditData(p => ({ ...p, agent_count: e.target.value }))} className="form-input form-select">
-                            <option value="">Select...</option>
-                            {AGENT_COUNT_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-                          </select>
-                        </div>
-                        <div className="form-group">
-                          <label className="form-label">Timeline</label>
-                          <select value={editData.implementation_timeline || ''} onChange={e => setEditData(p => ({ ...p, implementation_timeline: e.target.value }))} className="form-input form-select">
-                            <option value="">Select...</option>
-                            {TIMELINE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-                          </select>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <Field label="Agents" value={selectedDeal.agent_count} onChange={() => {}} editMode={false} />
-                        <Field label="Timeline" value={selectedDeal.implementation_timeline} onChange={() => {}} editMode={false} />
-                      </>
-                    )}
+                    <div style={{ padding: 16 }}>
+                      <GridField label="Company" value={editMode ? editData.customer_company_name : selectedDeal.customer_company_name} onChange={v => setEditData(p => ({ ...p, customer_company_name: v }))} editMode={editMode} required />
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                        <GridField label="First Name" value={editMode ? editData.customer_first_name : selectedDeal.customer_first_name} onChange={v => setEditData(p => ({ ...p, customer_first_name: v }))} editMode={editMode} required />
+                        <GridField label="Last Name" value={editMode ? editData.customer_last_name : selectedDeal.customer_last_name} onChange={v => setEditData(p => ({ ...p, customer_last_name: v }))} editMode={editMode} required />
+                      </div>
+                      <GridField label="Email" value={editMode ? editData.customer_email : selectedDeal.customer_email} onChange={v => setEditData(p => ({ ...p, customer_email: v }))} editMode={editMode} required />
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                        <GridField label="Phone" value={editMode ? editData.customer_phone : selectedDeal.customer_phone} onChange={v => setEditData(p => ({ ...p, customer_phone: v }))} editMode={editMode} />
+                        <GridField label="Job Title" value={editMode ? editData.customer_job_title : selectedDeal.customer_job_title} onChange={v => setEditData(p => ({ ...p, customer_job_title: v }))} editMode={editMode} />
+                      </div>
+                    </div>
                   </div>
-                  {editMode ? (
-                    <div className="form-group">
-                      <label className="form-label">Solutions</label>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                        {SOLUTIONS_OPTIONS.map(s => {
-                          const selected = (editData.solutions_interested || []).includes(s)
-                          return (
-                            <button
-                              key={s}
-                              type="button"
-                              onClick={() => {
-                                const current = editData.solutions_interested || []
-                                setEditData(p => ({ ...p, solutions_interested: selected ? current.filter(x => x !== s) : [...current, s] }))
-                              }}
-                              className="btn"
-                              style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', backgroundColor: selected ? 'var(--primary-600)' : 'var(--background-subtle)', color: selected ? 'white' : 'var(--foreground)', border: 'none' }}
+
+                  {/* Partner Section */}
+                  <div style={{ gridColumn: '2 / 3', border: `1px solid ${colors.border}`, borderRadius: 8, overflow: 'hidden' }}>
+                    <div style={{ padding: '10px 16px', backgroundColor: colors.purpleLight, borderBottom: `1px solid ${colors.border}` }}>
+                      <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: colors.purple, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Partner / TA</h3>
+                    </div>
+                    <div style={{ padding: 16 }}>
+                      <GridField label="Name" value={editMode ? editData.ta_full_name : selectedDeal.ta_full_name} onChange={v => setEditData(p => ({ ...p, ta_full_name: v }))} editMode={editMode} required />
+                      <GridField label="Company" value={editMode ? editData.ta_company_name : selectedDeal.ta_company_name} onChange={v => setEditData(p => ({ ...p, ta_company_name: v }))} editMode={editMode} required />
+                      <GridField label="Email" value={editMode ? editData.ta_email : selectedDeal.ta_email} onChange={v => setEditData(p => ({ ...p, ta_email: v }))} editMode={editMode} required />
+                      <GridField label="Phone" value={editMode ? editData.ta_phone : selectedDeal.ta_phone} onChange={v => setEditData(p => ({ ...p, ta_phone: v }))} editMode={editMode} />
+                    </div>
+                  </div>
+
+                  {/* TSD Section */}
+                  <div style={{ gridColumn: '1 / 3', border: `1px solid ${colors.border}`, borderRadius: 8, overflow: 'hidden' }}>
+                    <div style={{ padding: '10px 16px', backgroundColor: colors.bg, borderBottom: `1px solid ${colors.border}` }}>
+                      <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: colors.text, textTransform: 'uppercase', letterSpacing: '0.5px' }}>TSD</h3>
+                    </div>
+                    <div style={{ padding: 16 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                        {editMode ? (
+                          <div style={{ marginBottom: 12 }}>
+                            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>
+                              TSD <span style={{ color: colors.error }}>*</span>
+                            </label>
+                            <select
+                              value={editData.tsd_name || ''}
+                              onChange={e => setEditData(p => ({ ...p, tsd_name: e.target.value }))}
+                              style={{ width: '100%', padding: '8px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
                             >
-                              {s}
-                            </button>
-                          )
-                        })}
+                              <option value="">Select TSD...</option>
+                              {TSD_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                          </div>
+                        ) : (
+                          <GridField label="TSD" value={selectedDeal.tsd_name} onChange={() => {}} editMode={false} required />
+                        )}
+                        <GridField label="Contact Name" value={editMode ? editData.tsd_contact_name : selectedDeal.tsd_contact_name} onChange={v => setEditData(p => ({ ...p, tsd_contact_name: v }))} editMode={editMode} />
+                        <GridField label="Contact Email" value={editMode ? editData.tsd_contact_email : selectedDeal.tsd_contact_email} onChange={v => setEditData(p => ({ ...p, tsd_contact_email: v }))} editMode={editMode} />
                       </div>
                     </div>
-                  ) : (
-                    <div className="form-group">
-                      <label className="form-label">Solutions</label>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                        {(selectedDeal.solutions_interested || []).length > 0 ?
-                          selectedDeal.solutions_interested!.map(s => (
-                            <span key={s} style={{ padding: '0.25rem 0.5rem', backgroundColor: 'var(--primary-100)', color: 'var(--primary-700)', borderRadius: '0.25rem', fontSize: '0.75rem' }}>{s}</span>
-                          )) :
-                          <span style={{ color: 'var(--foreground-muted)' }}>-</span>
-                        }
+                  </div>
+
+                  {/* Opportunity Section */}
+                  <div style={{ gridColumn: '1 / 3', border: `1px solid ${colors.border}`, borderRadius: 8, overflow: 'hidden' }}>
+                    <div style={{ padding: '10px 16px', backgroundColor: colors.successLight, borderBottom: `1px solid ${colors.border}` }}>
+                      <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: colors.successText, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Opportunity</h3>
+                    </div>
+                    <div style={{ padding: 16 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                        {editMode ? (
+                          <>
+                            <div>
+                              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>Agents</label>
+                              <select
+                                value={editData.agent_count || ''}
+                                onChange={e => setEditData(p => ({ ...p, agent_count: e.target.value }))}
+                                style={{ width: '100%', padding: '8px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                              >
+                                <option value="">Select...</option>
+                                {AGENT_COUNT_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>Timeline</label>
+                              <select
+                                value={editData.implementation_timeline || ''}
+                                onChange={e => setEditData(p => ({ ...p, implementation_timeline: e.target.value }))}
+                                style={{ width: '100%', padding: '8px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                              >
+                                <option value="">Select...</option>
+                                {TIMELINE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                              </select>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <GridField label="Agents" value={selectedDeal.agent_count} onChange={() => {}} editMode={false} />
+                            <GridField label="Timeline" value={selectedDeal.implementation_timeline} onChange={() => {}} editMode={false} />
+                          </>
+                        )}
                       </div>
+
+                      {/* Solutions - Now Required */}
+                      <div style={{ marginBottom: 16 }}>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 8, textTransform: 'uppercase' }}>
+                          Solutions <span style={{ color: colors.error }}>*</span>
+                        </label>
+                        {editMode ? (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                            {SOLUTIONS_OPTIONS.map(s => {
+                              const selected = (editData.solutions_interested || []).includes(s)
+                              return (
+                                <button
+                                  key={s}
+                                  type="button"
+                                  onClick={() => {
+                                    const current = editData.solutions_interested || []
+                                    setEditData(p => ({ ...p, solutions_interested: selected ? current.filter(x => x !== s) : [...current, s] }))
+                                  }}
+                                  style={{
+                                    padding: '6px 12px',
+                                    fontSize: 13,
+                                    backgroundColor: selected ? colors.primary : colors.white,
+                                    color: selected ? colors.white : colors.text,
+                                    border: `1px solid ${selected ? colors.primary : colors.border}`,
+                                    borderRadius: 6,
+                                    cursor: 'pointer',
+                                  }}
+                                >
+                                  {s}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            {(selectedDeal.solutions_interested || []).length > 0 ?
+                              selectedDeal.solutions_interested!.map(s => (
+                                <span key={s} style={{ padding: '4px 10px', backgroundColor: colors.primaryLight, color: colors.primaryText, borderRadius: 4, fontSize: 13, fontWeight: 500 }}>{s}</span>
+                              )) :
+                              <span style={{ color: colors.textMuted, fontSize: 14 }}>No solutions selected</span>
+                            }
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Notes */}
+                      {editMode ? (
+                        <div>
+                          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>Notes</label>
+                          <textarea
+                            value={editData.opportunity_description || ''}
+                            onChange={e => setEditData(p => ({ ...p, opportunity_description: e.target.value }))}
+                            rows={3}
+                            style={{ width: '100%', padding: '8px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, resize: 'vertical' }}
+                          />
+                        </div>
+                      ) : selectedDeal.opportunity_description && (
+                        <div>
+                          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>Notes</label>
+                          <p style={{ fontSize: 14, color: colors.text, margin: 0, lineHeight: 1.5 }}>{selectedDeal.opportunity_description}</p>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {editMode ? (
-                    <div className="form-group">
-                      <label className="form-label">Notes</label>
-                      <textarea value={editData.opportunity_description || ''} onChange={e => setEditData(p => ({ ...p, opportunity_description: e.target.value }))} rows={2} className="form-input form-textarea" />
-                    </div>
-                  ) : selectedDeal.opportunity_description && (
-                    <div className="form-group">
-                      <label className="form-label">Notes</label>
-                      <p style={{ fontSize: '0.875rem', color: 'var(--foreground)' }}>{selectedDeal.opportunity_description}</p>
-                    </div>
-                  )}
-                </Section>
+                  </div>
+                </div>
               </div>
 
               {/* Actions Footer */}
-              <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--background-subtle)' }}>
+              <div style={{ padding: '16px 24px', borderTop: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
                 {editMode ? (
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button onClick={() => setEditMode(false)} className="btn btn-secondary" style={{ flex: 1 }}>Cancel</button>
-                    <button onClick={handleSave} disabled={saving} className="btn btn-primary" style={{ flex: 1 }}>{saving ? 'Saving...' : 'Save'}</button>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <button onClick={() => setEditMode(false)} style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.white, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>Cancel</button>
+                    <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.primary, color: colors.white, border: 'none', borderRadius: 6, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? 'Saving...' : 'Save Changes'}</button>
                   </div>
                 ) : selectedDeal.status === 'completed' || selectedDeal.status === 'rejected' ? (
-                  <p style={{ textAlign: 'center', color: 'var(--foreground-muted)', fontSize: '0.875rem' }}>
+                  <p style={{ textAlign: 'center', color: colors.textMuted, fontSize: 14, margin: 0 }}>
                     {selectedDeal.status === 'completed' ? 'Sent to HubSpot' : 'Rejected'}
                   </p>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <button onClick={handleSendToHubSpot} disabled={!canSend || sendingToHubSpot} className="btn" style={{ width: '100%', backgroundColor: canSend ? 'var(--success-500)' : 'var(--gray-300)', color: 'white', cursor: canSend ? 'pointer' : 'not-allowed' }}>
-                      {sendingToHubSpot ? 'Sending...' : canSend ? 'Send to HubSpot' : 'Complete required fields'}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <button
+                      onClick={handleSendToHubSpot}
+                      disabled={!canSend || sendingToHubSpot}
+                      style={{
+                        width: '100%',
+                        padding: '12px 20px',
+                        fontSize: 14,
+                        fontWeight: 600,
+                        backgroundColor: canSend ? colors.success : '#d1d5db',
+                        color: colors.white,
+                        border: 'none',
+                        borderRadius: 6,
+                        cursor: canSend ? 'pointer' : 'not-allowed'
+                      }}
+                    >
+                      {sendingToHubSpot ? 'Sending...' : canSend ? 'Send to HubSpot' : 'Complete required fields to send'}
                     </button>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button onClick={() => { setEditMode(true); setEditData({ ...selectedDeal }) }} className="btn btn-secondary" style={{ flex: 1 }}>Edit</button>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <button onClick={() => { setEditMode(true); setEditData({ ...selectedDeal }) }} style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.white, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>Edit</button>
                       {selectedDeal.type === 'email_intake' && (
-                        <button onClick={handleRequestInfo} className="btn" style={{ flex: 1, backgroundColor: 'var(--warning-50)', color: 'var(--warning-600)', border: '1px solid var(--warning-500)' }}>Request Info</button>
+                        <button onClick={handleRequestInfo} style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.warningLight, color: colors.warningText, border: `1px solid ${colors.warning}`, borderRadius: 6, cursor: 'pointer' }}>Request Info</button>
                       )}
-                      <button onClick={handleReject} className="btn" style={{ backgroundColor: 'var(--error-50)', color: 'var(--error-600)', border: '1px solid var(--error-500)' }}>Reject</button>
+                      <button onClick={handleReject} style={{ padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.errorLight, color: colors.errorText, border: `1px solid ${colors.error}`, borderRadius: 6, cursor: 'pointer' }}>Reject</button>
                     </div>
                   </div>
                 )}
@@ -667,31 +780,43 @@ export default function AdminDashboard() {
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div style={{ marginBottom: '1.5rem' }}>
-      <h3 style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--foreground-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>{title}</h3>
-      {children}
-    </div>
-  )
-}
-
-function Field({ label, value, onChange, editMode, required }: { label: string; value: string | undefined; onChange: (v: string) => void; editMode: boolean; required?: boolean }) {
+function GridField({ label, value, onChange, editMode, required }: { label: string; value: string | undefined; onChange: (v: string) => void; editMode: boolean; required?: boolean }) {
   const empty = !value || value.trim() === ''
+  const colors = {
+    text: '#1e293b',
+    textMuted: '#64748b',
+    border: '#e2e8f0',
+    error: '#dc2626',
+    white: '#ffffff',
+  }
 
   if (editMode) {
     return (
-      <div className="form-group">
-        <label className="form-label">{label}{required && <span style={{ color: 'var(--error-500)' }}> *</span>}</label>
-        <input type="text" value={value || ''} onChange={e => onChange(e.target.value)} className="form-input" style={{ borderColor: required && empty ? 'var(--error-500)' : undefined }} />
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>
+          {label}{required && <span style={{ color: colors.error }}> *</span>}
+        </label>
+        <input
+          type="text"
+          value={value || ''}
+          onChange={e => onChange(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '8px 12px',
+            fontSize: 14,
+            border: `1px solid ${required && empty ? colors.error : colors.border}`,
+            borderRadius: 6,
+            backgroundColor: colors.white
+          }}
+        />
       </div>
     )
   }
 
   return (
-    <div className="form-group">
-      <label className="form-label">{label}</label>
-      <p style={{ fontSize: '0.875rem', color: empty ? 'var(--foreground-muted)' : 'var(--foreground)' }}>{value || '-'}</p>
+    <div style={{ marginBottom: 12 }}>
+      <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 4, textTransform: 'uppercase' }}>{label}</label>
+      <p style={{ fontSize: 14, color: empty ? colors.textMuted : colors.text, margin: 0 }}>{value || '-'}</p>
     </div>
   )
 }
