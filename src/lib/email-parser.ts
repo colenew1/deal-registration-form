@@ -56,6 +56,9 @@ export interface EmailParseResult {
   warnings: string[]
 }
 
+// Amplifai internal email domain - emails from this domain are forwarded by internal staff
+const AMPLIFAI_DOMAIN = '@amplifai.com'
+
 // Known TSD/Partner names for fuzzy matching
 const KNOWN_TSDS = [
   'Avant', 'Telarus', 'Intelisys', 'Sandler Partners', 'AppSmart',
@@ -510,39 +513,80 @@ function cleanEmailText(text: string): string {
 
 /**
  * Parse forwarded email to extract original sender info
+ * Now enhanced to handle multiple forward patterns and extract company info
  */
 function parseForwardedEmail(text: string): {
-  originalFrom: { name: string | null, email: string | null }
+  originalFrom: { name: string | null, email: string | null, company: string | null, phone: string | null }
   originalSubject: string | null
   body: string
 } {
-  // Common forward patterns
+  // Common forward patterns - ordered by specificity
   const forwardPatterns = [
     // Gmail forward
-    /---------- Forwarded message ---------\s*From:\s*([^\n<]+?)(?:\s*<([^>]+)>)?\s*Date:.*?\s*Subject:\s*([^\n]+)/i,
-    // Outlook forward
-    /From:\s*([^\n<]+?)(?:\s*<([^>]+)>)?\s*Sent:.*?\s*To:.*?\s*Subject:\s*([^\n]+)/i,
-    // Generic forward
-    /From:\s*([^\n<]+?)(?:\s*<([^>]+)>)?[\s\S]*?Subject:\s*([^\n]+)/i,
+    /---------- Forwarded message ---------[\s\S]*?From:\s*([^\n<]+?)(?:\s*<([^>]+)>)?[\s\S]*?Date:[\s\S]*?Subject:\s*([^\n]+)/i,
+    // Outlook forward with From/Sent/To/Subject
+    /(?:-----Original Message-----|_{10,})[\s\S]*?From:\s*([^\n<]+?)(?:\s*<([^>]+)>)?[\s\S]*?Sent:[\s\S]*?To:[\s\S]*?Subject:\s*([^\n]+)/i,
+    // Outlook forward (different format)
+    /From:\s*([^\n<]+?)\s*\[mailto:([^\]]+)\][\s\S]*?Subject:\s*([^\n]+)/i,
+    // Simple From: header in forwarded content (not at start of email)
+    /(?:^|\n)From:\s*([^\n<]+?)(?:\s*<([^>]+)>)?\s*(?:Date|Sent):/im,
   ]
+
+  let originalFrom: { name: string | null, email: string | null, company: string | null, phone: string | null } = {
+    name: null,
+    email: null,
+    company: null,
+    phone: null
+  }
+  let originalSubject: string | null = null
 
   for (const pattern of forwardPatterns) {
     const match = text.match(pattern)
     if (match) {
-      return {
-        originalFrom: {
-          name: match[1]?.trim() || null,
-          email: match[2]?.trim() || null
-        },
-        originalSubject: match[3]?.trim() || null,
-        body: text
+      const name = match[1]?.trim() || null
+      const email = match[2]?.trim() || null
+      originalSubject = match[3]?.trim() || null
+
+      // Extract company from email domain
+      let company: string | null = null
+      if (email) {
+        const domainMatch = email.match(/@([^.]+)/)
+        if (domainMatch) {
+          const domain = domainMatch[1].toLowerCase()
+          // Skip common email providers
+          if (!['gmail', 'yahoo', 'hotmail', 'outlook', 'icloud', 'aol', 'amplifai'].includes(domain)) {
+            company = domain.charAt(0).toUpperCase() + domain.slice(1)
+          }
+        }
       }
+
+      originalFrom = { name, email, company, phone: null }
+      break
+    }
+  }
+
+  // Try to extract phone from signature near the original sender
+  // Look for phone patterns after the From: line in forwarded content
+  if (originalFrom.name || originalFrom.email) {
+    const phoneInForward = text.match(/(?:cell|mobile|phone|tel|d\.?)[:.]?\s*(\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4})/i)
+    if (phoneInForward) {
+      originalFrom.phone = phoneInForward[1]
+    }
+  }
+
+  // Also look for signature blocks that might have company name
+  if (!originalFrom.company && originalFrom.name) {
+    // Look for company name in signature (Name\nCompany Name pattern)
+    const sigPattern = new RegExp(`${originalFrom.name.split(' ')[0]}[\\s\\S]{0,100}?\\n([A-Z][A-Za-z\\s&]+(?:Inc|LLC|Corp|Ltd|Partners|Consulting|Solutions|Advisors|Group)?)\\.?\\s*\\n`, 'i')
+    const sigMatch = text.match(sigPattern)
+    if (sigMatch) {
+      originalFrom.company = sigMatch[1].trim()
     }
   }
 
   return {
-    originalFrom: { name: null, email: null },
-    originalSubject: null,
+    originalFrom,
+    originalSubject,
     body: text
   }
 }
@@ -596,10 +640,13 @@ export function parseEmail(
     deal_value: null
   }
 
+  // --- Check if email sender is from Amplifai (internal forwarder) ---
+  const senderIsAmplifai = emailFrom?.toLowerCase().includes(AMPLIFAI_DOMAIN.toLowerCase()) || false
+
   // --- Check if email sender is from a TSD (like Avant, Telarus, etc.) ---
   // If so, they're the TSD contact, not the Partner/TA
   let senderIsTsd = false
-  if (emailFrom) {
+  if (emailFrom && !senderIsAmplifai) {
     const senderDomain = emailFrom.toLowerCase()
     // Common TSD domains
     const tsdDomains = ['goavant.net', 'avant.com', 'telarus.com', 'intelisys.com', 'sandlerpartners.com', 'appsmart.com', 'tbicom.com']
@@ -613,7 +660,27 @@ export function parseEmail(
   const opportunitySection = extractSectionContent(searchText, ['Opportunity', 'Opportunity Info', 'Opp Info', 'Opp'])
 
   // --- Extract Partner/TA Information ---
-  if (partnerSection.length > 0) {
+  // Priority: 1) Forwarded sender (if from Amplifai), 2) Structured partner section, 3) Email sender (if not TSD)
+
+  // If email is from Amplifai, the TA is the ORIGINAL sender in the forwarded content
+  if (senderIsAmplifai && (forwardedInfo.originalFrom.name || forwardedInfo.originalFrom.email)) {
+    if (forwardedInfo.originalFrom.name) {
+      data.ta_full_name = forwardedInfo.originalFrom.name
+      confidence.ta_full_name = 90
+    }
+    if (forwardedInfo.originalFrom.email) {
+      data.ta_email = forwardedInfo.originalFrom.email
+      confidence.ta_email = 90
+    }
+    if (forwardedInfo.originalFrom.company) {
+      data.ta_company_name = forwardedInfo.originalFrom.company
+      confidence.ta_company_name = 75
+    }
+    if (forwardedInfo.originalFrom.phone) {
+      data.ta_phone = forwardedInfo.originalFrom.phone
+      confidence.ta_phone = 80
+    }
+  } else if (partnerSection.length > 0) {
     // Parse structured partner section
     const partnerInfo = parsePartnerSection(partnerSection)
     if (partnerInfo.companyName) {
@@ -632,8 +699,8 @@ export function parseEmail(
       data.ta_phone = partnerInfo.contactPhone
       confidence.ta_phone = 85
     }
-  } else if (!senderIsTsd) {
-    // Fall back to using email sender as TA (only if sender is not from TSD)
+  } else if (!senderIsTsd && !senderIsAmplifai) {
+    // Fall back to using email sender as TA (only if sender is not from TSD or Amplifai)
     if (emailFromName) {
       const nameParts = emailFromName.trim().split(/\s+/)
       if (nameParts.length >= 2) {

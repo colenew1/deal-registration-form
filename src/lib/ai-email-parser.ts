@@ -10,22 +10,33 @@ import { ParsedEmailData, EmailParseResult, ConfidenceScores } from './email-par
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
+// Amplifai internal email domain - emails from this domain are forwarded by internal staff
+const AMPLIFAI_DOMAIN = '@amplifai.com'
+
 /**
  * System prompt for the AI parser
  */
 const SYSTEM_PROMPT = `You are an expert at extracting structured data from business emails about deal registrations.
 
+CRITICAL CONTEXT: These emails are ALWAYS forwarded by an internal Amplifai channel team member (@amplifai.com). The Amplifai employee is NOT the Partner/TA - they are just forwarding the email. You must look INSIDE the forwarded content to find the actual Partner/TA who originally sent the deal registration.
+
+Look for forwarded email patterns like:
+- "---------- Forwarded message ---------" (Gmail)
+- "-----Original Message-----" (Outlook)
+- "From: [Name] <email>" headers inside the body
+- Email signatures at the bottom of forwarded content
+
 Extract the following fields from the email. Return ONLY valid JSON with these exact field names:
 
 {
-  "ta_full_name": "Partner/TA contact's full name",
-  "ta_email": "Partner/TA email address",
-  "ta_phone": "Partner/TA phone number",
-  "ta_company_name": "Partner/TA company name (e.g., SHI, CDW, ATC)",
+  "ta_full_name": "Partner/TA contact's full name (the ORIGINAL sender in forwarded content, NOT the @amplifai.com forwarder)",
+  "ta_email": "Partner/TA email address (look in forwarded From: header or signature, NOT @amplifai.com)",
+  "ta_phone": "Partner/TA phone number (from signature in forwarded content)",
+  "ta_company_name": "Partner/TA company name (from signature or email domain, e.g., TechPartners, CloudAdvisors)",
 
-  "tsd_name": "TSD/Distributor name (e.g., Avant, Telarus, Intelisys)",
-  "tsd_contact_name": "TSD contact's full name",
-  "tsd_contact_email": "TSD contact's email",
+  "tsd_name": "TSD/Distributor name - MUST be one of: Avant, Telarus, Intelisys, Sandler Partners, AppSmart, TBI, Bridgepointe, or Other",
+  "tsd_contact_name": "TSD contact's full name (if mentioned)",
+  "tsd_contact_email": "TSD contact's email (if mentioned)",
 
   "customer_first_name": "End customer contact's first name",
   "customer_last_name": "End customer contact's last name",
@@ -46,14 +57,15 @@ Extract the following fields from the email. Return ONLY valid JSON with these e
 }
 
 Important rules:
-- The email sender (From field) is often the TSD contact, NOT the Partner/TA
-- Look for labeled sections like "Partner Info:", "Customer Info:", "Opportunity Info:"
-- Partner/TA is the reseller/VAR (like SHI, CDW, ATC) - NOT the TSD/distributor
-- TSD is the distributor (like Avant, Telarus, Intelisys)
+- IGNORE @amplifai.com addresses - these are internal staff who forwarded the email, NOT the Partner/TA
+- The Partner/TA is the ORIGINAL sender found in the forwarded email content (From: header or signature)
+- Look for forwarded message headers to find the original sender's name, email, and company
+- Partner/TA company can often be extracted from their email domain or signature
+- TSD is the distributor (Avant, Telarus, Intelisys, Sandler Partners, AppSmart, TBI, Bridgepointe)
 - If a field cannot be found, use null
-- For agent_count, convert numbers like "75 users" to the appropriate range ("50-100")
+- For agent_count, convert numbers like "75 users" to the appropriate range ("50-100"). Numbers like "150-200" should become "101 to 249", "~800" should become "500 to 999", etc.
 - Clean up email addresses and phone numbers (remove extra text)
-- For solutions_interested, ONLY include solutions that are explicitly mentioned or clearly implied. Valid options are: Performance Management, Coaching, Conversation Intelligence & Analytics, Data Consolidation for CX, AutoQA / QA, Gamification. Use "Other" ONLY if a specific non-standard solution is explicitly mentioned (like language translation). If no solutions are mentioned, return an empty array []. Do NOT default to "Other" just because you couldn't identify a specific solution.
+- For solutions_interested, ONLY include solutions that are explicitly mentioned or clearly implied. Valid options are: Performance Management, Coaching, Conversation Intelligence & Analytics, Data Consolidation for CX, AutoQA / QA, Gamification. Use "Other" ONLY if a specific non-standard solution is explicitly mentioned. If no solutions are mentioned, return an empty array [].
 
 Return ONLY the JSON object, no other text.`
 
@@ -72,10 +84,16 @@ export async function parseEmailWithAI(
   }
 
   try {
+    // Check if sender is from Amplifai (internal forwarder)
+    const isAmplifaiForwarder = emailFrom?.toLowerCase().includes(AMPLIFAI_DOMAIN.toLowerCase()) || false
+
     // Build the user prompt with all available context
     let userPrompt = ''
     if (emailFromName || emailFrom) {
       userPrompt += `From: ${emailFromName || ''} <${emailFrom || ''}>\n`
+      if (isAmplifaiForwarder) {
+        userPrompt += `[NOTE: This is an INTERNAL Amplifai employee forwarding the email. Look for the ORIGINAL sender in the forwarded content below - that person is the Partner/TA.]\n`
+      }
     }
     if (emailSubject) {
       userPrompt += `Subject: ${emailSubject}\n`
