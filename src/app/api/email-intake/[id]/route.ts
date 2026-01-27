@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createApiClient } from '@/lib/supabase-server'
+import { createApiClient, createAdminClient } from '@/lib/supabase-server'
 
 export async function GET(
   request: NextRequest,
@@ -89,7 +89,16 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
-    const supabase = createApiClient()
+
+    // Use admin client to bypass RLS for delete operations
+    let supabase
+    try {
+      supabase = createAdminClient()
+    } catch {
+      // Fall back to API client if service role key not configured
+      console.warn('Service role key not configured, using anon key for delete')
+      supabase = createApiClient()
+    }
 
     const { error } = await supabase
       .from('email_intakes')
@@ -105,7 +114,7 @@ export async function DELETE(
   } catch (err) {
     console.error('Error deleting email intake:', err)
     return NextResponse.json(
-      { error: 'Failed to delete email intake' },
+      { error: 'Failed to delete email intake', details: err instanceof Error ? err.message : 'Unknown error' },
       { status: 500 }
     )
   }
