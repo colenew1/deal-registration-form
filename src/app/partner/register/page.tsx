@@ -178,7 +178,7 @@ export default function PartnerRegister() {
                     required
                     placeholder="John Smith"
                     disabled={isLoading}
-                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white, color: colors.text }}
                   />
                 </div>
                 <div>
@@ -193,7 +193,7 @@ export default function PartnerRegister() {
                     required
                     placeholder="Acme Corp"
                     disabled={isLoading}
-                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white, color: colors.text }}
                   />
                 </div>
               </div>
@@ -211,7 +211,7 @@ export default function PartnerRegister() {
                     required
                     placeholder="you@company.com"
                     disabled={isLoading}
-                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white, color: colors.text }}
                   />
                 </div>
                 <div>
@@ -225,7 +225,7 @@ export default function PartnerRegister() {
                     onChange={handleChange}
                     placeholder="(555) 123-4567"
                     disabled={isLoading}
-                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white, color: colors.text }}
                   />
                 </div>
               </div>
@@ -239,7 +239,7 @@ export default function PartnerRegister() {
                   value={formData.tsd_name}
                   onChange={handleChange}
                   disabled={isLoading}
-                  style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                  style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white, color: colors.text }}
                 >
                   <option value="">Select your TSD (optional)</option>
                   {TSD_OPTIONS.map(tsd => (
@@ -262,7 +262,7 @@ export default function PartnerRegister() {
                     placeholder="••••••••"
                     minLength={8}
                     disabled={isLoading}
-                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white, color: colors.text }}
                   />
                   <p style={{ marginTop: 4, fontSize: 11, color: colors.textMuted }}>Minimum 8 characters</p>
                 </div>
@@ -278,7 +278,7 @@ export default function PartnerRegister() {
                     required
                     placeholder="••••••••"
                     disabled={isLoading}
-                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white, color: colors.text }}
                   />
                 </div>
               </div>

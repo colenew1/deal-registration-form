@@ -300,7 +300,7 @@ export default function AdminUsersPage() {
                     onChange={(e) => setNewUser(prev => ({ ...prev, full_name: e.target.value }))}
                     required
                     placeholder="John Smith"
-                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white, color: colors.text }}
                   />
                 </div>
 
@@ -314,7 +314,7 @@ export default function AdminUsersPage() {
                     onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
                     required
                     placeholder="user@example.com"
-                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white, color: colors.text }}
                   />
                 </div>
 
@@ -329,7 +329,7 @@ export default function AdminUsersPage() {
                     required
                     minLength={8}
                     placeholder="Minimum 8 characters"
-                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white, color: colors.text }}
                   />
                 </div>
 
@@ -340,7 +340,7 @@ export default function AdminUsersPage() {
                   <select
                     value={newUser.role}
                     onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value as 'admin' | 'partner' }))}
-                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white, color: colors.text }}
                   >
                     <option value="partner">Partner</option>
                     <option value="admin">Admin</option>
