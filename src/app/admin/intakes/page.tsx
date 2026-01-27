@@ -18,7 +18,7 @@ const TSD_OPTIONS = [
   'Other',
 ]
 
-const ZAPIER_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/17726959/uqc71fo/'
+const ZAPIER_WEBHOOK_URL = process.env.NEXT_PUBLIC_ZAPIER_WEBHOOK_URL || ''
 
 export default function AdminIntakesPage() {
   const router = useRouter()
@@ -138,6 +138,10 @@ export default function AdminIntakesPage() {
 
   const handleApproveAndSendToHubspot = async () => {
     if (!selectedIntake) return
+    if (!ZAPIER_WEBHOOK_URL) {
+      alert('Zapier webhook URL not configured. Please add NEXT_PUBLIC_ZAPIER_WEBHOOK_URL to environment variables.')
+      return
+    }
     setSendingToZapier(true)
 
     try {

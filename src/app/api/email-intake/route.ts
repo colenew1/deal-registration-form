@@ -51,6 +51,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createApiClient } from '@/lib/supabase-server'
 import { parseEmail } from '@/lib/email-parser'
+import { parseEmailWithAI, isAIParsingAvailable } from '@/lib/ai-email-parser'
 
 // Optional: Add a secret token for basic security
 // Set this in your environment variables and configure in Zapier
@@ -119,9 +120,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Parse the email content
+    // Parse the email content - try AI first, fallback to regex
     const emailContent = bodyPlain || bodyHtml
-    const parseResult = parseEmail(emailContent, fromEmail, fromName, subject)
+    let parseResult = await parseEmailWithAI(emailContent, fromEmail, fromName, subject)
+    let parsingMethod = 'ai'
+
+    // Fallback to regex parser if AI is not available or fails
+    if (!parseResult) {
+      parseResult = parseEmail(emailContent, fromEmail, fromName, subject)
+      parsingMethod = 'regex'
+      console.log('Using regex parser (AI not available or failed)')
+    } else {
+      console.log('Using AI parser')
+    }
 
     // Prepare the data for Supabase
     const intakeData = {
@@ -206,6 +217,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Email intake processed successfully',
+      parsing_method: parsingMethod,
       intake_id: data.id,
       prefill_url: prefillUrl,
       extracted_data: {
