@@ -59,6 +59,13 @@ export interface EmailParseResult {
 // Amplifai internal email domain - emails from this domain are forwarded by internal staff
 const AMPLIFAI_DOMAIN = '@amplifai.com'
 
+/**
+ * Check if an email is from internal Amplifai staff
+ */
+function isInternalEmail(email: string | null | undefined): boolean {
+  return !!email && email.toLowerCase().includes(AMPLIFAI_DOMAIN.toLowerCase())
+}
+
 // Known TSD/Partner names for fuzzy matching
 const KNOWN_TSDS = [
   'Avant', 'Telarus', 'Intelisys', 'Sandler Partners', 'AppSmart',
@@ -958,6 +965,29 @@ export function parseEmail(
     }
   }
 
+  // --- Final cleanup: Remove any @amplifai.com emails that slipped through ---
+  // These are internal staff, never actual contacts
+  if (isInternalEmail(data.ta_email)) {
+    data.ta_email = null
+    data.ta_full_name = null
+    data.ta_phone = null
+    data.ta_company_name = null
+    delete confidence.ta_email
+    delete confidence.ta_full_name
+    delete confidence.ta_phone
+    delete confidence.ta_company_name
+  }
+  if (isInternalEmail(data.tsd_contact_email)) {
+    data.tsd_contact_email = null
+    data.tsd_contact_name = null
+    delete confidence.tsd_contact_email
+    delete confidence.tsd_contact_name
+  }
+  if (isInternalEmail(data.customer_email)) {
+    data.customer_email = null
+    delete confidence.customer_email
+  }
+
   // Add warnings for low confidence or missing critical fields
   if (!data.customer_company_name) {
     warnings.push('Could not extract customer company name')
@@ -967,6 +997,9 @@ export function parseEmail(
   }
   if (!data.tsd_name) {
     warnings.push('Could not identify TSD - please select manually')
+  }
+  if (!data.ta_full_name && !data.ta_email) {
+    warnings.push('Could not extract partner/TA information - check forwarded email content')
   }
 
   return {

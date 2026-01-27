@@ -18,56 +18,59 @@ const AMPLIFAI_DOMAIN = '@amplifai.com'
  */
 const SYSTEM_PROMPT = `You are an expert at extracting structured data from business emails about deal registrations.
 
-CRITICAL CONTEXT: These emails are ALWAYS forwarded by an internal Amplifai channel team member (@amplifai.com). The Amplifai employee is NOT the Partner/TA - they are just forwarding the email. You must look INSIDE the forwarded content to find the actual Partner/TA who originally sent the deal registration.
+CRITICAL: These emails are ALWAYS forwarded by an internal Amplifai employee (@amplifai.com).
+- ANY email address ending in @amplifai.com is INTERNAL STAFF - NEVER use these as Partner/TA or TSD contact
+- The Partner/TA is the person who ORIGINALLY sent the email (found in forwarded headers)
 
-Look for forwarded email patterns like:
-- "---------- Forwarded message ---------" (Gmail)
-- "-----Original Message-----" (Outlook)
-- "From: [Name] <email>" headers inside the body
-- Email signatures at the bottom of forwarded content
+HOW TO FIND THE PARTNER/TA:
+1. Look for forwarded message markers: "---------- Forwarded message ---------", "-----Original Message-----", "From:", etc.
+2. Inside the forwarded section, find "From: [Name] <email@domain.com>" - THIS is the Partner/TA
+3. Their company name comes from their email domain (e.g., tbradley@channelpros.io → company is "Channel Pros" or "ChannelPros")
+4. Look for their phone in signature blocks after their name
 
-Extract the following fields from the email. Return ONLY valid JSON with these exact field names:
+Example: If you see "From: Tom Bradley <tbradley@channelpros.io>", then:
+- ta_full_name = "Tom Bradley"
+- ta_email = "tbradley@channelpros.io"
+- ta_company_name = "Channel Pros" (derived from domain)
+
+Extract these fields. Return ONLY valid JSON:
 
 {
-  "ta_full_name": "Partner/TA contact's full name (the ORIGINAL sender in forwarded content, NOT the @amplifai.com forwarder)",
-  "ta_email": "Partner/TA email address (look in forwarded From: header or signature, NOT @amplifai.com)",
-  "ta_phone": "Partner/TA phone number (from signature in forwarded content)",
-  "ta_company_name": "Partner/TA company name (from signature or email domain, e.g., TechPartners, CloudAdvisors)",
+  "ta_full_name": "Partner/TA name from forwarded From: header (NEVER @amplifai.com person)",
+  "ta_email": "Partner/TA email from forwarded From: header (NEVER @amplifai.com)",
+  "ta_phone": "Partner/TA phone from their signature",
+  "ta_company_name": "Partner/TA company from signature or email domain",
 
-  "tsd_name": "TSD/Distributor name - MUST be one of: Avant, Telarus, Intelisys, Sandler Partners, AppSmart, TBI, Bridgepointe, or Other",
-  "tsd_contact_name": "TSD contact's full name (if mentioned)",
-  "tsd_contact_email": "TSD contact's email (if mentioned)",
+  "tsd_name": "TSD name - one of: Avant, Telarus, Intelisys, Sandler Partners, AppSmart, TBI, Bridgepointe, Other",
+  "tsd_contact_name": "TSD contact name (NEVER @amplifai.com person)",
+  "tsd_contact_email": "TSD contact email (NEVER @amplifai.com)",
 
-  "customer_first_name": "End customer contact's first name",
-  "customer_last_name": "End customer contact's last name",
-  "customer_company_name": "End customer's company name",
-  "customer_email": "End customer's email address",
-  "customer_phone": "End customer's phone number",
-  "customer_job_title": "End customer's job title (VP, Manager, etc.)",
+  "customer_first_name": "End customer first name",
+  "customer_last_name": "End customer last name",
+  "customer_company_name": "End customer company",
+  "customer_email": "End customer email",
+  "customer_phone": "End customer phone",
+  "customer_job_title": "End customer job title",
   "customer_street_address": "Street address",
   "customer_city": "City",
-  "customer_state": "State/Province (2-letter code preferred)",
-  "customer_postal_code": "ZIP/Postal code",
-  "customer_country": "Country (default to USA if US address)",
+  "customer_state": "State (2-letter)",
+  "customer_postal_code": "ZIP code",
+  "customer_country": "Country",
 
-  "agent_count": "Number of contact center agents (use ranges: 1-19, 20-49, 50-100, 101 to 249, 250 to 499, 500 to 999, 1000 to 2499, 2500 to 4999, 5000+)",
-  "implementation_timeline": "Timeline (use: 0-3 months, 4-6 months, 6-12 months, 12+ months)",
-  "solutions_interested": ["Array of solutions - ONLY if explicitly mentioned, empty array if none found"],
-  "opportunity_description": "Brief description of the opportunity, use case, or pain points"
+  "agent_count": "Use ranges: 1-19, 20-49, 50-100, 101 to 249, 250 to 499, 500 to 999, 1000 to 2499, 2500 to 4999, 5000+",
+  "implementation_timeline": "Use: 0-3 months, 4-6 months, 6-12 months, 12+ months",
+  "solutions_interested": ["Array of: Performance Management, Coaching, Conversation Intelligence & Analytics, Data Consolidation for CX, AutoQA / QA, Gamification"],
+  "opportunity_description": "Brief description"
 }
 
-Important rules:
-- IGNORE @amplifai.com addresses - these are internal staff who forwarded the email, NOT the Partner/TA
-- The Partner/TA is the ORIGINAL sender found in the forwarded email content (From: header or signature)
-- Look for forwarded message headers to find the original sender's name, email, and company
-- Partner/TA company can often be extracted from their email domain or signature
-- TSD is the distributor (Avant, Telarus, Intelisys, Sandler Partners, AppSmart, TBI, Bridgepointe)
-- If a field cannot be found, use null
-- For agent_count, convert numbers like "75 users" to the appropriate range ("50-100"). Numbers like "150-200" should become "101 to 249", "~800" should become "500 to 999", etc.
-- Clean up email addresses and phone numbers (remove extra text)
-- For solutions_interested, ONLY include solutions that are explicitly mentioned or clearly implied. Valid options are: Performance Management, Coaching, Conversation Intelligence & Analytics, Data Consolidation for CX, AutoQA / QA, Gamification. Use "Other" ONLY if a specific non-standard solution is explicitly mentioned. If no solutions are mentioned, return an empty array [].
+ABSOLUTE RULES:
+1. NEVER put @amplifai.com emails in ta_email, tsd_contact_email, or customer_email - these are internal
+2. The Partner/TA is ALWAYS in the forwarded content, not the outer email sender
+3. If you can't find non-@amplifai.com Partner/TA info, return null for those fields
+4. Convert agent counts: "~2000" → "1000 to 2499", "300 seats" → "250 to 499"
+5. Solutions must match exactly from the list above
 
-Return ONLY the JSON object, no other text.`
+Return ONLY the JSON object.`
 
 /**
  * Parse email using OpenAI GPT-4o-mini
@@ -143,21 +146,34 @@ export async function parseEmailWithAI(
       return null
     }
 
-    // Build the ParsedEmailData object
+    // Helper to check if email is internal Amplifai
+    const isInternalEmail = (email: string | null | undefined): boolean => {
+      return !!email && email.toLowerCase().includes('@amplifai.com')
+    }
+
+    // Helper to clear field if it contains internal email
+    const filterInternalEmail = (email: string | null | undefined): string | null => {
+      return isInternalEmail(email) ? null : (email as string | null)
+    }
+
+    // Build the ParsedEmailData object with internal email filtering
     const data: ParsedEmailData = {
-      ta_full_name: parsed.ta_full_name as string | null,
-      ta_email: parsed.ta_email as string | null,
-      ta_phone: parsed.ta_phone as string | null,
-      ta_company_name: parsed.ta_company_name as string | null,
+      // Filter out @amplifai.com from TA fields
+      ta_full_name: isInternalEmail(parsed.ta_email as string) ? null : (parsed.ta_full_name as string | null),
+      ta_email: filterInternalEmail(parsed.ta_email as string),
+      ta_phone: isInternalEmail(parsed.ta_email as string) ? null : (parsed.ta_phone as string | null),
+      ta_company_name: isInternalEmail(parsed.ta_email as string) ? null : (parsed.ta_company_name as string | null),
 
       tsd_name: parsed.tsd_name as string | null,
-      tsd_contact_name: parsed.tsd_contact_name as string | null,
-      tsd_contact_email: parsed.tsd_contact_email as string | null,
+      // Filter out @amplifai.com from TSD contact fields
+      tsd_contact_name: isInternalEmail(parsed.tsd_contact_email as string) ? null : (parsed.tsd_contact_name as string | null),
+      tsd_contact_email: filterInternalEmail(parsed.tsd_contact_email as string),
 
       customer_first_name: parsed.customer_first_name as string | null,
       customer_last_name: parsed.customer_last_name as string | null,
       customer_company_name: parsed.customer_company_name as string | null,
-      customer_email: parsed.customer_email as string | null,
+      // Filter out @amplifai.com from customer email (shouldn't happen but just in case)
+      customer_email: filterInternalEmail(parsed.customer_email as string),
       customer_phone: parsed.customer_phone as string | null,
       customer_job_title: parsed.customer_job_title as string | null,
       customer_street_address: parsed.customer_street_address as string | null,
