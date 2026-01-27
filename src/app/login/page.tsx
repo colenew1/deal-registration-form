@@ -29,9 +29,10 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const [authState, setAuthState] = useState<'checking' | 'ready' | 'redirecting'>('checking')
 
   const supabase = useMemo(() => createClientComponentClient(), [])
+  const hasCheckedAuth = useMemo(() => ({ current: false }), [])
 
   useEffect(() => {
     if (errorParam === 'account_inactive') {
@@ -39,12 +40,16 @@ function LoginForm() {
     }
   }, [errorParam])
 
-  // Check if already logged in
+  // Check if already logged in - only run once
   useEffect(() => {
+    if (hasCheckedAuth.current) return
+    hasCheckedAuth.current = true
+
     const checkAuth = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
+          setAuthState('redirecting')
           // Get user profile to determine redirect
           const { data: profile } = await supabase
             .from('user_profiles')
@@ -57,15 +62,15 @@ function LoginForm() {
           } else {
             router.replace('/partner/dashboard')
           }
-          return // Don't set isCheckingAuth to false - we're redirecting
+          return
         }
       } catch (err) {
         console.error('Auth check error:', err)
       }
-      setIsCheckingAuth(false)
+      setAuthState('ready')
     }
     checkAuth()
-  }, [supabase, router])
+  }, [supabase, router, hasCheckedAuth])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -124,8 +129,8 @@ function LoginForm() {
     router.push('/')
   }
 
-  // Show loading while checking if user is already authenticated
-  if (isCheckingAuth) {
+  // Show loading while checking auth or redirecting
+  if (authState !== 'ready') {
     return (
       <div style={{ width: '100%', maxWidth: 400 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
