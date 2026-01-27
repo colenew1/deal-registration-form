@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+export const dynamic = 'force-dynamic'
+
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClientComponentClient } from '@/lib/supabase'
@@ -18,7 +20,7 @@ const TSD_OPTIONS = [
 
 export default function PartnerRegister() {
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = useMemo(() => createClientComponentClient(), [])
   const [formData, setFormData] = useState({
     email: '',
     password: '',

@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+export const dynamic = 'force-dynamic'
+
+import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient, DealRegistration, type UserProfile } from '@/lib/supabase'
 import Link from 'next/link'
@@ -121,7 +123,7 @@ function StatCard({
 
 export default function AdminDashboard() {
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = useMemo(() => createClientComponentClient(), [])
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isAuthChecking, setIsAuthChecking] = useState(true)
   const [registrations, setRegistrations] = useState<DealRegistration[]>([])
