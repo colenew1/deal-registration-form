@@ -29,6 +29,7 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
 
   const supabase = useMemo(() => createClientComponentClient(), [])
 
@@ -41,21 +42,27 @@ function LoginForm() {
   // Check if already logged in
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        // Get user profile to determine redirect
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single()
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          // Get user profile to determine redirect
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
 
-        if (profile?.role === 'admin') {
-          router.push('/admin')
-        } else {
-          router.push('/partner/dashboard')
+          if (profile?.role === 'admin') {
+            router.replace('/admin')
+          } else {
+            router.replace('/partner/dashboard')
+          }
+          return // Don't set isCheckingAuth to false - we're redirecting
         }
+      } catch (err) {
+        console.error('Auth check error:', err)
       }
+      setIsCheckingAuth(false)
     }
     checkAuth()
   }, [supabase, router])
@@ -97,14 +104,14 @@ function LoginForm() {
         return
       }
 
-      // Redirect based on role
+      // Redirect based on role - use replace to prevent back button loop
       if (profile?.role === 'admin') {
-        router.push('/admin')
+        router.replace('/admin')
       } else if (redirect.startsWith('/admin')) {
         // Partner trying to access admin - redirect to partner dashboard instead
-        router.push('/partner/dashboard')
+        router.replace('/partner/dashboard')
       } else {
-        router.push(redirect)
+        router.replace(redirect)
       }
     } catch (err) {
       console.error('Login error:', err)
@@ -115,6 +122,23 @@ function LoginForm() {
 
   const handleGuestContinue = () => {
     router.push('/')
+  }
+
+  // Show loading while checking if user is already authenticated
+  if (isCheckingAuth) {
+    return (
+      <div style={{ width: '100%', maxWidth: 400 }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: colors.primary, margin: 0 }}>AmplifAI</h1>
+          <p style={{ marginTop: 8, color: colors.textMuted, fontSize: 14 }}>Deal Registration Portal</p>
+        </div>
+        <div style={{ backgroundColor: colors.white, borderRadius: 12, border: `1px solid ${colors.border}`, padding: 48 }}>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <div style={{ width: 24, height: 24, border: `2px solid ${colors.primary}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -245,21 +269,13 @@ function LoginForm() {
 }
 
 function LoginLoading() {
-  const colors = {
-    bg: '#f8fafc',
-    white: '#ffffff',
-    border: '#e2e8f0',
-    primary: '#2563eb',
-    textMuted: '#64748b',
-  }
-
   return (
     <div style={{ width: '100%', maxWidth: 400 }}>
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: colors.primary, margin: 0 }}>AmplifAI</h1>
         <p style={{ marginTop: 8, color: colors.textMuted, fontSize: 14 }}>Deal Registration Portal</p>
       </div>
-      <div style={{ backgroundColor: colors.white, borderRadius: 12, border: `1px solid ${colors.border}`, padding: 32 }}>
+      <div style={{ backgroundColor: colors.white, borderRadius: 12, border: `1px solid ${colors.border}`, padding: 48 }}>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           <div style={{ width: 24, height: 24, border: `2px solid ${colors.primary}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
         </div>
@@ -270,7 +286,7 @@ function LoginLoading() {
 
 export default function LoginPage() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: colors.bg }}>
       <Suspense fallback={<LoginLoading />}>
         <LoginForm />
       </Suspense>
