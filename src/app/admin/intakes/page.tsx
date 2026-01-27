@@ -277,15 +277,20 @@ export default function AdminIntakesPage() {
     }
 
     try {
+      console.log('Deleting intake:', intakeId)
       const response = await fetch(`/api/email-intake/${intakeId}`, {
         method: 'DELETE',
       })
 
+      console.log('Delete response status:', response.status)
+      const data = await response.json()
+      console.log('Delete response data:', data)
+
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to delete')
+        throw new Error(data.error || data.details || 'Failed to delete')
       }
 
+      alert('Deleted successfully!')
       await fetchIntakes()
       setSelectedIntake(null)
       setEditMode(false)

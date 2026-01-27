@@ -89,16 +89,37 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
+    console.log('DELETE request for intake:', id)
 
     // Use admin client to bypass RLS for delete operations
     let supabase
+    let usingAdminClient = false
     try {
       supabase = createAdminClient()
-    } catch {
+      usingAdminClient = true
+      console.log('Using admin client for delete')
+    } catch (adminError) {
       // Fall back to API client if service role key not configured
-      console.warn('Service role key not configured, using anon key for delete')
+      console.warn('Service role key not configured, using anon key for delete:', adminError)
       supabase = createApiClient()
     }
+
+    // First verify the record exists
+    const { data: existing, error: fetchError } = await supabase
+      .from('email_intakes')
+      .select('id')
+      .eq('id', id)
+      .single()
+
+    if (fetchError) {
+      console.error('Error finding intake:', fetchError)
+      return NextResponse.json(
+        { error: 'Intake not found', details: fetchError.message },
+        { status: 404 }
+      )
+    }
+
+    console.log('Found intake, proceeding with delete:', existing)
 
     const { error } = await supabase
       .from('email_intakes')
@@ -107,10 +128,14 @@ export async function DELETE(
 
     if (error) {
       console.error('Supabase delete error:', error)
-      throw error
+      return NextResponse.json(
+        { error: 'Database delete failed', details: error.message, code: error.code, usingAdminClient },
+        { status: 500 }
+      )
     }
 
-    return NextResponse.json({ success: true, deleted_id: id })
+    console.log('Delete successful for intake:', id)
+    return NextResponse.json({ success: true, deleted_id: id, usingAdminClient })
   } catch (err) {
     console.error('Error deleting email intake:', err)
     return NextResponse.json(
