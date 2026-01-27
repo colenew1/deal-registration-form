@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClientComponentClient, type UserProfile, type EmailIntake } from '@/lib/supabase'
@@ -50,6 +50,21 @@ const SOLUTIONS_OPTIONS = [
 const ZAPIER_WEBHOOK_URL = process.env.NEXT_PUBLIC_ZAPIER_WEBHOOK_URL || ''
 
 export default function AdminIntakesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background-subtle)' }}>
+        <div className="text-center">
+          <div className="w-8 h-8 mx-auto mb-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--primary-600)', borderTopColor: 'transparent' }}></div>
+          <p style={{ color: 'var(--foreground-muted)' }}>Loading...</p>
+        </div>
+      </div>
+    }>
+      <AdminIntakesContent />
+    </Suspense>
+  )
+}
+
+function AdminIntakesContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = useMemo(() => createClientComponentClient(), [])
