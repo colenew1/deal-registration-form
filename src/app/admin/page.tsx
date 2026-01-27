@@ -367,7 +367,25 @@ export default function AdminDashboard() {
       {/* Header */}
       <header style={{ backgroundColor: colors.white, borderBottom: `1px solid ${colors.border}`, padding: '16px 24px' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h1 style={{ fontSize: 20, fontWeight: 600, color: colors.text, margin: 0 }}>Deal Registrations</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+            <h1 style={{ fontSize: 20, fontWeight: 600, color: colors.text, margin: 0 }}>Deal Registrations</h1>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/register`); alert('Registration link copied!') }}
+                style={{ padding: '6px 12px', fontSize: 12, backgroundColor: colors.primaryLight, color: colors.primaryText, border: 'none', borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+              >
+                <svg style={{ width: 14, height: 14 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                Copy Form Link
+              </button>
+              <button
+                onClick={() => { navigator.clipboard.writeText('Channel.dkj2hu@zapiermail.com'); alert('Forwarding email copied!') }}
+                style={{ padding: '6px 12px', fontSize: 12, backgroundColor: colors.successLight, color: colors.successText, border: 'none', borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+              >
+                <svg style={{ width: 14, height: 14 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                Copy Forwarding Email
+              </button>
+            </div>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <span style={{ fontSize: 14, color: colors.textMuted }}>{profile?.full_name}</span>
             <Link href="/admin/users" style={{ padding: '8px 16px', fontSize: 14, backgroundColor: colors.white, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 6, textDecoration: 'none' }}>
@@ -699,12 +717,20 @@ export default function AdminDashboard() {
                             })}
                           </div>
                         ) : (
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                          <div style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: 6,
+                            padding: (selectedDeal.solutions_interested || []).length === 0 ? '10px 12px' : 0,
+                            backgroundColor: (selectedDeal.solutions_interested || []).length === 0 ? colors.errorLight : 'transparent',
+                            border: (selectedDeal.solutions_interested || []).length === 0 ? `1px solid ${colors.error}` : 'none',
+                            borderRadius: 6,
+                          }}>
                             {(selectedDeal.solutions_interested || []).length > 0 ?
                               selectedDeal.solutions_interested!.map(s => (
                                 <span key={s} style={{ padding: '4px 10px', backgroundColor: colors.primaryLight, color: colors.primaryText, borderRadius: 4, fontSize: 13, fontWeight: 500 }}>{s}</span>
                               )) :
-                              <span style={{ color: colors.textMuted, fontSize: 14 }}>No solutions selected</span>
+                              <span style={{ color: colors.errorText, fontSize: 14, fontWeight: 500 }}>No solutions selected - required</span>
                             }
                           </div>
                         )}
