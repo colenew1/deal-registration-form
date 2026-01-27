@@ -18,6 +18,35 @@ const TSD_OPTIONS = [
   'Other',
 ]
 
+const AGENT_COUNT_OPTIONS = [
+  '1-19',
+  '20-49',
+  '50-100',
+  '101 to 249',
+  '250 to 499',
+  '500 to 999',
+  '1000 to 2499',
+  '2500 to 4999',
+  '5000+',
+]
+
+const TIMELINE_OPTIONS = [
+  '0-3 months',
+  '4-6 months',
+  '6-12 months',
+  '12+ months',
+]
+
+const SOLUTIONS_OPTIONS = [
+  'Performance Management',
+  'Coaching',
+  'Conversation Intelligence & Analytics',
+  'Data Consolidation for CX',
+  'AutoQA / QA',
+  'Gamification',
+  'Other',
+]
+
 const ZAPIER_WEBHOOK_URL = process.env.NEXT_PUBLIC_ZAPIER_WEBHOOK_URL || ''
 
 export default function AdminIntakesPage() {
@@ -266,7 +295,7 @@ export default function AdminIntakesPage() {
     }
   }
 
-  const handleFieldChange = (field: string, value: string) => {
+  const handleFieldChange = (field: string, value: string | string[]) => {
     setEditData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -604,22 +633,6 @@ export default function AdminIntakesPage() {
                   <h3 className="font-semibold mb-3" style={{ color: 'var(--foreground)' }}>Customer Information</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <InputField
-                      label="Company Name"
-                      value={editMode ? editData.extracted_customer_company_name || '' : selectedIntake.extracted_customer_company_name || ''}
-                      onChange={(v) => handleFieldChange('extracted_customer_company_name', v)}
-                      editMode={editMode}
-                      confidence={getConfidenceColor('customer_company_name')}
-                      lowConfidence={isFieldLowConfidence('customer_company_name')}
-                    />
-                    <InputField
-                      label="Contact Email"
-                      value={editMode ? editData.extracted_customer_email || '' : selectedIntake.extracted_customer_email || ''}
-                      onChange={(v) => handleFieldChange('extracted_customer_email', v)}
-                      editMode={editMode}
-                      confidence={getConfidenceColor('customer_email')}
-                      lowConfidence={isFieldLowConfidence('customer_email')}
-                    />
-                    <InputField
                       label="First Name"
                       value={editMode ? editData.extracted_customer_first_name || '' : selectedIntake.extracted_customer_first_name || ''}
                       onChange={(v) => handleFieldChange('extracted_customer_first_name', v)}
@@ -636,6 +649,30 @@ export default function AdminIntakesPage() {
                       lowConfidence={isFieldLowConfidence('customer_last_name')}
                     />
                     <InputField
+                      label="Job Title"
+                      value={editMode ? editData.extracted_customer_job_title || '' : selectedIntake.extracted_customer_job_title || ''}
+                      onChange={(v) => handleFieldChange('extracted_customer_job_title', v)}
+                      editMode={editMode}
+                      confidence={getConfidenceColor('customer_job_title')}
+                      lowConfidence={isFieldLowConfidence('customer_job_title')}
+                    />
+                    <InputField
+                      label="Company Name"
+                      value={editMode ? editData.extracted_customer_company_name || '' : selectedIntake.extracted_customer_company_name || ''}
+                      onChange={(v) => handleFieldChange('extracted_customer_company_name', v)}
+                      editMode={editMode}
+                      confidence={getConfidenceColor('customer_company_name')}
+                      lowConfidence={isFieldLowConfidence('customer_company_name')}
+                    />
+                    <InputField
+                      label="Email"
+                      value={editMode ? editData.extracted_customer_email || '' : selectedIntake.extracted_customer_email || ''}
+                      onChange={(v) => handleFieldChange('extracted_customer_email', v)}
+                      editMode={editMode}
+                      confidence={getConfidenceColor('customer_email')}
+                      lowConfidence={isFieldLowConfidence('customer_email')}
+                    />
+                    <InputField
                       label="Phone"
                       value={editMode ? editData.extracted_customer_phone || '' : selectedIntake.extracted_customer_phone || ''}
                       onChange={(v) => handleFieldChange('extracted_customer_phone', v)}
@@ -643,13 +680,47 @@ export default function AdminIntakesPage() {
                       confidence={getConfidenceColor('customer_phone')}
                       lowConfidence={isFieldLowConfidence('customer_phone')}
                     />
+                    <div className="col-span-2">
+                      <InputField
+                        label="Street Address"
+                        value={editMode ? editData.extracted_customer_street_address || '' : selectedIntake.extracted_customer_street_address || ''}
+                        onChange={(v) => handleFieldChange('extracted_customer_street_address', v)}
+                        editMode={editMode}
+                        confidence={getConfidenceColor('customer_street_address')}
+                        lowConfidence={isFieldLowConfidence('customer_street_address')}
+                      />
+                    </div>
                     <InputField
-                      label="Job Title"
-                      value={editMode ? editData.extracted_customer_job_title || '' : selectedIntake.extracted_customer_job_title || ''}
-                      onChange={(v) => handleFieldChange('extracted_customer_job_title', v)}
+                      label="City"
+                      value={editMode ? editData.extracted_customer_city || '' : selectedIntake.extracted_customer_city || ''}
+                      onChange={(v) => handleFieldChange('extracted_customer_city', v)}
                       editMode={editMode}
-                      confidence={getConfidenceColor('customer_job_title')}
-                      lowConfidence={isFieldLowConfidence('customer_job_title')}
+                      confidence={getConfidenceColor('customer_city')}
+                      lowConfidence={isFieldLowConfidence('customer_city')}
+                    />
+                    <InputField
+                      label="State"
+                      value={editMode ? editData.extracted_customer_state || '' : selectedIntake.extracted_customer_state || ''}
+                      onChange={(v) => handleFieldChange('extracted_customer_state', v)}
+                      editMode={editMode}
+                      confidence={getConfidenceColor('customer_state')}
+                      lowConfidence={isFieldLowConfidence('customer_state')}
+                    />
+                    <InputField
+                      label="Postal Code"
+                      value={editMode ? editData.extracted_customer_postal_code || '' : selectedIntake.extracted_customer_postal_code || ''}
+                      onChange={(v) => handleFieldChange('extracted_customer_postal_code', v)}
+                      editMode={editMode}
+                      confidence={getConfidenceColor('customer_postal_code')}
+                      lowConfidence={isFieldLowConfidence('customer_postal_code')}
+                    />
+                    <InputField
+                      label="Country"
+                      value={editMode ? editData.extracted_customer_country || '' : selectedIntake.extracted_customer_country || ''}
+                      onChange={(v) => handleFieldChange('extracted_customer_country', v)}
+                      editMode={editMode}
+                      confidence={getConfidenceColor('customer_country')}
+                      lowConfidence={isFieldLowConfidence('customer_country')}
                     />
                   </div>
                 </section>
@@ -658,25 +729,118 @@ export default function AdminIntakesPage() {
                 <section>
                   <h3 className="font-semibold mb-3" style={{ color: 'var(--foreground)' }}>Opportunity Details</h3>
                   <div className="grid grid-cols-2 gap-4">
-                    <InputField
-                      label="Agent Count"
-                      value={editMode ? editData.extracted_agent_count || '' : selectedIntake.extracted_agent_count || ''}
-                      onChange={(v) => handleFieldChange('extracted_agent_count', v)}
-                      editMode={editMode}
-                      confidence={getConfidenceColor('agent_count')}
-                      lowConfidence={isFieldLowConfidence('agent_count')}
-                    />
-                    <InputField
-                      label="Timeline"
-                      value={editMode ? editData.extracted_implementation_timeline || '' : selectedIntake.extracted_implementation_timeline || ''}
-                      onChange={(v) => handleFieldChange('extracted_implementation_timeline', v)}
-                      editMode={editMode}
-                      confidence={getConfidenceColor('implementation_timeline')}
-                      lowConfidence={isFieldLowConfidence('implementation_timeline')}
-                    />
+                    {/* Agent Count Dropdown */}
+                    <div>
+                      <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                        Agent Count
+                        {isFieldLowConfidence('agent_count') && (
+                          <span className="ml-2 text-xs" style={{ color: 'var(--error-500)' }}>• Needs review</span>
+                        )}
+                      </label>
+                      {editMode ? (
+                        <select
+                          value={editData.extracted_agent_count || ''}
+                          onChange={(e) => handleFieldChange('extracted_agent_count', e.target.value)}
+                          className="form-input form-select"
+                          style={{ borderColor: isFieldLowConfidence('agent_count') ? 'var(--error-500)' : undefined }}
+                        >
+                          <option value="">Select agent count...</option>
+                          {AGENT_COUNT_OPTIONS.map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <p className="text-sm p-3 rounded-lg" style={{ backgroundColor: 'var(--background-subtle)', color: 'var(--foreground)', borderLeft: `3px solid ${getConfidenceColor('agent_count')}` }}>
+                          {selectedIntake.extracted_agent_count || '-'}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Timeline Dropdown */}
+                    <div>
+                      <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                        Implementation Timeline
+                        {isFieldLowConfidence('implementation_timeline') && (
+                          <span className="ml-2 text-xs" style={{ color: 'var(--error-500)' }}>• Needs review</span>
+                        )}
+                      </label>
+                      {editMode ? (
+                        <select
+                          value={editData.extracted_implementation_timeline || ''}
+                          onChange={(e) => handleFieldChange('extracted_implementation_timeline', e.target.value)}
+                          className="form-input form-select"
+                          style={{ borderColor: isFieldLowConfidence('implementation_timeline') ? 'var(--error-500)' : undefined }}
+                        >
+                          <option value="">Select timeline...</option>
+                          {TIMELINE_OPTIONS.map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <p className="text-sm p-3 rounded-lg" style={{ backgroundColor: 'var(--background-subtle)', color: 'var(--foreground)', borderLeft: `3px solid ${getConfidenceColor('implementation_timeline')}` }}>
+                          {selectedIntake.extracted_implementation_timeline || '-'}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Solutions Checkboxes */}
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                        Solutions Interested
+                        {isFieldLowConfidence('solutions_interested') && (
+                          <span className="ml-2 text-xs" style={{ color: 'var(--error-500)' }}>• Needs review</span>
+                        )}
+                      </label>
+                      {editMode ? (
+                        <div className="flex flex-wrap gap-2">
+                          {SOLUTIONS_OPTIONS.map(solution => {
+                            const currentSolutions = (editData.extracted_solutions_interested as string[]) || []
+                            const isChecked = currentSolutions.includes(solution)
+                            return (
+                              <button
+                                key={solution}
+                                type="button"
+                                onClick={() => {
+                                  const newSolutions = isChecked
+                                    ? currentSolutions.filter(s => s !== solution)
+                                    : [...currentSolutions, solution]
+                                  handleFieldChange('extracted_solutions_interested', newSolutions)
+                                }}
+                                className="px-3 py-1.5 rounded-lg text-sm transition-colors"
+                                style={{
+                                  backgroundColor: isChecked ? 'var(--primary-600)' : 'var(--background)',
+                                  color: isChecked ? 'white' : 'var(--foreground)',
+                                  border: '1px solid var(--card-border)',
+                                }}
+                              >
+                                {solution}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {(selectedIntake.extracted_solutions_interested || []).length > 0 ? (
+                            (selectedIntake.extracted_solutions_interested || []).map(solution => (
+                              <span
+                                key={solution}
+                                className="px-3 py-1.5 rounded-lg text-sm"
+                                style={{ backgroundColor: 'var(--primary-100)', color: 'var(--primary-700)' }}
+                              >
+                                {solution}
+                              </span>
+                            ))
+                          ) : (
+                            <span style={{ color: 'var(--foreground-muted)' }}>-</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Description */}
                     <div className="col-span-2">
                       <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
-                        Description
+                        Opportunity Description
                         {isFieldLowConfidence('opportunity_description') && (
                           <span className="ml-2 text-xs" style={{ color: 'var(--error-500)' }}>• Needs review</span>
                         )}
@@ -685,12 +849,13 @@ export default function AdminIntakesPage() {
                         <textarea
                           value={editData.extracted_opportunity_description || ''}
                           onChange={(e) => handleFieldChange('extracted_opportunity_description', e.target.value)}
-                          rows={3}
+                          rows={4}
                           className="form-input form-textarea"
+                          placeholder="Describe the opportunity, customer pain points, current solutions, etc."
                           style={{ borderColor: isFieldLowConfidence('opportunity_description') ? 'var(--error-500)' : undefined }}
                         />
                       ) : (
-                        <p className="text-sm p-3 rounded-lg" style={{ backgroundColor: 'var(--background-subtle)', color: 'var(--foreground)' }}>
+                        <p className="text-sm p-3 rounded-lg whitespace-pre-wrap" style={{ backgroundColor: 'var(--background-subtle)', color: 'var(--foreground)' }}>
                           {selectedIntake.extracted_opportunity_description || '-'}
                         </p>
                       )}
