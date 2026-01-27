@@ -7,6 +7,21 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClientComponentClient } from '@/lib/supabase'
 
+// Light mode color palette (matches admin panel)
+const colors = {
+  bg: '#f8fafc',
+  white: '#ffffff',
+  border: '#e2e8f0',
+  text: '#1e293b',
+  textMuted: '#64748b',
+  primary: '#2563eb',
+  primaryLight: '#dbeafe',
+  primaryText: '#1e40af',
+  error: '#dc2626',
+  errorLight: '#fee2e2',
+  errorText: '#991b1b',
+}
+
 const TSD_OPTIONS = [
   'Avant',
   'Telarus',
@@ -128,175 +143,181 @@ export default function PartnerRegister() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--background)' }}>
-      <div className="w-full max-w-md">
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: colors.bg }}>
+      <div style={{ width: '100%', maxWidth: 440 }}>
         {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold" style={{ color: 'var(--primary-600)' }}>
-            AmplifAI
-          </h1>
-          <p className="mt-2" style={{ color: 'var(--foreground-muted)' }}>
-            Partner Portal
-          </p>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: colors.primary, margin: 0 }}>AmplifAI</h1>
+          <p style={{ marginTop: 8, color: colors.textMuted, fontSize: 14 }}>Partner Portal</p>
         </div>
 
         {/* Register Card */}
-        <div className="rounded-xl p-8 shadow-lg" style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-          <h2 className="text-xl font-semibold mb-6" style={{ color: 'var(--foreground)' }}>
-            Create your account
-          </h2>
+        <div style={{ backgroundColor: colors.white, borderRadius: 12, border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+          <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: colors.text, margin: 0 }}>Create your account</h2>
+          </div>
 
-          {error && (
-            <div className="mb-4 p-3 rounded-lg text-sm" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-              {error}
-            </div>
-          )}
+          <div style={{ padding: 24 }}>
+            {error && (
+              <div style={{ marginBottom: 20, padding: 12, backgroundColor: colors.errorLight, border: `1px solid ${colors.error}`, borderRadius: 6 }}>
+                <p style={{ margin: 0, fontSize: 14, color: colors.errorText }}>{error}</p>
+              </div>
+            )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="full_name"
-                value={formData.full_name}
-                onChange={handleChange}
-                required
-                className="form-input"
-                placeholder="John Smith"
+            <form onSubmit={handleSubmit}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>
+                    Full Name <span style={{ color: colors.error }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="full_name"
+                    value={formData.full_name}
+                    onChange={handleChange}
+                    required
+                    placeholder="John Smith"
+                    disabled={isLoading}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>
+                    Company Name <span style={{ color: colors.error }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="company_name"
+                    value={formData.company_name}
+                    onChange={handleChange}
+                    required
+                    placeholder="Acme Corp"
+                    disabled={isLoading}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>
+                    Email <span style={{ color: colors.error }}>*</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    placeholder="you@company.com"
+                    disabled={isLoading}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="(555) 123-4567"
+                    disabled={isLoading}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>
+                  TSD / Distributor
+                </label>
+                <select
+                  name="tsd_name"
+                  value={formData.tsd_name}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                >
+                  <option value="">Select your TSD (optional)</option>
+                  {TSD_OPTIONS.map(tsd => (
+                    <option key={tsd} value={tsd}>{tsd}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>
+                    Password <span style={{ color: colors.error }}>*</span>
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    placeholder="••••••••"
+                    minLength={8}
+                    disabled={isLoading}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                  />
+                  <p style={{ marginTop: 4, fontSize: 11, color: colors.textMuted }}>Minimum 8 characters</p>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>
+                    Confirm Password <span style={{ color: colors.error }}>*</span>
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                    placeholder="••••••••"
+                    disabled={isLoading}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
                 disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                Company Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="company_name"
-                value={formData.company_name}
-                onChange={handleChange}
-                required
-                className="form-input"
-                placeholder="Acme Corp"
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                Email <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="form-input"
-                placeholder="you@company.com"
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                Phone
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="form-input"
-                placeholder="(555) 123-4567"
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                TSD / Distributor
-              </label>
-              <select
-                name="tsd_name"
-                value={formData.tsd_name}
-                onChange={handleChange}
-                className="form-select"
-                disabled={isLoading}
+                style={{
+                  width: '100%',
+                  padding: '12px 20px',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  backgroundColor: colors.primary,
+                  color: colors.white,
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  opacity: isLoading ? 0.7 : 1,
+                }}
               >
-                <option value="">Select your TSD (optional)</option>
-                {TSD_OPTIONS.map(tsd => (
-                  <option key={tsd} value={tsd}>{tsd}</option>
-                ))}
-              </select>
-            </div>
+                {isLoading ? 'Creating account...' : 'Create Account'}
+              </button>
+            </form>
 
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                Password <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="form-input"
-                placeholder="••••••••"
-                minLength={8}
-                disabled={isLoading}
-              />
-              <p className="mt-1 text-xs" style={{ color: 'var(--foreground-muted)' }}>
-                Minimum 8 characters
+            <div style={{ marginTop: 20, textAlign: 'center' }}>
+              <p style={{ fontSize: 14, color: colors.textMuted, margin: 0 }}>
+                Already have an account?{' '}
+                <Link href="/login" style={{ fontWeight: 500, color: colors.primary, textDecoration: 'none' }}>
+                  Sign in
+                </Link>
               </p>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                Confirm Password <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-                className="form-input"
-                placeholder="••••••••"
-                disabled={isLoading}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 disabled:opacity-50"
-              style={{
-                backgroundColor: 'var(--primary-600)',
-                color: 'white',
-              }}
-            >
-              {isLoading ? 'Creating account...' : 'Create Account'}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
-              Already have an account?{' '}
-              <Link href="/login" className="font-medium hover:underline" style={{ color: 'var(--primary-600)' }}>
-                Sign in
-              </Link>
-            </p>
           </div>
         </div>
 
         {/* Footer */}
-        <p className="mt-8 text-center text-sm" style={{ color: 'var(--foreground-muted)' }}>
+        <p style={{ marginTop: 24, textAlign: 'center', fontSize: 13, color: colors.textMuted }}>
           Need help? Contact{' '}
-          <a href="mailto:greynolds@amplifai.com" className="hover:underline" style={{ color: 'var(--primary-600)' }}>
+          <a href="mailto:greynolds@amplifai.com" style={{ color: colors.primary, textDecoration: 'none' }}>
             greynolds@amplifai.com
           </a>
         </p>

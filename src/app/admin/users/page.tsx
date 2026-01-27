@@ -7,6 +7,30 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClientComponentClient, type UserProfile } from '@/lib/supabase'
 
+// Light mode color palette (matches admin panel)
+const colors = {
+  bg: '#f8fafc',
+  white: '#ffffff',
+  border: '#e2e8f0',
+  text: '#1e293b',
+  textMuted: '#64748b',
+  textLight: '#94a3b8',
+  primary: '#2563eb',
+  primaryLight: '#dbeafe',
+  primaryText: '#1e40af',
+  success: '#16a34a',
+  successLight: '#dcfce7',
+  successText: '#166534',
+  warning: '#d97706',
+  warningLight: '#fef3c7',
+  warningText: '#92400e',
+  error: '#dc2626',
+  errorLight: '#fee2e2',
+  errorText: '#991b1b',
+  purple: '#7c3aed',
+  purpleLight: '#ede9fe',
+}
+
 export default function AdminUsersPage() {
   const router = useRouter()
   const supabase = useMemo(() => createClientComponentClient(), [])
@@ -114,146 +138,126 @@ export default function AdminUsersPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background)' }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto" style={{ borderColor: 'var(--primary-600)' }}></div>
-          <p className="mt-4" style={{ color: 'var(--foreground-muted)' }}>Loading...</p>
-        </div>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
+        <div style={{ width: 24, height: 24, border: `2px solid ${colors.primary}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
       {/* Header */}
-      <header className="border-b" style={{ borderColor: 'var(--card-border)', backgroundColor: 'var(--card-bg)' }}>
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold" style={{ color: 'var(--primary-600)' }}>
-              AmplifAI
-            </h1>
-            <span className="text-sm px-2 py-1 rounded" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground-muted)' }}>
-              Admin Portal
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>{profile?.full_name}</p>
-              <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>Administrator</p>
-            </div>
-            <Link
-              href="/admin"
-              className="text-sm px-3 py-1.5 rounded-lg transition-colors"
-              style={{ color: 'var(--foreground-muted)', border: '1px solid var(--card-border)' }}
-            >
+      <header style={{ backgroundColor: colors.white, borderBottom: `1px solid ${colors.border}`, padding: '16px 24px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h1 style={{ fontSize: 20, fontWeight: 600, color: colors.text, margin: 0 }}>User Management</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <span style={{ fontSize: 14, color: colors.textMuted }}>{profile?.full_name}</span>
+            <Link href="/admin" style={{ padding: '8px 16px', fontSize: 14, backgroundColor: colors.white, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 6, textDecoration: 'none' }}>
               Back to Dashboard
             </Link>
-            <button
-              onClick={handleLogout}
-              className="text-sm px-3 py-1.5 rounded-lg transition-colors"
-              style={{ color: 'var(--foreground-muted)', border: '1px solid var(--card-border)' }}
-            >
+            <button onClick={handleLogout} style={{ padding: '8px 16px', fontSize: 14, backgroundColor: colors.white, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>
               Sign Out
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-semibold" style={{ color: 'var(--foreground)' }}>
-              User Management
-            </h2>
-            <p className="mt-1" style={{ color: 'var(--foreground-muted)' }}>
-              Manage admin and partner accounts
-            </p>
-          </div>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
+        {/* Page Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+          <p style={{ fontSize: 14, color: colors.textMuted, margin: 0 }}>Manage admin and partner accounts</p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 rounded-lg font-medium transition-all"
-            style={{ backgroundColor: 'var(--primary-600)', color: 'white' }}
+            style={{ padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.primary, color: colors.white, border: 'none', borderRadius: 6, cursor: 'pointer' }}
           >
             + Create User
           </button>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-            <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Total Users</p>
-            <p className="text-2xl font-bold mt-1" style={{ color: 'var(--primary-600)' }}>{users.length}</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+          <div style={{ padding: 20, backgroundColor: colors.white, borderRadius: 8, border: `1px solid ${colors.border}` }}>
+            <p style={{ fontSize: 13, color: colors.textMuted, margin: 0, textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>Total Users</p>
+            <p style={{ fontSize: 32, fontWeight: 700, color: colors.primary, margin: '8px 0 0' }}>{users.length}</p>
           </div>
-          <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-            <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Admins</p>
-            <p className="text-2xl font-bold mt-1" style={{ color: '#8b5cf6' }}>{users.filter(u => u.role === 'admin').length}</p>
+          <div style={{ padding: 20, backgroundColor: colors.white, borderRadius: 8, border: `1px solid ${colors.border}` }}>
+            <p style={{ fontSize: 13, color: colors.textMuted, margin: 0, textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>Admins</p>
+            <p style={{ fontSize: 32, fontWeight: 700, color: colors.purple, margin: '8px 0 0' }}>{users.filter(u => u.role === 'admin').length}</p>
           </div>
-          <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-            <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Partners</p>
-            <p className="text-2xl font-bold mt-1" style={{ color: '#22c55e' }}>{users.filter(u => u.role === 'partner').length}</p>
+          <div style={{ padding: 20, backgroundColor: colors.white, borderRadius: 8, border: `1px solid ${colors.border}` }}>
+            <p style={{ fontSize: 13, color: colors.textMuted, margin: 0, textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>Partners</p>
+            <p style={{ fontSize: 32, fontWeight: 700, color: colors.success, margin: '8px 0 0' }}>{users.filter(u => u.role === 'partner').length}</p>
           </div>
         </div>
 
         {/* Users Table */}
-        <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-          <table className="w-full">
+        <div style={{ backgroundColor: colors.white, borderRadius: 8, border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                <th className="text-left p-4 text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>User</th>
-                <th className="text-left p-4 text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>Email</th>
-                <th className="text-left p-4 text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>Role</th>
-                <th className="text-left p-4 text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>Status</th>
-                <th className="text-left p-4 text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>Created</th>
-                <th className="text-left p-4 text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>Actions</th>
+              <tr style={{ backgroundColor: colors.bg, borderBottom: `1px solid ${colors.border}` }}>
+                <th style={{ textAlign: 'left', padding: 16, fontSize: 11, fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>User</th>
+                <th style={{ textAlign: 'left', padding: 16, fontSize: 11, fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Email</th>
+                <th style={{ textAlign: 'left', padding: 16, fontSize: 11, fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Role</th>
+                <th style={{ textAlign: 'left', padding: 16, fontSize: 11, fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status</th>
+                <th style={{ textAlign: 'left', padding: 16, fontSize: 11, fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Created</th>
+                <th style={{ textAlign: 'left', padding: 16, fontSize: 11, fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {users.map(user => (
-                <tr key={user.id} style={{ borderBottom: '1px solid var(--card-border)' }}>
-                  <td className="p-4">
-                    <p className="font-medium" style={{ color: 'var(--foreground)' }}>{user.full_name}</p>
+                <tr key={user.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
+                  <td style={{ padding: 16 }}>
+                    <p style={{ fontWeight: 500, color: colors.text, margin: 0, fontSize: 14 }}>{user.full_name}</p>
                     {user.company_name && (
-                      <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>{user.company_name}</p>
+                      <p style={{ fontSize: 13, color: colors.textMuted, margin: '4px 0 0' }}>{user.company_name}</p>
                     )}
                   </td>
-                  <td className="p-4">
-                    <p className="text-sm" style={{ color: 'var(--foreground)' }}>{user.email}</p>
+                  <td style={{ padding: 16 }}>
+                    <p style={{ fontSize: 14, color: colors.text, margin: 0 }}>{user.email}</p>
                   </td>
-                  <td className="p-4">
-                    <span
-                      className="px-2 py-1 rounded-full text-xs font-medium capitalize"
-                      style={{
-                        backgroundColor: user.role === 'admin' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(34, 197, 94, 0.1)',
-                        color: user.role === 'admin' ? '#8b5cf6' : '#22c55e',
-                      }}
-                    >
+                  <td style={{ padding: 16 }}>
+                    <span style={{
+                      padding: '4px 10px',
+                      borderRadius: 4,
+                      fontSize: 12,
+                      fontWeight: 500,
+                      backgroundColor: user.role === 'admin' ? colors.purpleLight : colors.successLight,
+                      color: user.role === 'admin' ? colors.purple : colors.successText,
+                      textTransform: 'capitalize',
+                    }}>
                       {user.role}
                     </span>
                   </td>
-                  <td className="p-4">
-                    <span
-                      className="px-2 py-1 rounded-full text-xs font-medium"
-                      style={{
-                        backgroundColor: user.is_active ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                        color: user.is_active ? '#22c55e' : '#ef4444',
-                      }}
-                    >
+                  <td style={{ padding: 16 }}>
+                    <span style={{
+                      padding: '4px 10px',
+                      borderRadius: 4,
+                      fontSize: 12,
+                      fontWeight: 500,
+                      backgroundColor: user.is_active ? colors.successLight : colors.errorLight,
+                      color: user.is_active ? colors.successText : colors.errorText,
+                    }}>
                       {user.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="p-4">
-                    <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                  <td style={{ padding: 16 }}>
+                    <p style={{ fontSize: 14, color: colors.textMuted, margin: 0 }}>
                       {new Date(user.created_at).toLocaleDateString()}
                     </p>
                   </td>
-                  <td className="p-4">
+                  <td style={{ padding: 16 }}>
                     {user.id !== profile?.id && (
                       <button
                         onClick={() => handleToggleStatus(user.id, user.is_active)}
-                        className="text-sm px-3 py-1 rounded-lg transition-colors"
                         style={{
-                          color: user.is_active ? '#ef4444' : '#22c55e',
-                          border: `1px solid ${user.is_active ? '#ef4444' : '#22c55e'}`,
+                          padding: '6px 12px',
+                          fontSize: 13,
+                          fontWeight: 500,
+                          backgroundColor: user.is_active ? colors.errorLight : colors.successLight,
+                          color: user.is_active ? colors.errorText : colors.successText,
+                          border: `1px solid ${user.is_active ? colors.error : colors.success}`,
+                          borderRadius: 6,
+                          cursor: 'pointer',
                         }}
                       >
                         {user.is_active ? 'Deactivate' : 'Activate'}
@@ -265,108 +269,102 @@ export default function AdminUsersPage() {
             </tbody>
           </table>
         </div>
-      </main>
+      </div>
 
       {/* Create User Modal */}
       {showCreateModal && (
         <div
-          className="fixed inset-0 flex items-center justify-center p-4 z-50"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowCreateModal(false)
-          }}
+          style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 50 }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowCreateModal(false) }}
         >
-          <div
-            className="w-full max-w-md rounded-xl p-6"
-            style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
-          >
-            <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
-              Create New User
-            </h3>
+          <div style={{ width: '100%', maxWidth: 420, backgroundColor: colors.white, borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
+              <h3 style={{ fontSize: 18, fontWeight: 600, color: colors.text, margin: 0 }}>Create New User</h3>
+            </div>
 
-            {createError && (
-              <div className="mb-4 p-3 rounded-lg text-sm" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                {createError}
-              </div>
-            )}
+            <div style={{ padding: 24 }}>
+              {createError && (
+                <div style={{ marginBottom: 16, padding: 12, backgroundColor: colors.errorLight, border: `1px solid ${colors.error}`, borderRadius: 6 }}>
+                  <p style={{ margin: 0, fontSize: 14, color: colors.errorText }}>{createError}</p>
+                </div>
+              )}
 
-            <form onSubmit={handleCreateUser} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={newUser.full_name}
-                  onChange={(e) => setNewUser(prev => ({ ...prev, full_name: e.target.value }))}
-                  required
-                  className="form-input"
-                  placeholder="John Smith"
-                />
-              </div>
+              <form onSubmit={handleCreateUser}>
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>
+                    Full Name <span style={{ color: colors.error }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newUser.full_name}
+                    onChange={(e) => setNewUser(prev => ({ ...prev, full_name: e.target.value }))}
+                    required
+                    placeholder="John Smith"
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={newUser.email}
-                  onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
-                  required
-                  className="form-input"
-                  placeholder="user@example.com"
-                />
-              </div>
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>
+                    Email <span style={{ color: colors.error }}>*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={newUser.email}
+                    onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
+                    required
+                    placeholder="user@example.com"
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                  Password
-                </label>
-                <input
-                  type="password"
-                  value={newUser.password}
-                  onChange={(e) => setNewUser(prev => ({ ...prev, password: e.target.value }))}
-                  required
-                  minLength={8}
-                  className="form-input"
-                  placeholder="Minimum 8 characters"
-                />
-              </div>
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>
+                    Password <span style={{ color: colors.error }}>*</span>
+                  </label>
+                  <input
+                    type="password"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser(prev => ({ ...prev, password: e.target.value }))}
+                    required
+                    minLength={8}
+                    placeholder="Minimum 8 characters"
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                  Role
-                </label>
-                <select
-                  value={newUser.role}
-                  onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value as 'admin' | 'partner' }))}
-                  className="form-select"
-                >
-                  <option value="partner">Partner</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
+                <div style={{ marginBottom: 24 }}>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>
+                    Role <span style={{ color: colors.error }}>*</span>
+                  </label>
+                  <select
+                    value={newUser.role}
+                    onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value as 'admin' | 'partner' }))}
+                    style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white }}
+                  >
+                    <option value="partner">Partner</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
 
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 py-2 px-4 rounded-lg font-medium transition-colors"
-                  style={{ color: 'var(--foreground-muted)', border: '1px solid var(--card-border)' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating}
-                  className="flex-1 py-2 px-4 rounded-lg font-medium transition-all disabled:opacity-50"
-                  style={{ backgroundColor: 'var(--primary-600)', color: 'white' }}
-                >
-                  {isCreating ? 'Creating...' : 'Create User'}
-                </button>
-              </div>
-            </form>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.white, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isCreating}
+                    style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.primary, color: colors.white, border: 'none', borderRadius: 6, cursor: 'pointer', opacity: isCreating ? 0.7 : 1 }}
+                  >
+                    {isCreating ? 'Creating...' : 'Create User'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
