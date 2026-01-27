@@ -82,3 +82,31 @@ export async function PATCH(
     )
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const supabase = createApiClient()
+
+    const { error } = await supabase
+      .from('email_intakes')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Supabase delete error:', error)
+      throw error
+    }
+
+    return NextResponse.json({ success: true, deleted_id: id })
+  } catch (err) {
+    console.error('Error deleting email intake:', err)
+    return NextResponse.json(
+      { error: 'Failed to delete email intake' },
+      { status: 500 }
+    )
+  }
+}

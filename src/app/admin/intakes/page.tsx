@@ -248,19 +248,21 @@ export default function AdminIntakesPage() {
     }
 
     try {
-      const { error } = await supabase
-        .from('email_intakes')
-        .delete()
-        .eq('id', intakeId)
+      const response = await fetch(`/api/email-intake/${intakeId}`, {
+        method: 'DELETE',
+      })
 
-      if (error) throw error
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to delete')
+      }
 
       await fetchIntakes()
       setSelectedIntake(null)
       setEditMode(false)
     } catch (err) {
       console.error('Delete error:', err)
-      alert('Failed to delete intake')
+      alert('Failed to delete intake: ' + (err instanceof Error ? err.message : 'Unknown error'))
     }
   }
 
@@ -391,8 +393,8 @@ export default function AdminIntakesPage() {
         </div>
 
         {/* Intakes Table */}
-        <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-          <table className="w-full">
+        <div className="rounded-xl overflow-x-auto" style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+          <table className="w-full" style={{ minWidth: '800px' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
                 <th className="text-left p-4 text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>From</th>
@@ -428,20 +430,23 @@ export default function AdminIntakesPage() {
                     <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>{formatDate(intake.created_at)}</p>
                   </td>
                   <td className="p-4">
-                    <div className="flex gap-2">
+                    <div className="flex gap-1">
                       <button
                         onClick={() => setSelectedIntake(intake)}
                         className="btn btn-secondary"
-                        style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                        style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }}
                       >
                         Review
                       </button>
                       <button
-                        onClick={() => handleDelete(intake.id)}
+                        onClick={(e) => { e.stopPropagation(); handleDelete(intake.id); }}
                         className="btn"
-                        style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', backgroundColor: 'var(--error-500)', color: 'white' }}
+                        style={{ padding: '0.375rem 0.5rem', fontSize: '0.75rem', backgroundColor: 'var(--error-500)', color: 'white' }}
+                        title="Delete"
                       >
-                        Delete
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
                       </button>
                     </div>
                   </td>
