@@ -1130,8 +1130,7 @@ function AdminIntakesContent() {
                       {saving ? 'Saving...' : 'Save Changes'}
                     </button>
                   </>
-                ) : (
-                  {(() => {
+                ) : (() => {
                     const missingFields = getMissingRequiredFields(selectedIntake)
                     const canApprove = missingFields.length === 0
                     return (
@@ -1168,7 +1167,6 @@ function AdminIntakesContent() {
                       </>
                     )
                   })()}
-                )}
               </div>
             </div>
           </div>
