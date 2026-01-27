@@ -64,12 +64,13 @@ const KNOWN_TSDS = [
 
 // Known solution keywords
 const SOLUTION_KEYWORDS = {
-  'Performance Management': ['performance management', 'performance', 'kpi', 'metrics', 'dashboards'],
-  'Coaching': ['coaching', 'coach', 'training', 'development'],
-  'Conversation Intelligence & Analytics': ['conversation intelligence', 'speech analytics', 'call analytics', 'analytics', 'transcription'],
+  'Performance Management': ['performance management', 'performance', 'kpi', 'metrics', 'dashboards', 'wfm', 'wfo', 'workforce management', 'workforce optimization'],
+  'Coaching': ['coaching', 'coach', 'training', 'development', 'agent assist', 'real-time assist'],
+  'Conversation Intelligence & Analytics': ['conversation intelligence', 'speech analytics', 'call analytics', 'analytics', 'transcription', 'call summarization', 'summarization', 'agentic ai', 'ai'],
   'Data Consolidation for CX': ['data consolidation', 'cx data', 'customer experience', 'unified data'],
   'AutoQA / QA': ['autoqa', 'auto qa', 'quality assurance', 'qa scoring', 'quality management'],
   'Gamification': ['gamification', 'gamify', 'leaderboard', 'contests', 'rewards'],
+  'Other': ['language translation', 'translation', 'accent neutralization', 'accent reduction'],
 }
 
 // Timeline patterns
@@ -80,17 +81,17 @@ const TIMELINE_PATTERNS = [
   { pattern: /12\+?\s*months?|over\s*a?\s*year|long[\s-]?term/i, value: '12+ months' },
 ]
 
-// Agent count patterns
+// Agent count patterns - also match standalone numbers followed by "users", "agents", etc.
 const AGENT_COUNT_PATTERNS = [
-  { pattern: /\b(1[-\s]?19|under\s*20|fewer\s*than\s*20)\s*(agents?|seats?|reps?)?/i, value: '1-19' },
-  { pattern: /\b(20[-\s]?49|20\s*to\s*49)\s*(agents?|seats?|reps?)?/i, value: '20-49' },
-  { pattern: /\b(50[-\s]?100|50\s*to\s*100)\s*(agents?|seats?|reps?)?/i, value: '50-100' },
-  { pattern: /\b(101[-\s]?249|100[-\s]?250|101\s*to\s*249)\s*(agents?|seats?|reps?)?/i, value: '101 to 249' },
-  { pattern: /\b(250[-\s]?499|250\s*to\s*499)\s*(agents?|seats?|reps?)?/i, value: '250 to 499' },
-  { pattern: /\b(500[-\s]?999|500\s*to\s*999)\s*(agents?|seats?|reps?)?/i, value: '500 to 999' },
-  { pattern: /\b(1000[-\s]?2499|1k[-\s]?2\.5k)\s*(agents?|seats?|reps?)?/i, value: '1000 to 2499' },
-  { pattern: /\b(2500[-\s]?4999|2\.5k[-\s]?5k)\s*(agents?|seats?|reps?)?/i, value: '2500 to 4999' },
-  { pattern: /\b(5000\+?|5k\+?|over\s*5000)\s*(agents?|seats?|reps?)?/i, value: '5000+' },
+  { pattern: /\b(1[-\s]?19|under\s*20|fewer\s*than\s*20)\s*(agents?|seats?|reps?|users?)?/i, value: '1-19' },
+  { pattern: /\b(20[-\s]?49|20\s*to\s*49)\s*(agents?|seats?|reps?|users?)?/i, value: '20-49' },
+  { pattern: /\b(50[-\s]?100|50\s*to\s*100)\s*(agents?|seats?|reps?|users?)?/i, value: '50-100' },
+  { pattern: /\b(101[-\s]?249|100[-\s]?250|101\s*to\s*249)\s*(agents?|seats?|reps?|users?)?/i, value: '101 to 249' },
+  { pattern: /\b(250[-\s]?499|250\s*to\s*499)\s*(agents?|seats?|reps?|users?)?/i, value: '250 to 499' },
+  { pattern: /\b(500[-\s]?999|500\s*to\s*999)\s*(agents?|seats?|reps?|users?)?/i, value: '500 to 999' },
+  { pattern: /\b(1000[-\s]?2499|1k[-\s]?2\.5k)\s*(agents?|seats?|reps?|users?)?/i, value: '1000 to 2499' },
+  { pattern: /\b(2500[-\s]?4999|2\.5k[-\s]?5k)\s*(agents?|seats?|reps?|users?)?/i, value: '2500 to 4999' },
+  { pattern: /\b(5000\+?|5k\+?|over\s*5000)\s*(agents?|seats?|reps?|users?)?/i, value: '5000+' },
 ]
 
 /**
@@ -161,6 +162,164 @@ function extractLabeledValue(text: string, labels: string[]): string | null {
     }
   }
   return null
+}
+
+/**
+ * Extract a multi-line section content (e.g., "Partner Info:" followed by lines until next section)
+ * Returns array of non-empty lines in the section
+ */
+function extractSectionContent(text: string, sectionHeaders: string[]): string[] {
+  for (const header of sectionHeaders) {
+    // Match "Header:" or "Header Info:" followed by content until next header or double newline
+    const pattern = new RegExp(
+      `${header}(?:\\s*Info)?\\s*[:\\-]\\s*([\\s\\S]*?)(?=\\n\\s*(?:[A-Z][a-zA-Z\\s]+(?:Info)?\\s*[:\\-])|\\*|$)`,
+      'i'
+    )
+    const match = text.match(pattern)
+    if (match && match[1]) {
+      // Split into lines, clean them, and filter empty lines
+      const lines = match[1]
+        .split(/[\n\r]+/)
+        .map(line => line.trim())
+        .filter(line => line.length > 0 && !line.startsWith('*'))
+      if (lines.length > 0) {
+        return lines
+      }
+    }
+  }
+  return []
+}
+
+/**
+ * Parse structured partner info section
+ * Format: Company name, then contact name, then email
+ */
+function parsePartnerSection(lines: string[]): {
+  companyName: string | null
+  contactName: string | null
+  contactEmail: string | null
+  contactPhone: string | null
+} {
+  let companyName: string | null = null
+  let contactName: string | null = null
+  let contactEmail: string | null = null
+  let contactPhone: string | null = null
+
+  for (const line of lines) {
+    // Check if it's an email
+    if (line.includes('@') && !contactEmail) {
+      contactEmail = line
+    }
+    // Check if it's a phone number
+    else if (/^\d{3}[-.\s]?\d{3}[-.\s]?\d{4}$/.test(line.replace(/[()D.\s]/g, '')) || /^D\.\s*\d{3}[-.\s]?\d{3}[-.\s]?\d{4}$/.test(line)) {
+      contactPhone = line.replace(/^D\.\s*/, '')
+    }
+    // Check if it looks like a name (contains letters, possibly with underscore)
+    else if (/^[A-Za-z][a-zA-Z_\s]+$/.test(line) && line.includes(' ') || line.includes('_')) {
+      contactName = line.replace(/_/g, ' ')
+    }
+    // First non-email, non-phone, non-name line is likely the company
+    else if (!companyName && /^[A-Za-z]/.test(line)) {
+      companyName = line
+    }
+  }
+
+  return { companyName, contactName, contactEmail, contactPhone }
+}
+
+/**
+ * Parse structured customer company section
+ * Format: Company name, then address lines
+ */
+function parseCustomerCompanySection(lines: string[]): {
+  companyName: string | null
+  streetAddress: string | null
+  city: string | null
+  state: string | null
+  postalCode: string | null
+} {
+  let companyName: string | null = null
+  let streetAddress: string | null = null
+  let city: string | null = null
+  let state: string | null = null
+  let postalCode: string | null = null
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+
+    // First line is usually company name
+    if (i === 0) {
+      companyName = line
+      continue
+    }
+
+    // Check for city, state ZIP pattern
+    const cityStateZip = line.match(/^([A-Za-z\s]+),?\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/)
+    if (cityStateZip) {
+      city = cityStateZip[1].trim()
+      state = cityStateZip[2]
+      postalCode = cityStateZip[3]
+      continue
+    }
+
+    // Otherwise it's part of the street address
+    if (!streetAddress) {
+      streetAddress = line
+    } else {
+      streetAddress += ', ' + line
+    }
+  }
+
+  return { companyName, streetAddress, city, state, postalCode }
+}
+
+/**
+ * Parse structured customer contact section
+ * Format: Name, then title/email/phone on separate lines
+ */
+function parseCustomerContactSection(lines: string[]): {
+  firstName: string | null
+  lastName: string | null
+  jobTitle: string | null
+  email: string | null
+  phone: string | null
+} {
+  let firstName: string | null = null
+  let lastName: string | null = null
+  let jobTitle: string | null = null
+  let email: string | null = null
+  let phone: string | null = null
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+
+    // Check if it's an email
+    if (line.includes('@')) {
+      email = line
+      continue
+    }
+
+    // Check if it's a phone number
+    if (/\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/.test(line)) {
+      phone = line
+      continue
+    }
+
+    // First line is usually the name
+    if (i === 0 || (!firstName && /^[A-Za-z]+\s+[A-Za-z]+/.test(line))) {
+      const nameParts = line.split(/\s+/)
+      firstName = nameParts[0]
+      lastName = nameParts.slice(1).join(' ') || null
+      continue
+    }
+
+    // Check for job title keywords
+    if (!jobTitle && /VP|Vice President|Director|Manager|CEO|CTO|CFO|COO|President|Owner/i.test(line)) {
+      jobTitle = line
+    }
+  }
+
+  return { firstName, lastName, jobTitle, email, phone }
 }
 
 /**
@@ -437,50 +596,84 @@ export function parseEmail(
     deal_value: null
   }
 
-  // --- Extract Partner/TA Information ---
-  // The person forwarding the email is often the TA
-  if (emailFromName) {
-    const nameParts = emailFromName.trim().split(/\s+/)
-    if (nameParts.length >= 2) {
-      data.ta_full_name = emailFromName.trim()
-      confidence.ta_full_name = 85
-    }
+  // --- Check if email sender is from a TSD (like Avant, Telarus, etc.) ---
+  // If so, they're the TSD contact, not the Partner/TA
+  let senderIsTsd = false
+  if (emailFrom) {
+    const senderDomain = emailFrom.toLowerCase()
+    // Common TSD domains
+    const tsdDomains = ['goavant.net', 'avant.com', 'telarus.com', 'intelisys.com', 'sandlerpartners.com', 'appsmart.com', 'tbicom.com']
+    senderIsTsd = tsdDomains.some(domain => senderDomain.includes(domain))
   }
 
-  if (emailFrom) {
-    data.ta_email = emailFrom
-    confidence.ta_email = 85
+  // --- Try to extract structured sections first (Avant format) ---
+  const partnerSection = extractSectionContent(searchText, ['Partner', 'Partner Info'])
+  const customerCompanySection = extractSectionContent(searchText, ['Customer Company', 'Customer Company Info', 'End User', 'End User Info'])
+  const customerContactSection = extractSectionContent(searchText, ['Customer Contact', 'Customer Contact Info', 'Contact Info'])
+  const opportunitySection = extractSectionContent(searchText, ['Opportunity', 'Opportunity Info', 'Opp Info', 'Opp'])
 
-    // Try to extract company from email domain
-    const domainMatch = emailFrom.match(/@([^.]+)/)
-    if (domainMatch) {
-      const domain = domainMatch[1]
-      // Capitalize first letter
-      const companyGuess = domain.charAt(0).toUpperCase() + domain.slice(1)
-      if (!['gmail', 'yahoo', 'hotmail', 'outlook', 'icloud', 'aol'].includes(domain.toLowerCase())) {
-        data.ta_company_name = companyGuess
-        confidence.ta_company_name = 60
+  // --- Extract Partner/TA Information ---
+  if (partnerSection.length > 0) {
+    // Parse structured partner section
+    const partnerInfo = parsePartnerSection(partnerSection)
+    if (partnerInfo.companyName) {
+      data.ta_company_name = partnerInfo.companyName
+      confidence.ta_company_name = 90
+    }
+    if (partnerInfo.contactName) {
+      data.ta_full_name = partnerInfo.contactName
+      confidence.ta_full_name = 90
+    }
+    if (partnerInfo.contactEmail) {
+      data.ta_email = partnerInfo.contactEmail
+      confidence.ta_email = 90
+    }
+    if (partnerInfo.contactPhone) {
+      data.ta_phone = partnerInfo.contactPhone
+      confidence.ta_phone = 85
+    }
+  } else if (!senderIsTsd) {
+    // Fall back to using email sender as TA (only if sender is not from TSD)
+    if (emailFromName) {
+      const nameParts = emailFromName.trim().split(/\s+/)
+      if (nameParts.length >= 2) {
+        data.ta_full_name = emailFromName.trim()
+        confidence.ta_full_name = 85
+      }
+    }
+
+    if (emailFrom) {
+      data.ta_email = emailFrom
+      confidence.ta_email = 85
+
+      // Try to extract company from email domain
+      const domainMatch = emailFrom.match(/@([^.]+)/)
+      if (domainMatch) {
+        const domain = domainMatch[1]
+        const companyGuess = domain.charAt(0).toUpperCase() + domain.slice(1)
+        if (!['gmail', 'yahoo', 'hotmail', 'outlook', 'icloud', 'aol'].includes(domain.toLowerCase())) {
+          data.ta_company_name = companyGuess
+          confidence.ta_company_name = 60
+        }
       }
     }
   }
 
-  // Look for TA info in labeled fields
-  const taNameLabeled = extractLabeledValue(searchText, ['partner name', 'ta name', 'advisor name', 'rep name', 'sales rep'])
-  if (taNameLabeled) {
-    data.ta_full_name = taNameLabeled
-    confidence.ta_full_name = 75
+  // Look for TA info in labeled fields (fallback)
+  if (!data.ta_full_name) {
+    const taNameLabeled = extractLabeledValue(searchText, ['partner name', 'ta name', 'advisor name', 'rep name', 'sales rep'])
+    if (taNameLabeled) {
+      data.ta_full_name = taNameLabeled
+      confidence.ta_full_name = 75
+    }
   }
 
-  const taCompanyLabeled = extractLabeledValue(searchText, ['partner company', 'ta company', 'partner', 'reseller'])
-  if (taCompanyLabeled) {
-    data.ta_company_name = taCompanyLabeled
-    confidence.ta_company_name = 80
-  }
-
-  // Extract phones - first one often belongs to submitter
-  if (allPhones.length > 0) {
-    data.ta_phone = allPhones[0]
-    confidence.ta_phone = 50
+  if (!data.ta_company_name) {
+    const taCompanyLabeled = extractLabeledValue(searchText, ['partner company', 'ta company', 'partner', 'reseller'])
+    if (taCompanyLabeled) {
+      data.ta_company_name = taCompanyLabeled
+      confidence.ta_company_name = 80
+    }
   }
 
   // --- Extract TSD Information ---
@@ -490,59 +683,127 @@ export function parseEmail(
     confidence.tsd_name = tsdResult.confidence
   }
 
-  const tsdContactLabeled = extractLabeledValue(searchText, ['tsd contact', 'distributor contact', 'tsd rep'])
-  if (tsdContactLabeled) {
-    data.tsd_contact_name = tsdContactLabeled
-    confidence.tsd_contact_name = 75
-  }
-
-  // --- Extract Customer Information ---
-  // Look for customer/end-user/prospect patterns
-  const customerCompanyLabels = [
-    'customer', 'end user', 'end-user', 'prospect', 'client', 'company name',
-    'organization', 'account', 'business name', 'opportunity'
-  ]
-  const customerCompanyLabeled = extractLabeledValue(searchText, customerCompanyLabels)
-  if (customerCompanyLabeled) {
-    data.customer_company_name = customerCompanyLabeled
-    confidence.customer_company_name = 80
-  }
-
-  // Extract customer contact name
-  const contactNameLabels = ['contact name', 'primary contact', 'decision maker', 'customer contact', 'poc']
-  const contactNameLabeled = extractLabeledValue(searchText, contactNameLabels)
-  if (contactNameLabeled) {
-    const nameParts = contactNameLabeled.trim().split(/\s+/)
-    if (nameParts.length >= 2) {
-      data.customer_first_name = nameParts[0]
-      data.customer_last_name = nameParts.slice(1).join(' ')
-      confidence.customer_first_name = 75
-      confidence.customer_last_name = 75
-    } else if (nameParts.length === 1) {
-      data.customer_first_name = nameParts[0]
-      confidence.customer_first_name = 60
+  // If email sender is from TSD, use them as TSD contact
+  if (senderIsTsd) {
+    if (emailFromName) {
+      data.tsd_contact_name = emailFromName.trim()
+      confidence.tsd_contact_name = 90
+    }
+    if (emailFrom) {
+      data.tsd_contact_email = emailFrom
+      confidence.tsd_contact_email = 90
+    }
+  } else {
+    const tsdContactLabeled = extractLabeledValue(searchText, ['tsd contact', 'distributor contact', 'tsd rep'])
+    if (tsdContactLabeled) {
+      data.tsd_contact_name = tsdContactLabeled
+      confidence.tsd_contact_name = 75
     }
   }
 
-  // Extract customer job title
-  const jobTitleLabels = ['title', 'job title', 'position', 'role']
-  const jobTitleLabeled = extractLabeledValue(searchText, jobTitleLabels)
-  if (jobTitleLabeled) {
-    data.customer_job_title = jobTitleLabeled
-    confidence.customer_job_title = 75
+  // --- Extract Customer Information ---
+  if (customerCompanySection.length > 0) {
+    // Parse structured customer company section
+    const companyInfo = parseCustomerCompanySection(customerCompanySection)
+    if (companyInfo.companyName) {
+      data.customer_company_name = companyInfo.companyName
+      confidence.customer_company_name = 90
+    }
+    if (companyInfo.streetAddress) {
+      data.customer_street_address = companyInfo.streetAddress
+      confidence.customer_street_address = 85
+    }
+    if (companyInfo.city) {
+      data.customer_city = companyInfo.city
+      confidence.customer_city = 85
+    }
+    if (companyInfo.state) {
+      data.customer_state = companyInfo.state
+      confidence.customer_state = 85
+    }
+    if (companyInfo.postalCode) {
+      data.customer_postal_code = companyInfo.postalCode
+      confidence.customer_postal_code = 85
+    }
+  }
+
+  if (customerContactSection.length > 0) {
+    // Parse structured customer contact section
+    const contactInfo = parseCustomerContactSection(customerContactSection)
+    if (contactInfo.firstName) {
+      data.customer_first_name = contactInfo.firstName
+      confidence.customer_first_name = 90
+    }
+    if (contactInfo.lastName) {
+      data.customer_last_name = contactInfo.lastName
+      confidence.customer_last_name = 90
+    }
+    if (contactInfo.jobTitle) {
+      data.customer_job_title = contactInfo.jobTitle
+      confidence.customer_job_title = 85
+    }
+    if (contactInfo.email) {
+      data.customer_email = contactInfo.email
+      confidence.customer_email = 90
+    }
+    if (contactInfo.phone) {
+      data.customer_phone = contactInfo.phone
+      confidence.customer_phone = 85
+    }
+  }
+
+  // Fall back to labeled value extraction if sections didn't work
+  if (!data.customer_company_name) {
+    const customerCompanyLabels = [
+      'customer', 'end user', 'end-user', 'prospect', 'client', 'company name',
+      'organization', 'account', 'business name', 'opportunity'
+    ]
+    const customerCompanyLabeled = extractLabeledValue(searchText, customerCompanyLabels)
+    if (customerCompanyLabeled) {
+      data.customer_company_name = customerCompanyLabeled
+      confidence.customer_company_name = 80
+    }
+  }
+
+  if (!data.customer_first_name) {
+    const contactNameLabels = ['contact name', 'primary contact', 'decision maker', 'customer contact', 'poc']
+    const contactNameLabeled = extractLabeledValue(searchText, contactNameLabels)
+    if (contactNameLabeled) {
+      const nameParts = contactNameLabeled.trim().split(/\s+/)
+      if (nameParts.length >= 2) {
+        data.customer_first_name = nameParts[0]
+        data.customer_last_name = nameParts.slice(1).join(' ')
+        confidence.customer_first_name = 75
+        confidence.customer_last_name = 75
+      } else if (nameParts.length === 1) {
+        data.customer_first_name = nameParts[0]
+        confidence.customer_first_name = 60
+      }
+    }
+  }
+
+  if (!data.customer_job_title) {
+    const jobTitleLabels = ['title', 'job title', 'position', 'role']
+    const jobTitleLabeled = extractLabeledValue(searchText, jobTitleLabels)
+    if (jobTitleLabeled) {
+      data.customer_job_title = jobTitleLabeled
+      confidence.customer_job_title = 75
+    }
   }
 
   // Extract customer email - look for customer-related email
-  const customerEmailLabels = ['customer email', 'contact email', 'email']
-  const customerEmailLabeled = extractLabeledValue(searchText, customerEmailLabels)
-  if (customerEmailLabeled && customerEmailLabeled.includes('@')) {
-    data.customer_email = customerEmailLabeled
-    confidence.customer_email = 80
-  } else if (allEmails.length > 1) {
-    // If we have multiple emails, the second one might be customer
-    // (first is usually the person forwarding)
-    data.customer_email = allEmails[1]
-    confidence.customer_email = 40
+  if (!data.customer_email) {
+    const customerEmailLabels = ['customer email', 'contact email', 'email']
+    const customerEmailLabeled = extractLabeledValue(searchText, customerEmailLabels)
+    if (customerEmailLabeled && customerEmailLabeled.includes('@')) {
+      data.customer_email = customerEmailLabeled
+      confidence.customer_email = 80
+    } else if (allEmails.length > 1) {
+      // If we have multiple emails, the second one might be customer
+      // (first is usually the person forwarding)
+      data.customer_email = allEmails[1]
+      confidence.customer_email = 40
+    }
   }
 
   // Extract customer phone
@@ -604,18 +865,30 @@ export function parseEmail(
     confidence.deal_value = dealValueResult.confidence
   }
 
-  // Use the email body as opportunity description if no specific one found
-  const descriptionLabels = ['description', 'details', 'notes', 'opportunity description', 'use case']
-  const descriptionLabeled = extractLabeledValue(searchText, descriptionLabels)
-  if (descriptionLabeled) {
-    data.opportunity_description = descriptionLabeled
-    confidence.opportunity_description = 70
-  } else if (forwardedInfo.body && forwardedInfo.body.length > 50) {
-    // Use a portion of the email body as description
-    const truncated = forwardedInfo.body.substring(0, 500)
-    data.opportunity_description = truncated + (forwardedInfo.body.length > 500 ? '...' : '')
-    confidence.opportunity_description = 30
-    warnings.push('Used email body as opportunity description - please review and edit')
+  // Extract opportunity description from structured section first
+  if (opportunitySection.length > 0) {
+    // Join opportunity section lines as the description
+    const oppDescription = opportunitySection.join(' ').trim()
+    if (oppDescription.length > 0) {
+      data.opportunity_description = oppDescription
+      confidence.opportunity_description = 90
+    }
+  }
+
+  // Fall back to labeled value extraction or email body
+  if (!data.opportunity_description) {
+    const descriptionLabels = ['description', 'details', 'notes', 'opportunity description', 'use case']
+    const descriptionLabeled = extractLabeledValue(searchText, descriptionLabels)
+    if (descriptionLabeled) {
+      data.opportunity_description = descriptionLabeled
+      confidence.opportunity_description = 70
+    } else if (forwardedInfo.body && forwardedInfo.body.length > 50) {
+      // Use a portion of the email body as description
+      const truncated = forwardedInfo.body.substring(0, 500)
+      data.opportunity_description = truncated + (forwardedInfo.body.length > 500 ? '...' : '')
+      confidence.opportunity_description = 30
+      warnings.push('Used email body as opportunity description - please review and edit')
+    }
   }
 
   // Add warnings for low confidence or missing critical fields

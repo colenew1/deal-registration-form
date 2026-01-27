@@ -304,6 +304,9 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>{profile?.full_name}</p>
                 <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>Administrator</p>
               </div>
+              <Link href="/admin/intakes" className="btn btn-secondary">
+                Email Intakes
+              </Link>
               <Link href="/admin/users" className="btn btn-secondary">
                 Manage Users
               </Link>

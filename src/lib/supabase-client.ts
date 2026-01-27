@@ -41,21 +41,30 @@ export function useSupabaseClient() {
   return client
 }
 
+// Helper to check if a URL is valid
+function isValidSupabaseUrl(url: string | undefined): boolean {
+  if (!url) return false
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 // Browser client (for client components) - safe to call during SSR (returns null)
 export function createClientComponentClient(): SupabaseClient {
-  // During SSR, return a minimal mock that won't throw
+  // During SSR or build time, check if we have valid env vars
   if (typeof window === 'undefined') {
-    // Return a proxy that won't throw during SSR
-    // Real client will be used after hydration
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-    // If we have valid values, create the client
-    if (url && key && url !== 'https://placeholder.supabase.co') {
-      return createBrowserClient(url, key)
+    // Only create client if we have valid URL and key
+    if (isValidSupabaseUrl(url) && key && key.length > 10) {
+      return createBrowserClient(url!, key)
     }
 
-    // During build without env vars, return a mock
+    // During build without valid env vars, return a mock
     return {
       auth: {
         getUser: async () => ({ data: { user: null }, error: null }),
