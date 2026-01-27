@@ -50,6 +50,13 @@ export async function PATCH(
       'converted_registration_id',
       'review_notes',
       'reviewed_by',
+      'admin_edited_fields',
+      'admin_edited_at',
+      'sent_to_partner_at',
+      'sent_to_partner_email',
+      'has_conflicts',
+      'conflicts',
+      'conflicts_resolved_at',
     ]
 
     for (const field of allowedFields) {
@@ -60,6 +67,54 @@ export async function PATCH(
 
     if (body.status === 'converted') {
       updateData.converted_at = new Date().toISOString()
+    }
+
+    // Handle sending to partner - save current admin values as snapshot
+    if (body.send_to_partner) {
+      // Get current intake to create snapshot of admin-edited fields
+      const { data: currentIntake } = await supabase
+        .from('email_intakes')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (currentIntake) {
+        // Create snapshot of all extracted fields as they currently exist
+        const adminSnapshot: Record<string, unknown> = {}
+        const extractedFields = [
+          'extracted_ta_full_name',
+          'extracted_ta_email',
+          'extracted_ta_phone',
+          'extracted_ta_company_name',
+          'extracted_tsd_name',
+          'extracted_tsd_contact_name',
+          'extracted_tsd_contact_email',
+          'extracted_customer_first_name',
+          'extracted_customer_last_name',
+          'extracted_customer_company_name',
+          'extracted_customer_email',
+          'extracted_customer_phone',
+          'extracted_customer_job_title',
+          'extracted_customer_street_address',
+          'extracted_customer_city',
+          'extracted_customer_state',
+          'extracted_customer_postal_code',
+          'extracted_customer_country',
+          'extracted_agent_count',
+          'extracted_implementation_timeline',
+          'extracted_solutions_interested',
+          'extracted_opportunity_description',
+        ]
+
+        for (const field of extractedFields) {
+          adminSnapshot[field] = currentIntake[field]
+        }
+
+        updateData.admin_edited_fields = adminSnapshot
+        updateData.admin_edited_at = new Date().toISOString()
+        updateData.sent_to_partner_at = new Date().toISOString()
+        updateData.sent_to_partner_email = body.partner_email || null
+      }
     }
 
     const { data, error } = await supabase

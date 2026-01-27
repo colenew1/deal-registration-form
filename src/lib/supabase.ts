@@ -138,4 +138,25 @@ export type EmailIntake = {
   // Review info
   review_notes: string | null
   reviewed_by: string | null
+
+  // Conflict tracking fields
+  admin_edited_fields: Record<string, unknown> | null
+  admin_edited_at: string | null
+  sent_to_partner_at: string | null
+  sent_to_partner_email: string | null
+  partner_submitted_values: Record<string, unknown> | null
+  has_conflicts: boolean | null
+  conflicts: Array<{
+    field: string
+    admin_value: unknown
+    partner_value: unknown
+  }> | null
+  conflicts_resolved_at: string | null
+}
+
+// Conflict type for easier use
+export type IntakeConflict = {
+  field: string
+  admin_value: unknown
+  partner_value: unknown
 }

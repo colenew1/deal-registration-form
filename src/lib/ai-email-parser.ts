@@ -41,7 +41,7 @@ Extract the following fields from the email. Return ONLY valid JSON with these e
 
   "agent_count": "Number of contact center agents (use ranges: 1-19, 20-49, 50-100, 101 to 249, 250 to 499, 500 to 999, 1000 to 2499, 2500 to 4999, 5000+)",
   "implementation_timeline": "Timeline (use: 0-3 months, 4-6 months, 6-12 months, 12+ months)",
-  "solutions_interested": ["Array of solutions they want"],
+  "solutions_interested": ["Array of solutions - ONLY if explicitly mentioned, empty array if none found"],
   "opportunity_description": "Brief description of the opportunity, use case, or pain points"
 }
 
@@ -53,7 +53,7 @@ Important rules:
 - If a field cannot be found, use null
 - For agent_count, convert numbers like "75 users" to the appropriate range ("50-100")
 - Clean up email addresses and phone numbers (remove extra text)
-- For solutions_interested, map to: Performance Management, Coaching, Conversation Intelligence & Analytics, Data Consolidation for CX, AutoQA / QA, Gamification, Other
+- For solutions_interested, ONLY include solutions that are explicitly mentioned or clearly implied. Valid options are: Performance Management, Coaching, Conversation Intelligence & Analytics, Data Consolidation for CX, AutoQA / QA, Gamification. Use "Other" ONLY if a specific non-standard solution is explicitly mentioned (like language translation). If no solutions are mentioned, return an empty array []. Do NOT default to "Other" just because you couldn't identify a specific solution.
 
 Return ONLY the JSON object, no other text.`
 

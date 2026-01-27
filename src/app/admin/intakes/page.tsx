@@ -49,6 +49,33 @@ const SOLUTIONS_OPTIONS = [
 
 const ZAPIER_WEBHOOK_URL = process.env.NEXT_PUBLIC_ZAPIER_WEBHOOK_URL || ''
 
+// Required fields for HubSpot submission
+const REQUIRED_FIELDS = [
+  { key: 'extracted_customer_first_name', label: 'Customer First Name' },
+  { key: 'extracted_customer_last_name', label: 'Customer Last Name' },
+  { key: 'extracted_customer_company_name', label: 'Customer Company' },
+  { key: 'extracted_customer_email', label: 'Customer Email' },
+  { key: 'extracted_ta_full_name', label: 'TA Name' },
+  { key: 'extracted_ta_email', label: 'TA Email' },
+  { key: 'extracted_ta_company_name', label: 'TA Company' },
+  { key: 'extracted_tsd_name', label: 'TSD Name' },
+] as const
+
+// Helper to get missing required fields
+function getMissingRequiredFields(data: Partial<EmailIntake>): string[] {
+  return REQUIRED_FIELDS
+    .filter(field => !data[field.key as keyof EmailIntake])
+    .map(field => field.label)
+}
+
+// Helper to check if a field is required and empty
+function isRequiredFieldEmpty(fieldKey: string, data: Partial<EmailIntake>): boolean {
+  const isRequired = REQUIRED_FIELDS.some(f => f.key === fieldKey)
+  if (!isRequired) return false
+  const value = data[fieldKey as keyof EmailIntake]
+  return !value || (typeof value === 'string' && value.trim() === '')
+}
+
 export default function AdminIntakesPage() {
   return (
     <Suspense fallback={
@@ -275,15 +302,17 @@ function AdminIntakesContent() {
 
       alert(`Form link copied to clipboard!\n\nSend this to ${partnerEmail}:\n${prefillUrl}`)
 
-      // Update status
-      await supabase
-        .from('email_intakes')
-        .update({
+      // Update status and save admin snapshot for conflict detection
+      await fetch(`/api/email-intake/${selectedIntake.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           status: 'reviewed',
           review_notes: `Sent to partner: ${partnerEmail}`,
-          updated_at: new Date().toISOString(),
+          send_to_partner: true,
+          partner_email: partnerEmail,
         })
-        .eq('id', selectedIntake.id)
+      })
 
       setShowSendToPartnerModal(false)
       setPartnerEmail('')
@@ -483,7 +512,17 @@ function AdminIntakesContent() {
                     <p style={{ color: 'var(--foreground)' }}>{intake.extracted_tsd_name || '-'}</p>
                   </td>
                   <td className="p-4">
-                    {getStatusBadge(intake.status)}
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(intake.status)}
+                      {intake.has_conflicts && (
+                        <span
+                          className="px-2 py-1 rounded-full text-xs font-medium"
+                          style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#dc2626' }}
+                        >
+                          Conflicts
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="p-4">
                     <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>{formatDate(intake.created_at)}</p>
@@ -560,6 +599,168 @@ function AdminIntakesContent() {
                 </button>
               </div>
 
+              {/* Missing Required Fields Warning */}
+              {(() => {
+                const dataToCheck = editMode ? editData : selectedIntake
+                const missingFields = getMissingRequiredFields(dataToCheck)
+                if (missingFields.length > 0) {
+                  return (
+                    <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--error-500)' }}>
+                      <div className="flex items-start gap-3">
+                        <svg className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--error-500)' }} fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <div>
+                          <p className="font-medium" style={{ color: 'var(--error-600)' }}>Missing Required Fields</p>
+                          <p className="text-sm mt-1" style={{ color: 'var(--error-600)' }}>
+                            The following fields are required before sending to HubSpot:
+                          </p>
+                          <ul className="list-disc list-inside text-sm mt-2" style={{ color: 'var(--error-600)' }}>
+                            {missingFields.map(field => (
+                              <li key={field}>{field}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                }
+                return null
+              })()}
+
+              {/* Conflict Resolution Section */}
+              {selectedIntake.has_conflicts && selectedIntake.conflicts && selectedIntake.conflicts.length > 0 && (
+                <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', border: '1px solid var(--warning-500)' }}>
+                  <div className="flex items-start gap-3 mb-4">
+                    <svg className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--warning-500)' }} fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <p className="font-medium" style={{ color: 'var(--warning-700)' }}>Conflicts Detected</p>
+                      <p className="text-sm mt-1" style={{ color: 'var(--warning-600)' }}>
+                        The partner submitted different values than what you had set. Please resolve each conflict below.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {selectedIntake.conflicts.map((conflict, index) => (
+                      <div key={index} className="p-3 rounded-lg" style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+                        <p className="font-medium text-sm mb-2" style={{ color: 'var(--foreground)' }}>
+                          {conflict.field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <p className="text-xs mb-1" style={{ color: 'var(--foreground-muted)' }}>Your Value</p>
+                            <div className="p-2 rounded text-sm" style={{ backgroundColor: 'var(--background-subtle)' }}>
+                              {String(conflict.admin_value || '-')}
+                            </div>
+                            <button
+                              onClick={async () => {
+                                const fieldName = `extracted_${conflict.field}`
+                                const newConflicts = selectedIntake.conflicts?.filter((_, i) => i !== index) || []
+
+                                // Update the intake - keep admin value (already in extracted fields)
+                                await supabase
+                                  .from('email_intakes')
+                                  .update({
+                                    [fieldName]: conflict.admin_value,
+                                    conflicts: newConflicts.length > 0 ? newConflicts : null,
+                                    has_conflicts: newConflicts.length > 0,
+                                    conflicts_resolved_at: newConflicts.length === 0 ? new Date().toISOString() : null,
+                                    updated_at: new Date().toISOString(),
+                                  })
+                                  .eq('id', selectedIntake.id)
+
+                                await fetchIntakes()
+                                // Refresh selected intake
+                                const { data } = await supabase
+                                  .from('email_intakes')
+                                  .select('*')
+                                  .eq('id', selectedIntake.id)
+                                  .single()
+                                if (data) setSelectedIntake(data)
+                              }}
+                              className="btn btn-secondary w-full mt-2"
+                              style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }}
+                            >
+                              Keep Admin Value
+                            </button>
+                          </div>
+                          <div>
+                            <p className="text-xs mb-1" style={{ color: 'var(--foreground-muted)' }}>Partner Value</p>
+                            <div className="p-2 rounded text-sm" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+                              {String(conflict.partner_value || '-')}
+                            </div>
+                            <button
+                              onClick={async () => {
+                                const fieldName = `extracted_${conflict.field}`
+                                const newConflicts = selectedIntake.conflicts?.filter((_, i) => i !== index) || []
+
+                                // Update the intake - use partner value
+                                await supabase
+                                  .from('email_intakes')
+                                  .update({
+                                    [fieldName]: conflict.partner_value,
+                                    conflicts: newConflicts.length > 0 ? newConflicts : null,
+                                    has_conflicts: newConflicts.length > 0,
+                                    conflicts_resolved_at: newConflicts.length === 0 ? new Date().toISOString() : null,
+                                    updated_at: new Date().toISOString(),
+                                  })
+                                  .eq('id', selectedIntake.id)
+
+                                await fetchIntakes()
+                                // Refresh selected intake
+                                const { data } = await supabase
+                                  .from('email_intakes')
+                                  .select('*')
+                                  .eq('id', selectedIntake.id)
+                                  .single()
+                                if (data) setSelectedIntake(data)
+                              }}
+                              className="btn btn-primary w-full mt-2"
+                              style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }}
+                            >
+                              Use Partner Value
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Mark All Resolved button */}
+                  <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--warning-300)' }}>
+                    <button
+                      onClick={async () => {
+                        // Mark all conflicts as resolved (keeping current values)
+                        await supabase
+                          .from('email_intakes')
+                          .update({
+                            conflicts: null,
+                            has_conflicts: false,
+                            conflicts_resolved_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString(),
+                          })
+                          .eq('id', selectedIntake.id)
+
+                        await fetchIntakes()
+                        const { data } = await supabase
+                          .from('email_intakes')
+                          .select('*')
+                          .eq('id', selectedIntake.id)
+                          .single()
+                        if (data) setSelectedIntake(data)
+                      }}
+                      className="btn btn-secondary w-full"
+                      style={{ borderColor: 'var(--warning-500)', color: 'var(--warning-600)' }}
+                    >
+                      Mark All Resolved (Keep Current Values)
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Original Email Preview */}
               <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: 'var(--background-subtle)' }}>
                 <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--foreground-muted)' }}>Original Email</h3>
@@ -582,6 +783,7 @@ function AdminIntakesContent() {
                       editMode={editMode}
                       confidence={getConfidenceColor('ta_full_name')}
                       lowConfidence={isFieldLowConfidence('ta_full_name')}
+                      isRequiredEmpty={isRequiredFieldEmpty('extracted_ta_full_name', editMode ? editData : selectedIntake)}
                     />
                     <InputField
                       label="TA Email"
@@ -590,6 +792,7 @@ function AdminIntakesContent() {
                       editMode={editMode}
                       confidence={getConfidenceColor('ta_email')}
                       lowConfidence={isFieldLowConfidence('ta_email')}
+                      isRequiredEmpty={isRequiredFieldEmpty('extracted_ta_email', editMode ? editData : selectedIntake)}
                     />
                     <InputField
                       label="TA Phone"
@@ -606,6 +809,7 @@ function AdminIntakesContent() {
                       editMode={editMode}
                       confidence={getConfidenceColor('ta_company_name')}
                       lowConfidence={isFieldLowConfidence('ta_company_name')}
+                      isRequiredEmpty={isRequiredFieldEmpty('extracted_ta_company_name', editMode ? editData : selectedIntake)}
                     />
                   </div>
                 </section>
@@ -616,12 +820,21 @@ function AdminIntakesContent() {
                   <div className="grid grid-cols-2 gap-4">
                     {editMode ? (
                       <div>
-                        <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>TSD</label>
+                        <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                          TSD
+                          <span className="ml-1 text-xs" style={{ color: 'var(--error-500)' }}>*</span>
+                          {isRequiredFieldEmpty('extracted_tsd_name', editData) && (
+                            <span className="ml-2 text-xs" style={{ color: 'var(--error-500)' }}>• Required</span>
+                          )}
+                        </label>
                         <select
                           value={editData.extracted_tsd_name || ''}
                           onChange={(e) => handleFieldChange('extracted_tsd_name', e.target.value)}
                           className="form-input form-select"
-                          style={{ borderColor: isFieldLowConfidence('tsd_name') ? 'var(--error-500)' : undefined }}
+                          style={{
+                            borderColor: isRequiredFieldEmpty('extracted_tsd_name', editData) ? 'var(--error-500)' : isFieldLowConfidence('tsd_name') ? 'var(--warning-500)' : undefined,
+                            borderWidth: isRequiredFieldEmpty('extracted_tsd_name', editData) ? '2px' : undefined
+                          }}
                         >
                           <option value="">Select TSD...</option>
                           {TSD_OPTIONS.map(tsd => (
@@ -637,6 +850,7 @@ function AdminIntakesContent() {
                         editMode={false}
                         confidence={getConfidenceColor('tsd_name')}
                         lowConfidence={isFieldLowConfidence('tsd_name')}
+                        isRequiredEmpty={isRequiredFieldEmpty('extracted_tsd_name', selectedIntake)}
                       />
                     )}
                     <InputField
@@ -669,6 +883,7 @@ function AdminIntakesContent() {
                       editMode={editMode}
                       confidence={getConfidenceColor('customer_first_name')}
                       lowConfidence={isFieldLowConfidence('customer_first_name')}
+                      isRequiredEmpty={isRequiredFieldEmpty('extracted_customer_first_name', editMode ? editData : selectedIntake)}
                     />
                     <InputField
                       label="Last Name"
@@ -677,6 +892,7 @@ function AdminIntakesContent() {
                       editMode={editMode}
                       confidence={getConfidenceColor('customer_last_name')}
                       lowConfidence={isFieldLowConfidence('customer_last_name')}
+                      isRequiredEmpty={isRequiredFieldEmpty('extracted_customer_last_name', editMode ? editData : selectedIntake)}
                     />
                     <InputField
                       label="Job Title"
@@ -693,6 +909,7 @@ function AdminIntakesContent() {
                       editMode={editMode}
                       confidence={getConfidenceColor('customer_company_name')}
                       lowConfidence={isFieldLowConfidence('customer_company_name')}
+                      isRequiredEmpty={isRequiredFieldEmpty('extracted_customer_company_name', editMode ? editData : selectedIntake)}
                     />
                     <InputField
                       label="Email"
@@ -701,6 +918,7 @@ function AdminIntakesContent() {
                       editMode={editMode}
                       confidence={getConfidenceColor('customer_email')}
                       lowConfidence={isFieldLowConfidence('customer_email')}
+                      isRequiredEmpty={isRequiredFieldEmpty('extracted_customer_email', editMode ? editData : selectedIntake)}
                     />
                     <InputField
                       label="Phone"
@@ -913,32 +1131,43 @@ function AdminIntakesContent() {
                     </button>
                   </>
                 ) : (
-                  <>
-                    <button
-                      onClick={handleEdit}
-                      className="btn btn-secondary flex-1"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => {
-                        setPartnerEmail(selectedIntake.extracted_ta_email || '')
-                        setShowSendToPartnerModal(true)
-                      }}
-                      className="btn btn-secondary flex-1"
-                      style={{ borderColor: 'var(--warning-500)', color: 'var(--warning-600)' }}
-                    >
-                      Send to Partner
-                    </button>
-                    <button
-                      onClick={handleApproveAndSendToHubspot}
-                      disabled={sendingToZapier}
-                      className="btn btn-primary flex-1"
-                      style={{ backgroundColor: 'var(--success-500)' }}
-                    >
-                      {sendingToZapier ? 'Sending...' : 'Approve & Send to HubSpot'}
-                    </button>
-                  </>
+                  {(() => {
+                    const missingFields = getMissingRequiredFields(selectedIntake)
+                    const canApprove = missingFields.length === 0
+                    return (
+                      <>
+                        <button
+                          onClick={handleEdit}
+                          className="btn btn-secondary flex-1"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            setPartnerEmail(selectedIntake.extracted_ta_email || '')
+                            setShowSendToPartnerModal(true)
+                          }}
+                          className="btn btn-secondary flex-1"
+                          style={{ borderColor: 'var(--warning-500)', color: 'var(--warning-600)' }}
+                        >
+                          Send to Partner
+                        </button>
+                        <button
+                          onClick={handleApproveAndSendToHubspot}
+                          disabled={sendingToZapier || !canApprove}
+                          className="btn btn-primary flex-1"
+                          style={{
+                            backgroundColor: canApprove ? 'var(--success-500)' : 'var(--foreground-muted)',
+                            cursor: canApprove ? 'pointer' : 'not-allowed',
+                            opacity: canApprove ? 1 : 0.6
+                          }}
+                          title={canApprove ? '' : `Missing required fields: ${missingFields.join(', ')}`}
+                        >
+                          {sendingToZapier ? 'Sending...' : 'Approve & Send to HubSpot'}
+                        </button>
+                      </>
+                    )
+                  })()}
                 )}
               </div>
             </div>
@@ -1004,6 +1233,7 @@ function InputField({
   editMode,
   confidence,
   lowConfidence,
+  isRequiredEmpty,
 }: {
   label: string
   value: string
@@ -1011,13 +1241,21 @@ function InputField({
   editMode: boolean
   confidence: string
   lowConfidence: boolean
+  isRequiredEmpty?: boolean
 }) {
+  const showRequiredError = isRequiredEmpty && !value
   return (
     <div>
       <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
         {label}
-        {lowConfidence && (
+        {isRequiredEmpty !== undefined && (
+          <span className="ml-1 text-xs" style={{ color: 'var(--error-500)' }}>*</span>
+        )}
+        {lowConfidence && !showRequiredError && (
           <span className="ml-2 text-xs" style={{ color: 'var(--error-500)' }}>• Needs review</span>
+        )}
+        {showRequiredError && (
+          <span className="ml-2 text-xs" style={{ color: 'var(--error-500)' }}>• Required</span>
         )}
       </label>
       {editMode ? (
@@ -1026,7 +1264,10 @@ function InputField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className="form-input"
-          style={{ borderColor: lowConfidence ? 'var(--error-500)' : undefined }}
+          style={{
+            borderColor: showRequiredError ? 'var(--error-500)' : lowConfidence ? 'var(--warning-500)' : undefined,
+            borderWidth: showRequiredError ? '2px' : undefined
+          }}
         />
       ) : (
         <p
@@ -1034,7 +1275,9 @@ function InputField({
           style={{
             backgroundColor: 'var(--background-subtle)',
             color: value ? 'var(--foreground)' : 'var(--foreground-muted)',
-            borderLeft: `3px solid ${confidence}`,
+            borderLeft: `3px solid ${showRequiredError ? 'var(--error-500)' : confidence}`,
+            border: showRequiredError ? '2px solid var(--error-500)' : undefined,
+            borderLeftWidth: showRequiredError ? '3px' : undefined,
           }}
         >
           {value || '-'}

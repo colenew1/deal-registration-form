@@ -430,6 +430,32 @@ function RegistrationFormContent({ id }: { id: string }) {
     }
 
     try {
+      // If this is a partner filling in requested info, use the partner-submit endpoint
+      // This enables conflict detection
+      if (requestInfo && intake) {
+        const res = await fetch(`/api/email-intake/${intake.id}/partner-submit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        })
+
+        if (!res.ok) {
+          const data = await res.json()
+          throw new Error(data.error || 'Failed to submit')
+        }
+
+        const result = await res.json()
+
+        // Show appropriate message based on conflicts
+        if (result.has_conflicts) {
+          router.push('/thank-you?message=submitted-with-conflicts')
+        } else {
+          router.push('/thank-you')
+        }
+        return
+      }
+
+      // Standard submission - create a registration
       const res = await fetch('/api/registrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

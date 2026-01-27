@@ -1,6 +1,14 @@
-import Link from 'next/link'
+'use client'
 
-export default function ThankYou() {
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
+
+function ThankYouContent() {
+  const searchParams = useSearchParams()
+  const message = searchParams.get('message')
+  const hasConflicts = message === 'submitted-with-conflicts'
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--background-subtle)' }}>
       {/* Header */}
@@ -41,12 +49,14 @@ export default function ThankYou() {
 
             {/* Title */}
             <h1 className="text-2xl font-semibold mb-3">
-              Registration Submitted Successfully
+              {hasConflicts ? 'Information Submitted for Review' : 'Registration Submitted Successfully'}
             </h1>
 
             {/* Description */}
             <p className="mb-8" style={{ color: 'var(--foreground-muted)' }}>
-              Thank you for submitting your deal registration. Our team has received your submission and will review it promptly.
+              {hasConflicts
+                ? 'Thank you for updating the information. Some of your changes differ from what our team entered. An admin will review and resolve any differences.'
+                : 'Thank you for submitting your deal registration. Our team has received your submission and will review it promptly.'}
             </p>
 
             {/* What's Next Section */}
@@ -136,5 +146,17 @@ export default function ThankYou() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function ThankYou() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background-subtle)' }}>
+        <p style={{ color: 'var(--foreground-muted)' }}>Loading...</p>
+      </div>
+    }>
+      <ThankYouContent />
+    </Suspense>
   )
 }

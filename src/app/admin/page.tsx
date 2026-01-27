@@ -133,6 +133,7 @@ export default function AdminDashboard() {
   const [editMode, setEditMode] = useState(false)
   const [editData, setEditData] = useState<Partial<DealRegistration>>({})
   const [saving, setSaving] = useState(false)
+  const [pendingIntakesCount, setPendingIntakesCount] = useState(0)
 
   // Check authentication and admin role
   useEffect(() => {
@@ -170,6 +171,29 @@ export default function AdminDashboard() {
 
     checkAuth()
   }, [router, supabase])
+
+  // Fetch pending email intakes count
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const res = await fetch('/api/email-intake/count')
+        if (res.ok) {
+          const data = await res.json()
+          setPendingIntakesCount(data.pending_count || 0)
+        }
+      } catch (err) {
+        console.error('Failed to fetch pending intakes count:', err)
+      }
+    }
+
+    // Fetch on mount
+    fetchPendingCount()
+
+    // Poll every 30 seconds
+    const interval = setInterval(fetchPendingCount, 30000)
+
+    return () => clearInterval(interval)
+  }, [])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -304,8 +328,30 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>{profile?.full_name}</p>
                 <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>Administrator</p>
               </div>
-              <Link href="/admin/intakes" className="btn btn-secondary">
+              <Link href="/admin/intakes" className="btn btn-secondary" style={{ position: 'relative' }}>
                 Email Intakes
+                {pendingIntakesCount > 0 && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '-8px',
+                      right: '-8px',
+                      backgroundColor: 'var(--error-500)',
+                      color: 'white',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      minWidth: '20px',
+                      height: '20px',
+                      borderRadius: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '0 6px',
+                    }}
+                  >
+                    {pendingIntakesCount > 99 ? '99+' : pendingIntakesCount}
+                  </span>
+                )}
               </Link>
               <Link href="/admin/users" className="btn btn-secondary">
                 Manage Users
