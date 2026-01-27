@@ -49,7 +49,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase-server'
+import { createApiClient } from '@/lib/supabase-server'
 import { parseEmail } from '@/lib/email-parser'
 
 // Optional: Add a secret token for basic security
@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert into Supabase
-    const supabase = createAdminClient()
+    const supabase = createApiClient()
     const { data, error } = await supabase
       .from('email_intakes')
       .insert([intakeData])

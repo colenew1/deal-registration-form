@@ -27,6 +27,16 @@ export async function createServerComponentClient() {
   })
 }
 
+// Simple server client for API routes (uses anon key, no cookies needed)
+export function createApiClient() {
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+}
+
 // Admin client (for server-side admin operations - uses service role key)
 export function createAdminClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
