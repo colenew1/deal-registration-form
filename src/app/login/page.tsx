@@ -5,6 +5,20 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClientComponentClient } from '@/lib/supabase'
 
+// Light mode color palette (matches admin panel)
+const colors = {
+  bg: '#f8fafc',
+  white: '#ffffff',
+  border: '#e2e8f0',
+  text: '#1e293b',
+  textMuted: '#64748b',
+  primary: '#2563eb',
+  primaryLight: '#dbeafe',
+  error: '#dc2626',
+  errorLight: '#fee2e2',
+  errorText: '#991b1b',
+}
+
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -104,117 +118,125 @@ function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-md">
+    <div style={{ width: '100%', maxWidth: 400 }}>
       {/* Logo */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--primary-600)' }}>
-          AmplifAI
-        </h1>
-        <p className="mt-2" style={{ color: 'var(--foreground-muted)' }}>
-          Deal Registration Portal
-        </p>
+      <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: colors.primary, margin: 0 }}>AmplifAI</h1>
+        <p style={{ marginTop: 8, color: colors.textMuted, fontSize: 14 }}>Deal Registration Portal</p>
       </div>
 
       {/* Login Card */}
-      <div className="rounded-xl p-8 shadow-lg" style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-        <h2 className="text-xl font-semibold mb-6" style={{ color: 'var(--foreground)' }}>
-          Sign in to your account
-        </h2>
-
-        {error && (
-          <div className="mb-4 p-3 rounded-lg text-sm" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="form-input"
-              placeholder="you@company.com"
-              disabled={isLoading}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="form-input"
-              placeholder="••••••••"
-              disabled={isLoading}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 disabled:opacity-50"
-            style={{
-              backgroundColor: 'var(--primary-600)',
-              color: 'white',
-            }}
-          >
-            {isLoading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-
-        {/* Divider */}
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t" style={{ borderColor: 'var(--card-border)' }}></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2" style={{ backgroundColor: 'var(--card-bg)', color: 'var(--foreground-muted)' }}>
-              or
-            </span>
-          </div>
+      <div style={{ backgroundColor: colors.white, borderRadius: 12, border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+        <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
+          <h2 style={{ fontSize: 18, fontWeight: 600, color: colors.text, margin: 0 }}>Sign in to your account</h2>
         </div>
 
-        {/* Guest Access */}
-        <button
-          onClick={handleGuestContinue}
-          disabled={isLoading}
-          className="w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 disabled:opacity-50"
-          style={{
-            backgroundColor: 'transparent',
-            color: 'var(--primary-600)',
-            border: '2px solid var(--primary-600)',
-          }}
-        >
-          Continue as Guest
-        </button>
-        <p className="mt-2 text-xs text-center" style={{ color: 'var(--foreground-muted)' }}>
-          Submit a deal registration without creating an account
-        </p>
+        <div style={{ padding: 24 }}>
+          {error && (
+            <div style={{ marginBottom: 20, padding: 12, backgroundColor: colors.errorLight, border: `1px solid ${colors.error}`, borderRadius: 6 }}>
+              <p style={{ margin: 0, fontSize: 14, color: colors.errorText }}>{error}</p>
+            </div>
+          )}
 
-        {/* Register Link */}
-        <div className="mt-6 text-center">
-          <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
-            Don&apos;t have an account?{' '}
-            <Link href="/partner/register" className="font-medium hover:underline" style={{ color: 'var(--primary-600)' }}>
-              Register as Partner
-            </Link>
+          <form onSubmit={handleLogin}>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="you@company.com"
+                disabled={isLoading}
+                style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white, color: colors.text }}
+              />
+            </div>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+                disabled={isLoading}
+                style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white, color: colors.text }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              style={{
+                width: '100%',
+                padding: '12px 20px',
+                fontSize: 14,
+                fontWeight: 600,
+                backgroundColor: colors.primary,
+                color: colors.white,
+                border: 'none',
+                borderRadius: 6,
+                cursor: 'pointer',
+                opacity: isLoading ? 0.7 : 1,
+              }}
+            >
+              {isLoading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div style={{ position: 'relative', margin: '24px 0' }}>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center' }}>
+              <div style={{ width: '100%', borderTop: `1px solid ${colors.border}` }}></div>
+            </div>
+            <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+              <span style={{ padding: '0 12px', backgroundColor: colors.white, color: colors.textMuted, fontSize: 13 }}>or</span>
+            </div>
+          </div>
+
+          {/* Guest Access */}
+          <button
+            onClick={handleGuestContinue}
+            disabled={isLoading}
+            style={{
+              width: '100%',
+              padding: '12px 20px',
+              fontSize: 14,
+              fontWeight: 500,
+              backgroundColor: colors.white,
+              color: colors.primary,
+              border: `2px solid ${colors.primary}`,
+              borderRadius: 6,
+              cursor: 'pointer',
+            }}
+          >
+            Continue as Guest
+          </button>
+          <p style={{ marginTop: 8, fontSize: 12, textAlign: 'center', color: colors.textMuted }}>
+            Submit a deal registration without creating an account
           </p>
+
+          {/* Register Link */}
+          <div style={{ marginTop: 20, textAlign: 'center' }}>
+            <p style={{ fontSize: 14, color: colors.textMuted, margin: 0 }}>
+              Don&apos;t have an account?{' '}
+              <Link href="/partner/register" style={{ fontWeight: 500, color: colors.primary, textDecoration: 'none' }}>
+                Register as Partner
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Footer */}
-      <p className="mt-8 text-center text-sm" style={{ color: 'var(--foreground-muted)' }}>
+      <p style={{ marginTop: 24, textAlign: 'center', fontSize: 13, color: colors.textMuted }}>
         Need help? Contact{' '}
-        <a href="mailto:greynolds@amplifai.com" className="hover:underline" style={{ color: 'var(--primary-600)' }}>
+        <a href="mailto:greynolds@amplifai.com" style={{ color: colors.primary, textDecoration: 'none' }}>
           greynolds@amplifai.com
         </a>
       </p>
@@ -223,22 +245,23 @@ function LoginForm() {
 }
 
 function LoginLoading() {
+  const colors = {
+    bg: '#f8fafc',
+    white: '#ffffff',
+    border: '#e2e8f0',
+    primary: '#2563eb',
+    textMuted: '#64748b',
+  }
+
   return (
-    <div className="w-full max-w-md">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--primary-600)' }}>
-          AmplifAI
-        </h1>
-        <p className="mt-2" style={{ color: 'var(--foreground-muted)' }}>
-          Deal Registration Portal
-        </p>
+    <div style={{ width: '100%', maxWidth: 400 }}>
+      <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: colors.primary, margin: 0 }}>AmplifAI</h1>
+        <p style={{ marginTop: 8, color: colors.textMuted, fontSize: 14 }}>Deal Registration Portal</p>
       </div>
-      <div className="rounded-xl p-8 shadow-lg" style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
-        <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-10 bg-gray-200 rounded"></div>
-          <div className="h-10 bg-gray-200 rounded"></div>
-          <div className="h-12 bg-gray-200 rounded"></div>
+      <div style={{ backgroundColor: colors.white, borderRadius: 12, border: `1px solid ${colors.border}`, padding: 32 }}>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <div style={{ width: 24, height: 24, border: `2px solid ${colors.primary}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
         </div>
       </div>
     </div>
@@ -247,7 +270,7 @@ function LoginLoading() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--background)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: '#f8fafc' }}>
       <Suspense fallback={<LoginLoading />}>
         <LoginForm />
       </Suspense>

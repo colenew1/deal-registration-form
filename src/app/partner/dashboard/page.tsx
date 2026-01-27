@@ -7,6 +7,27 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClientComponentClient, type UserProfile } from '@/lib/supabase'
 
+// Light mode color palette (matches admin panel)
+const colors = {
+  bg: '#f8fafc',
+  white: '#ffffff',
+  border: '#e2e8f0',
+  text: '#1e293b',
+  textMuted: '#64748b',
+  primary: '#2563eb',
+  primaryLight: '#dbeafe',
+  primaryText: '#1e40af',
+  success: '#16a34a',
+  successLight: '#dcfce7',
+  successText: '#166534',
+  warning: '#d97706',
+  warningLight: '#fef3c7',
+  warningText: '#92400e',
+  error: '#dc2626',
+  errorLight: '#fee2e2',
+  errorText: '#991b1b',
+}
+
 type Submission = {
   id: string
   created_at: string
@@ -102,16 +123,13 @@ export default function PartnerDashboard() {
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, { bg: string; text: string }> = {
-      pending: { bg: 'rgba(234, 179, 8, 0.1)', text: '#eab308' },
-      approved: { bg: 'rgba(34, 197, 94, 0.1)', text: '#22c55e' },
-      rejected: { bg: 'rgba(239, 68, 68, 0.1)', text: '#ef4444' },
+      pending: { bg: colors.warningLight, text: colors.warningText },
+      approved: { bg: colors.successLight, text: colors.successText },
+      rejected: { bg: colors.errorLight, text: colors.errorText },
     }
     const style = styles[status] || styles.pending
     return (
-      <span
-        className="px-2 py-1 rounded-full text-xs font-medium capitalize"
-        style={{ backgroundColor: style.bg, color: style.text }}
-      >
+      <span style={{ padding: '4px 10px', borderRadius: 4, fontSize: 12, fontWeight: 500, backgroundColor: style.bg, color: style.text, textTransform: 'capitalize' }}>
         {status}
       </span>
     )
@@ -119,94 +137,78 @@ export default function PartnerDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background)' }}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto" style={{ borderColor: 'var(--primary-600)' }}></div>
-          <p className="mt-4" style={{ color: 'var(--foreground-muted)' }}>Loading...</p>
-        </div>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
+        <div style={{ width: 24, height: 24, border: `2px solid ${colors.primary}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
       {/* Header */}
-      <header className="border-b" style={{ borderColor: 'var(--card-border)', backgroundColor: 'var(--card-bg)' }}>
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold" style={{ color: 'var(--primary-600)' }}>
-              AmplifAI
-            </h1>
-            <span className="text-sm px-2 py-1 rounded" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground-muted)' }}>
-              Partner Portal
-            </span>
+      <header style={{ backgroundColor: colors.white, borderBottom: `1px solid ${colors.border}`, padding: '16px 24px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: colors.primary, margin: 0 }}>AmplifAI</h1>
+            <span style={{ padding: '4px 10px', backgroundColor: colors.bg, borderRadius: 4, fontSize: 12, color: colors.textMuted }}>Partner Portal</span>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>{profile?.full_name}</p>
-              <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>{profile?.company_name}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontSize: 14, fontWeight: 500, color: colors.text, margin: 0 }}>{profile?.full_name}</p>
+              <p style={{ fontSize: 12, color: colors.textMuted, margin: 0 }}>{profile?.company_name}</p>
             </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm px-3 py-1.5 rounded-lg transition-colors"
-              style={{ color: 'var(--foreground-muted)', border: '1px solid var(--card-border)' }}
-            >
+            <button onClick={handleLogout} style={{ padding: '8px 16px', fontSize: 14, backgroundColor: colors.white, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>
               Sign Out
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: 24 }}>
         {/* Welcome + CTA */}
-        <div className="flex items-center justify-between mb-8">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <div>
-            <h2 className="text-2xl font-semibold" style={{ color: 'var(--foreground)' }}>
+            <h2 style={{ fontSize: 24, fontWeight: 600, color: colors.text, margin: 0 }}>
               Welcome back, {profile?.full_name?.split(' ')[0]}
             </h2>
-            <p className="mt-1" style={{ color: 'var(--foreground-muted)' }}>
-              Manage your deal registrations
-            </p>
+            <p style={{ fontSize: 14, color: colors.textMuted, margin: '4px 0 0' }}>Manage your deal registrations</p>
           </div>
-          <Link
-            href="/partner/submit"
-            className="px-4 py-2 rounded-lg font-medium transition-all"
-            style={{ backgroundColor: 'var(--primary-600)', color: 'white' }}
-          >
+          <Link href="/partner/submit" style={{ padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.primary, color: colors.white, borderRadius: 6, textDecoration: 'none' }}>
             + Submit New Deal
           </Link>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
           {[
-            { label: 'Total', value: stats.total, color: 'var(--primary-600)' },
-            { label: 'Pending', value: stats.pending, color: '#eab308' },
-            { label: 'Approved', value: stats.approved, color: '#22c55e' },
-            { label: 'Rejected', value: stats.rejected, color: '#ef4444' },
+            { label: 'Total', value: stats.total, color: colors.primary },
+            { label: 'Pending', value: stats.pending, color: colors.warning },
+            { label: 'Approved', value: stats.approved, color: colors.success },
+            { label: 'Rejected', value: stats.rejected, color: colors.error },
           ].map(stat => (
-            <div
-              key={stat.label}
-              className="p-4 rounded-xl"
-              style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
-            >
-              <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>{stat.label}</p>
-              <p className="text-2xl font-bold mt-1" style={{ color: stat.color }}>{stat.value}</p>
+            <div key={stat.label} style={{ padding: 20, backgroundColor: colors.white, borderRadius: 8, border: `1px solid ${colors.border}` }}>
+              <p style={{ fontSize: 13, color: colors.textMuted, margin: 0, textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.5px' }}>{stat.label}</p>
+              <p style={{ fontSize: 32, fontWeight: 700, color: stat.color, margin: '8px 0 0' }}>{stat.value}</p>
             </div>
           ))}
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-4">
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           {(['all', 'pending', 'approved', 'rejected'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className="px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize"
               style={{
-                backgroundColor: activeTab === tab ? 'var(--primary-600)' : 'var(--card-bg)',
-                color: activeTab === tab ? 'white' : 'var(--foreground-muted)',
-                border: activeTab === tab ? 'none' : '1px solid var(--card-border)',
+                padding: '10px 20px',
+                fontSize: 14,
+                fontWeight: 500,
+                backgroundColor: activeTab === tab ? colors.primary : colors.white,
+                color: activeTab === tab ? colors.white : colors.text,
+                border: activeTab === tab ? 'none' : `1px solid ${colors.border}`,
+                borderRadius: 6,
+                cursor: 'pointer',
+                textTransform: 'capitalize',
               }}
             >
               {tab} {tab !== 'all' && `(${stats[tab]})`}
@@ -215,63 +217,53 @@ export default function PartnerDashboard() {
         </div>
 
         {/* Submissions Table */}
-        <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
+        <div style={{ backgroundColor: colors.white, borderRadius: 8, border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
           {filteredSubmissions.length === 0 ? (
-            <div className="p-12 text-center">
-              <p style={{ color: 'var(--foreground-muted)' }}>
+            <div style={{ padding: 48, textAlign: 'center' }}>
+              <p style={{ color: colors.textMuted, margin: 0 }}>
                 {activeTab === 'all' ? 'No submissions yet.' : `No ${activeTab} submissions.`}
               </p>
               {activeTab === 'all' && (
-                <Link
-                  href="/partner/submit"
-                  className="inline-block mt-4 px-4 py-2 rounded-lg font-medium"
-                  style={{ backgroundColor: 'var(--primary-600)', color: 'white' }}
-                >
+                <Link href="/partner/submit" style={{ display: 'inline-block', marginTop: 16, padding: '10px 20px', backgroundColor: colors.primary, color: colors.white, borderRadius: 6, textDecoration: 'none', fontWeight: 500 }}>
                   Submit Your First Deal
                 </Link>
               )}
             </div>
           ) : (
-            <table className="w-full">
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-                  <th className="text-left p-4 text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>Customer</th>
-                  <th className="text-left p-4 text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>Contact</th>
-                  <th className="text-left p-4 text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>Agents</th>
-                  <th className="text-left p-4 text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>Submitted</th>
-                  <th className="text-left p-4 text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>Status</th>
+                <tr style={{ backgroundColor: colors.bg, borderBottom: `1px solid ${colors.border}` }}>
+                  <th style={{ textAlign: 'left', padding: 16, fontSize: 11, fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Customer</th>
+                  <th style={{ textAlign: 'left', padding: 16, fontSize: 11, fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Contact</th>
+                  <th style={{ textAlign: 'left', padding: 16, fontSize: 11, fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Agents</th>
+                  <th style={{ textAlign: 'left', padding: 16, fontSize: 11, fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Submitted</th>
+                  <th style={{ textAlign: 'left', padding: 16, fontSize: 11, fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredSubmissions.map(sub => (
-                  <tr
-                    key={sub.id}
-                    className="transition-colors"
-                    style={{ borderBottom: '1px solid var(--card-border)' }}
-                  >
-                    <td className="p-4">
-                      <p className="font-medium" style={{ color: 'var(--foreground)' }}>{sub.customer_company_name}</p>
-                      <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                  <tr key={sub.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
+                    <td style={{ padding: 16 }}>
+                      <p style={{ fontWeight: 500, color: colors.text, margin: 0, fontSize: 14 }}>{sub.customer_company_name}</p>
+                      <p style={{ fontSize: 13, color: colors.textMuted, margin: '4px 0 0' }}>
                         {sub.customer_first_name} {sub.customer_last_name}
                       </p>
                     </td>
-                    <td className="p-4">
-                      <p className="text-sm" style={{ color: 'var(--foreground)' }}>{sub.customer_email}</p>
+                    <td style={{ padding: 16 }}>
+                      <p style={{ fontSize: 14, color: colors.text, margin: 0 }}>{sub.customer_email}</p>
                     </td>
-                    <td className="p-4">
-                      <p className="text-sm" style={{ color: 'var(--foreground)' }}>{sub.agent_count || '-'}</p>
+                    <td style={{ padding: 16 }}>
+                      <p style={{ fontSize: 14, color: colors.text, margin: 0 }}>{sub.agent_count || '-'}</p>
                     </td>
-                    <td className="p-4">
-                      <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                    <td style={{ padding: 16 }}>
+                      <p style={{ fontSize: 14, color: colors.textMuted, margin: 0 }}>
                         {new Date(sub.created_at).toLocaleDateString()}
                       </p>
                     </td>
-                    <td className="p-4">
+                    <td style={{ padding: 16 }}>
                       {getStatusBadge(sub.status)}
                       {sub.status === 'rejected' && sub.rejection_reason && (
-                        <p className="text-xs mt-1" style={{ color: '#ef4444' }}>
-                          {sub.rejection_reason}
-                        </p>
+                        <p style={{ fontSize: 12, marginTop: 4, color: colors.errorText }}>{sub.rejection_reason}</p>
                       )}
                     </td>
                   </tr>
@@ -280,13 +272,13 @@ export default function PartnerDashboard() {
             </table>
           )}
         </div>
-      </main>
+      </div>
 
       {/* Footer */}
-      <footer className="text-center py-8">
-        <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+      <footer style={{ textAlign: 'center', padding: 32 }}>
+        <p style={{ fontSize: 13, color: colors.textMuted, margin: 0 }}>
           Need help? Contact{' '}
-          <a href="mailto:greynolds@amplifai.com" className="hover:underline" style={{ color: 'var(--primary-600)' }}>
+          <a href="mailto:greynolds@amplifai.com" style={{ color: colors.primary, textDecoration: 'none' }}>
             greynolds@amplifai.com
           </a>
         </p>
