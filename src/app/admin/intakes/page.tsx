@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClientComponentClient, type UserProfile, type EmailIntake } from '@/lib/supabase'
 
@@ -51,6 +51,7 @@ const ZAPIER_WEBHOOK_URL = process.env.NEXT_PUBLIC_ZAPIER_WEBHOOK_URL || ''
 
 export default function AdminIntakesPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = useMemo(() => createClientComponentClient(), [])
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isAuthChecking, setIsAuthChecking] = useState(true)
@@ -104,6 +105,15 @@ export default function AdminIntakesPage() {
 
       if (error) throw error
       setIntakes(data || [])
+
+      // Auto-select intake if id param is present
+      const intakeId = searchParams.get('id')
+      if (intakeId && data) {
+        const targetIntake = data.find(i => i.id === intakeId)
+        if (targetIntake) {
+          setSelectedIntake(targetIntake)
+        }
+      }
     } catch (err) {
       console.error('Failed to fetch intakes:', err)
     } finally {

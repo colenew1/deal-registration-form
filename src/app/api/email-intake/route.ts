@@ -209,17 +209,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate the pre-fill URL
+    // Generate URLs
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.headers.get('origin') || 'http://localhost:3000'
     const prefillUrl = `${baseUrl}/register/${data.id}`
+    const adminReviewUrl = `${baseUrl}/admin/intakes?id=${data.id}`
 
-    // Return success response with the pre-fill URL
+    // Return success response with URLs
     return NextResponse.json({
       success: true,
       message: 'Email intake processed successfully',
       parsing_method: parsingMethod,
       intake_id: data.id,
       prefill_url: prefillUrl,
+      admin_review_url: adminReviewUrl,
       extracted_data: {
         customer_company: parseResult.data.customer_company_name,
         customer_email: parseResult.data.customer_email,
