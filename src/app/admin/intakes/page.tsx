@@ -242,6 +242,28 @@ export default function AdminIntakesPage() {
     }
   }
 
+  const handleDelete = async (intakeId: string) => {
+    if (!confirm('Are you sure you want to delete this email intake? This cannot be undone.')) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('email_intakes')
+        .delete()
+        .eq('id', intakeId)
+
+      if (error) throw error
+
+      await fetchIntakes()
+      setSelectedIntake(null)
+      setEditMode(false)
+    } catch (err) {
+      console.error('Delete error:', err)
+      alert('Failed to delete intake')
+    }
+  }
+
   const handleFieldChange = (field: string, value: string) => {
     setEditData(prev => ({ ...prev, [field]: value }))
   }
@@ -406,13 +428,22 @@ export default function AdminIntakesPage() {
                     <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>{formatDate(intake.created_at)}</p>
                   </td>
                   <td className="p-4">
-                    <button
-                      onClick={() => setSelectedIntake(intake)}
-                      className="btn btn-secondary"
-                      style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
-                    >
-                      Review
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setSelectedIntake(intake)}
+                        className="btn btn-secondary"
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                      >
+                        Review
+                      </button>
+                      <button
+                        onClick={() => handleDelete(intake.id)}
+                        className="btn"
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', backgroundColor: 'var(--error-500)', color: 'white' }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
