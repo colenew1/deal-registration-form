@@ -120,16 +120,45 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Parse the email content - try AI first, fallback to regex
+    // Parse the email content using AI
     const emailContent = bodyPlain || bodyHtml
     let parseResult = await parseEmailWithAI(emailContent, fromEmail, fromName, subject)
     let parsingMethod = 'ai'
 
-    // Fallback to regex parser if AI is not available or fails
+    // If AI fails, store the email with empty fields so admin can fill in manually
     if (!parseResult) {
-      parseResult = parseEmail(emailContent, fromEmail, fromName, subject)
-      parsingMethod = 'regex'
-      console.log('Using regex parser (AI not available or failed)')
+      parsingMethod = 'failed'
+      console.log('AI parser failed — storing email with empty fields for manual review')
+      parseResult = {
+        data: {
+          ta_full_name: null,
+          ta_email: null,
+          ta_phone: null,
+          ta_company_name: null,
+          tsd_name: null,
+          tsd_contact_name: null,
+          tsd_contact_email: null,
+          customer_first_name: null,
+          customer_last_name: null,
+          customer_company_name: null,
+          customer_email: null,
+          customer_phone: null,
+          customer_job_title: null,
+          customer_street_address: null,
+          customer_city: null,
+          customer_state: null,
+          customer_postal_code: null,
+          customer_country: null,
+          agent_count: null,
+          implementation_timeline: null,
+          solutions_interested: [],
+          opportunity_description: null,
+          deal_value: null,
+        },
+        confidence: {},
+        warnings: ['AI parsing failed — manual review required'],
+        rawText: emailContent || '',
+      }
     } else {
       console.log('Using AI parser')
     }
