@@ -1135,21 +1135,19 @@ export default function AdminDashboard() {
                     whiteSpace: 'pre-wrap',
                   }}
                 >
-{`Hello ${selectedDeal.ta_full_name || 'Partner'},
+{`Hi ${(selectedDeal.ta_full_name || 'there').split(' ')[0]},
 
-Thank you for submitting a deal registration for ${selectedDeal.customer_company_name || 'the customer'}.
+Thanks for submitting a deal registration for ${selectedDeal.customer_company_name || 'the customer'}. We took a look and unfortunately aren't able to move forward with this one.
 
-Unfortunately, we are unable to process this registration at this time.
+If you think this was a mistake or have any questions, feel free to reply and we're happy to take another look.
 
-If you have questions or believe this was in error, please contact us at greynolds@amplifai.com.
-
-Best regards,
-AmplifAI Channel Team`}
+Best,
+${profile?.full_name || 'AmplifAI Channel Team'}`}
                 </div>
                 <div style={{ display: 'flex', gap: 12 }}>
                   <button
                     onClick={async () => {
-                      const text = `Hello ${selectedDeal.ta_full_name || 'Partner'},\n\nThank you for submitting a deal registration for ${selectedDeal.customer_company_name || 'the customer'}.\n\nUnfortunately, we are unable to process this registration at this time.\n\nIf you have questions or believe this was in error, please contact us at greynolds@amplifai.com.\n\nBest regards,\nAmplifAI Channel Team`
+                      const text = `Hi ${(selectedDeal.ta_full_name || 'there').split(' ')[0]},\n\nThanks for submitting a deal registration for ${selectedDeal.customer_company_name || 'the customer'}. We took a look and unfortunately aren't able to move forward with this one.\n\nIf you think this was a mistake or have any questions, feel free to reply and we're happy to take another look.\n\nBest,\n${profile?.full_name || 'AmplifAI Channel Team'}`
                       await navigator.clipboard.writeText(text)
                       setRejectCopied(true)
                     }}
