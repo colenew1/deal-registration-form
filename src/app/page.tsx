@@ -119,9 +119,21 @@ export default function RegistrationForm() {
     }
 
     setAuthLoading(true)
+    let resolved = false
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        console.warn('Auth check timed out')
+        setAuthLoading(false)
+      }
+    }, 5000)
+
     const checkAuth = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (userError) {
+          console.error('Auth check error:', userError)
+          return
+        }
         setUser(user)
         if (user) {
           // Fetch user profile
@@ -147,6 +159,8 @@ export default function RegistrationForm() {
       } catch (err) {
         console.error('Auth check error:', err)
       } finally {
+        resolved = true
+        clearTimeout(timeout)
         setAuthLoading(false)
       }
     }
@@ -320,7 +334,10 @@ export default function RegistrationForm() {
         {/* Auth Section */}
         <div style={{ marginBottom: 24, padding: 16, backgroundColor: colors.white, borderRadius: 8, border: `1px solid ${colors.border}` }}>
           {authLoading ? (
-            <p style={{ margin: 0, textAlign: 'center', color: colors.textMuted, fontSize: 14 }}>Loading...</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <div style={{ width: 16, height: 16, border: `2px solid ${colors.primary}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <p style={{ margin: 0, color: colors.textMuted, fontSize: 14 }}>Checking login...</p>
+            </div>
           ) : user ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
               <div>
