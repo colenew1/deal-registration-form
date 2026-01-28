@@ -76,7 +76,7 @@ Extract these fields. Return ONLY valid JSON:
   "ta_phone": "Partner/TA phone from their signature",
   "ta_company_name": "Partner/TA company from signature or email domain",
 
-  "tsd_name": "TSD name - one of: Avant, Telarus, Intelisys, Sandler Partners, AppSmart, TBI, Bridgepointe, Other",
+  "tsd_name": "TSD name - one of: Avant, Telarus, Intelisys, Sandler Partners, AppSmart, TBI, Bridgepointe, Other. Use 'Other' ONLY if a TSD is clearly mentioned but doesn't match the list. If no TSD is mentioned or identifiable, return null.",
   "tsd_contact_name": "TSD contact - may be intermediary forwarder OR mentioned by TA (NEVER @amplifai.com)",
   "tsd_contact_email": "TSD contact email (NEVER @amplifai.com)",
 
@@ -105,6 +105,7 @@ ABSOLUTE RULES:
 4. If you can't find non-@amplifai.com Partner/TA info, return null for those fields
 5. Convert agent counts: "~2000" → "1000 to 2499", "300 seats" → "250 to 499"
 6. Solutions must match exactly from the list above
+7. For tsd_name, do NOT default to "Other" when no TSD is mentioned — return null instead. Only use "Other" when the email explicitly names a TSD that isn't in the known list
 
 Return ONLY the JSON object.`
 
