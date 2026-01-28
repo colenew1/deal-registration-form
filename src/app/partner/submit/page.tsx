@@ -119,7 +119,7 @@ export default function SubmitDeal() {
 
       // Pre-fill TSD from profile
       if (profileData.tsd_name) {
-        setFormData(prev => ({ ...prev, tsd_name: profileData.tsd_name || '' }))
+        setFormData(prev => ({ ...prev, tsd_name: profileData.tsd_name }))
       }
 
       setIsLoading(false)
