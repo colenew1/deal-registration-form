@@ -35,6 +35,33 @@ const inputStyle = {
   color: colors.text,
 }
 
+// Required fields on this form
+const REQUIRED_FIELDS = new Set([
+  'customer_first_name', 'customer_last_name', 'customer_job_title',
+  'customer_company_name', 'customer_email',
+  'ta_full_name', 'ta_email', 'ta_company_name',
+  'tsd_name', 'agent_count', 'solutions_interested', 'opportunity_description',
+])
+
+// Optional fields that get yellow highlight when empty
+const OPTIONAL_FIELDS = new Set([
+  'customer_phone', 'customer_street_address', 'customer_city',
+  'customer_state', 'customer_postal_code', 'customer_country',
+  'ta_phone', 'implementation_timeline', 'tsd_contact_name', 'tsd_contact_email',
+])
+
+function getFieldInputStyle(fieldName: string, value: string | string[]) {
+  const isEmpty = Array.isArray(value) ? value.length === 0 : !value
+  if (!isEmpty) return inputStyle
+  if (REQUIRED_FIELDS.has(fieldName)) {
+    return { ...inputStyle, border: `2px solid ${colors.error}`, backgroundColor: colors.errorLight }
+  }
+  if (OPTIONAL_FIELDS.has(fieldName)) {
+    return { ...inputStyle, border: `2px solid ${colors.warning}`, backgroundColor: colors.warningLight }
+  }
+  return inputStyle
+}
+
 const labelStyle = {
   display: 'block',
   fontSize: 11,
@@ -412,6 +439,30 @@ function RegistrationFormContent({ id }: { id: string }) {
           </p>
         </div>
 
+        {/* Email Pre-fill Disclaimer */}
+        <div style={{ marginBottom: 24, padding: 20, backgroundColor: colors.primaryLight, borderRadius: 12, border: `1px solid ${colors.primary}` }}>
+          <h3 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 600, color: colors.primary }}>
+            This form has been pre-filled from a forwarded email
+          </h3>
+          <p style={{ margin: '0 0 12px', fontSize: 13, color: colors.text }}>
+            Our team received an email about this deal and extracted the details below. Please review for accuracy, correct anything that&apos;s wrong, and fill in any missing fields.
+          </p>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${colors.error}`, backgroundColor: colors.errorLight, display: 'inline-block' }} />
+              <span style={{ fontSize: 12, color: colors.text }}>Required — needs to be filled</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${colors.warning}`, backgroundColor: colors.warningLight, display: 'inline-block' }} />
+              <span style={{ fontSize: 12, color: colors.text }}>Optional — helpful if you have it</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 16, height: 16, borderRadius: 3, border: `1px solid ${colors.border}`, backgroundColor: colors.white, display: 'inline-block' }} />
+              <span style={{ fontSize: 12, color: colors.text }}>Pre-filled — verify accuracy</span>
+            </div>
+          </div>
+        </div>
+
         {/* Auth Section */}
         {!partnerProfile && (
           <div style={{ marginBottom: 24, padding: 16, backgroundColor: colors.white, borderRadius: 8, border: `1px solid ${colors.border}` }}>
@@ -553,47 +604,47 @@ function RegistrationFormContent({ id }: { id: string }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={labelStyle}>First Name <span style={{ color: colors.error }}>*</span></label>
-                  <input type="text" name="customer_first_name" value={formData.customer_first_name} onChange={handleChange} required placeholder="John" style={inputStyle} />
+                  <input type="text" name="customer_first_name" value={formData.customer_first_name} onChange={handleChange} required placeholder="John" style={getFieldInputStyle('customer_first_name', formData.customer_first_name)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Last Name <span style={{ color: colors.error }}>*</span></label>
-                  <input type="text" name="customer_last_name" value={formData.customer_last_name} onChange={handleChange} required placeholder="Smith" style={inputStyle} />
+                  <input type="text" name="customer_last_name" value={formData.customer_last_name} onChange={handleChange} required placeholder="Smith" style={getFieldInputStyle('customer_last_name', formData.customer_last_name)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Job Title <span style={{ color: colors.error }}>*</span></label>
-                  <input type="text" name="customer_job_title" value={formData.customer_job_title} onChange={handleChange} required placeholder="Contact Center Manager" style={inputStyle} />
+                  <input type="text" name="customer_job_title" value={formData.customer_job_title} onChange={handleChange} required placeholder="Contact Center Manager" style={getFieldInputStyle('customer_job_title', formData.customer_job_title)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Company Name <span style={{ color: colors.error }}>*</span></label>
-                  <input type="text" name="customer_company_name" value={formData.customer_company_name} onChange={handleChange} required placeholder="Acme Corp" style={inputStyle} />
+                  <input type="text" name="customer_company_name" value={formData.customer_company_name} onChange={handleChange} required placeholder="Acme Corp" style={getFieldInputStyle('customer_company_name', formData.customer_company_name)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Email <span style={{ color: colors.error }}>*</span></label>
-                  <input type="email" name="customer_email" value={formData.customer_email} onChange={handleChange} required placeholder="jsmith@company.com" style={inputStyle} />
+                  <input type="email" name="customer_email" value={formData.customer_email} onChange={handleChange} required placeholder="jsmith@company.com" style={getFieldInputStyle('customer_email', formData.customer_email)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Phone</label>
-                  <input type="tel" name="customer_phone" value={formData.customer_phone} onChange={handleChange} placeholder="(555) 123-4567" style={inputStyle} />
+                  <input type="tel" name="customer_phone" value={formData.customer_phone} onChange={handleChange} placeholder="(555) 123-4567" style={getFieldInputStyle('customer_phone', formData.customer_phone)} />
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>Street Address</label>
-                  <input type="text" name="customer_street_address" value={formData.customer_street_address} onChange={handleChange} placeholder="123 Main St" style={inputStyle} />
+                  <input type="text" name="customer_street_address" value={formData.customer_street_address} onChange={handleChange} placeholder="123 Main St" style={getFieldInputStyle('customer_street_address', formData.customer_street_address)} />
                 </div>
                 <div>
                   <label style={labelStyle}>City</label>
-                  <input type="text" name="customer_city" value={formData.customer_city} onChange={handleChange} placeholder="Austin" style={inputStyle} />
+                  <input type="text" name="customer_city" value={formData.customer_city} onChange={handleChange} placeholder="Austin" style={getFieldInputStyle('customer_city', formData.customer_city)} />
                 </div>
                 <div>
                   <label style={labelStyle}>State</label>
-                  <input type="text" name="customer_state" value={formData.customer_state} onChange={handleChange} placeholder="TX" style={inputStyle} />
+                  <input type="text" name="customer_state" value={formData.customer_state} onChange={handleChange} placeholder="TX" style={getFieldInputStyle('customer_state', formData.customer_state)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Postal Code</label>
-                  <input type="text" name="customer_postal_code" value={formData.customer_postal_code} onChange={handleChange} placeholder="78701" style={inputStyle} />
+                  <input type="text" name="customer_postal_code" value={formData.customer_postal_code} onChange={handleChange} placeholder="78701" style={getFieldInputStyle('customer_postal_code', formData.customer_postal_code)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Country</label>
-                  <input type="text" name="customer_country" value={formData.customer_country} onChange={handleChange} placeholder="USA" style={inputStyle} />
+                  <input type="text" name="customer_country" value={formData.customer_country} onChange={handleChange} placeholder="USA" style={getFieldInputStyle('customer_country', formData.customer_country)} />
                 </div>
               </div>
             </div>
@@ -611,21 +662,25 @@ function RegistrationFormContent({ id }: { id: string }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={labelStyle}>Number of Agents <span style={{ color: colors.error }}>*</span></label>
-                  <select name="agent_count" value={formData.agent_count} onChange={handleChange} required style={inputStyle}>
+                  <select name="agent_count" value={formData.agent_count} onChange={handleChange} required style={getFieldInputStyle('agent_count', formData.agent_count)}>
                     <option value="">Select range</option>
                     {AGENT_COUNTS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
                 </div>
                 <div>
                   <label style={labelStyle}>Implementation Timeline</label>
-                  <select name="implementation_timeline" value={formData.implementation_timeline} onChange={handleChange} style={inputStyle}>
+                  <select name="implementation_timeline" value={formData.implementation_timeline} onChange={handleChange} style={getFieldInputStyle('implementation_timeline', formData.implementation_timeline)}>
                     <option value="">Select timeline</option>
                     {TIMELINES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </select>
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>Solutions Interested <span style={{ color: colors.error }}>*</span></label>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+                  <div style={{
+                    display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8, padding: 12, borderRadius: 6,
+                    border: formData.solutions_interested.length === 0 ? `2px solid ${colors.error}` : `1px solid ${colors.border}`,
+                    backgroundColor: formData.solutions_interested.length === 0 ? colors.errorLight : 'transparent',
+                  }}>
                     {SOLUTIONS.map(solution => (
                       <button
                         key={solution}
@@ -656,7 +711,7 @@ function RegistrationFormContent({ id }: { id: string }) {
                     required
                     rows={4}
                     placeholder="Customer's use case, challenges, goals..."
-                    style={{ ...inputStyle, resize: 'vertical' }}
+                    style={{ ...getFieldInputStyle('opportunity_description', formData.opportunity_description), resize: 'vertical' as const }}
                   />
                 </div>
               </div>
@@ -676,19 +731,19 @@ function RegistrationFormContent({ id }: { id: string }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={labelStyle}>Full Name <span style={{ color: colors.error }}>*</span></label>
-                  <input type="text" name="ta_full_name" value={formData.ta_full_name} onChange={handleChange} required placeholder="Jane Doe" style={inputStyle} />
+                  <input type="text" name="ta_full_name" value={formData.ta_full_name} onChange={handleChange} required placeholder="Jane Doe" style={getFieldInputStyle('ta_full_name', formData.ta_full_name)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Company Name <span style={{ color: colors.error }}>*</span></label>
-                  <input type="text" name="ta_company_name" value={formData.ta_company_name} onChange={handleChange} required placeholder="Partner Co" style={inputStyle} />
+                  <input type="text" name="ta_company_name" value={formData.ta_company_name} onChange={handleChange} required placeholder="Partner Co" style={getFieldInputStyle('ta_company_name', formData.ta_company_name)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Email <span style={{ color: colors.error }}>*</span></label>
-                  <input type="email" name="ta_email" value={formData.ta_email} onChange={handleChange} required placeholder="jane@partner.com" style={inputStyle} />
+                  <input type="email" name="ta_email" value={formData.ta_email} onChange={handleChange} required placeholder="jane@partner.com" style={getFieldInputStyle('ta_email', formData.ta_email)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Phone</label>
-                  <input type="tel" name="ta_phone" value={formData.ta_phone} onChange={handleChange} placeholder="(555) 123-4567" style={inputStyle} />
+                  <input type="tel" name="ta_phone" value={formData.ta_phone} onChange={handleChange} placeholder="(555) 123-4567" style={getFieldInputStyle('ta_phone', formData.ta_phone)} />
                 </div>
               </div>
             </div>
@@ -706,15 +761,15 @@ function RegistrationFormContent({ id }: { id: string }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={labelStyle}>TSD Name <span style={{ color: colors.error }}>*</span></label>
-                  <input type="text" name="tsd_name" value={formData.tsd_name} onChange={handleChange} required placeholder="Avant" style={inputStyle} />
+                  <input type="text" name="tsd_name" value={formData.tsd_name} onChange={handleChange} required placeholder="Avant" style={getFieldInputStyle('tsd_name', formData.tsd_name)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Contact Name</label>
-                  <input type="text" name="tsd_contact_name" value={formData.tsd_contact_name} onChange={handleChange} placeholder="Contact Name" style={inputStyle} />
+                  <input type="text" name="tsd_contact_name" value={formData.tsd_contact_name} onChange={handleChange} placeholder="Contact Name" style={getFieldInputStyle('tsd_contact_name', formData.tsd_contact_name)} />
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>Contact Email</label>
-                  <input type="email" name="tsd_contact_email" value={formData.tsd_contact_email} onChange={handleChange} placeholder="contact@tsd.com" style={inputStyle} />
+                  <input type="email" name="tsd_contact_email" value={formData.tsd_contact_email} onChange={handleChange} placeholder="contact@tsd.com" style={getFieldInputStyle('tsd_contact_email', formData.tsd_contact_email)} />
                 </div>
               </div>
             </div>
