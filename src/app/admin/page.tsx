@@ -205,6 +205,8 @@ export default function AdminDashboard() {
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [rejectPath, setRejectPath] = useState<'choose' | 'custom'>('choose')
   const [rejectCopied, setRejectCopied] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -362,13 +364,28 @@ export default function AdminDashboard() {
 
   const handleDelete = async () => {
     if (!selectedDeal) return
-    if (selectedDeal.type === 'email_intake') {
-      await supabase.from('email_intakes').delete().eq('id', selectedDeal.id)
-    } else {
-      await supabase.from('deal_registrations').delete().eq('id', selectedDeal.id)
+    setDeleting(true)
+    try {
+      let result
+      if (selectedDeal.type === 'email_intake') {
+        result = await supabase.from('email_intakes').delete().eq('id', selectedDeal.id)
+      } else {
+        result = await supabase.from('deal_registrations').delete().eq('id', selectedDeal.id)
+      }
+      if (result.error) {
+        console.error('Delete error:', result.error)
+        alert('Failed to delete: ' + result.error.message)
+        return
+      }
+      setSelectedDeal(null)
+      setShowDeleteConfirm(false)
+      await fetchData()
+    } catch (err) {
+      console.error('Delete error:', err)
+      alert('Failed to delete the record.')
+    } finally {
+      setDeleting(false)
     }
-    await fetchData()
-    setSelectedDeal(null)
   }
 
   const handleResolveConflict = async (index: number, usePartner: boolean) => {
@@ -809,24 +826,42 @@ export default function AdminDashboard() {
                     <p style={{ textAlign: 'center', color: colors.textMuted, fontSize: 13, margin: 0 }}>
                       Sent to HubSpot
                     </p>
-                    <button
-                      onClick={handleSendToHubSpot}
-                      disabled={sendingToHubSpot}
-                      style={{
-                        width: '100%',
-                        padding: '10px 20px',
-                        fontSize: 14,
-                        fontWeight: 500,
-                        backgroundColor: colors.white,
-                        color: colors.textMuted,
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: 6,
-                        cursor: sendingToHubSpot ? 'not-allowed' : 'pointer',
-                        opacity: sendingToHubSpot ? 0.7 : 1,
-                      }}
-                    >
-                      {sendingToHubSpot ? 'Resubmitting...' : 'Resubmit to HubSpot'}
-                    </button>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <button
+                        onClick={handleSendToHubSpot}
+                        disabled={sendingToHubSpot}
+                        style={{
+                          flex: 1,
+                          padding: '10px 20px',
+                          fontSize: 14,
+                          fontWeight: 500,
+                          backgroundColor: colors.white,
+                          color: colors.textMuted,
+                          border: `1px solid ${colors.border}`,
+                          borderRadius: 6,
+                          cursor: sendingToHubSpot ? 'not-allowed' : 'pointer',
+                          opacity: sendingToHubSpot ? 0.7 : 1,
+                        }}
+                      >
+                        {sendingToHubSpot ? 'Resubmitting...' : 'Resubmit to HubSpot'}
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        style={{
+                          flex: 1,
+                          padding: '10px 20px',
+                          fontSize: 14,
+                          fontWeight: 500,
+                          backgroundColor: colors.error,
+                          color: colors.white,
+                          border: 'none',
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Delete Permanently
+                      </button>
+                    </div>
                   </div>
                 ) : selectedDeal.status === 'rejected' ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -851,7 +886,7 @@ export default function AdminDashboard() {
                         Unreject
                       </button>
                       <button
-                        onClick={handleDelete}
+                        onClick={() => setShowDeleteConfirm(true)}
                         style={{
                           flex: 1,
                           padding: '10px 20px',
@@ -1153,6 +1188,86 @@ AmplifAI Channel Team`}
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && selectedDeal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: 16,
+          }}
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          <div
+            style={{
+              backgroundColor: colors.white,
+              borderRadius: 12,
+              padding: 24,
+              width: '100%',
+              maxWidth: 440,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 600, color: colors.error }}>
+              Delete Permanently
+            </h3>
+            <p style={{ margin: '0 0 16px', fontSize: 14, color: colors.textMuted }}>
+              This will permanently delete this deal registration. This action cannot be undone.
+            </p>
+            <div style={{ padding: 12, backgroundColor: colors.errorLight, borderRadius: 8, marginBottom: 20, border: `1px solid ${colors.error}` }}>
+              <p style={{ margin: 0, fontSize: 13, color: colors.text }}>
+                <strong>{selectedDeal.customer_first_name} {selectedDeal.customer_last_name}</strong> at {selectedDeal.customer_company_name}
+              </p>
+              <p style={{ margin: '4px 0 0', fontSize: 12, color: colors.textMuted }}>
+                Partner: {selectedDeal.ta_full_name} ({selectedDeal.ta_company_name})
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{
+                  flex: 1,
+                  padding: '10px 20px',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  backgroundColor: colors.white,
+                  color: colors.text,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                style={{
+                  flex: 1,
+                  padding: '10px 20px',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  backgroundColor: colors.error,
+                  color: colors.white,
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: deleting ? 'not-allowed' : 'pointer',
+                  opacity: deleting ? 0.7 : 1,
+                }}
+              >
+                {deleting ? 'Deleting...' : 'Delete Forever'}
+              </button>
+            </div>
           </div>
         </div>
       )}
