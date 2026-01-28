@@ -68,6 +68,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Validate partner_id if provided - must exist in user_profiles
+    let partnerId = body.partner_id || null
+    if (partnerId) {
+      const { data: partnerProfile } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('id', partnerId)
+        .single()
+
+      if (!partnerProfile) {
+        console.warn('partner_id not found in user_profiles, setting to null:', partnerId)
+        partnerId = null
+      }
+    }
+
     const { data, error } = await supabase
       .from('deal_registrations')
       .insert([{
@@ -95,7 +110,7 @@ export async function POST(request: NextRequest) {
         tsd_contact_email: body.tsd_contact_email || null,
         source: body.source === 'email_import' ? 'email_import' : 'form',
         original_email_content: body.original_email_content || null,
-        partner_id: body.partner_id || null,
+        partner_id: partnerId,
         status: 'pending',
       }])
       .select()
