@@ -203,6 +203,12 @@ export async function PATCH(
         reviewed_at: new Date().toISOString(),
         rejection_reason: rejection_reason || 'No reason provided',
       }
+    } else if (action === 'unreject') {
+      updateData = {
+        status: 'pending',
+        reviewed_at: null,
+        rejection_reason: null,
+      }
     } else {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
     }

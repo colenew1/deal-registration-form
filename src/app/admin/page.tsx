@@ -342,6 +342,17 @@ export default function AdminDashboard() {
     setSelectedDeal(null)
   }
 
+  const handleUnreject = async () => {
+    if (!selectedDeal) return
+    if (selectedDeal.type === 'email_intake') {
+      await supabase.from('email_intakes').update({ status: 'new' }).eq('id', selectedDeal.id)
+    } else {
+      await fetch(`/api/registrations/${selectedDeal.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'unreject' }) })
+    }
+    await fetchData()
+    setSelectedDeal(null)
+  }
+
   const handleResolveConflict = async (index: number, usePartner: boolean) => {
     if (!selectedDeal?.conflicts) return
     const conflict = selectedDeal.conflicts[index]
@@ -770,10 +781,32 @@ export default function AdminDashboard() {
                     <button onClick={() => setEditMode(false)} style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.white, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>Cancel</button>
                     <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.primary, color: colors.white, border: 'none', borderRadius: 6, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? 'Saving...' : 'Save Changes'}</button>
                   </div>
-                ) : selectedDeal.status === 'completed' || selectedDeal.status === 'rejected' ? (
+                ) : selectedDeal.status === 'completed' ? (
                   <p style={{ textAlign: 'center', color: colors.textMuted, fontSize: 14, margin: 0 }}>
-                    {selectedDeal.status === 'completed' ? 'Sent to HubSpot' : 'Rejected'}
+                    Sent to HubSpot
                   </p>
+                ) : selectedDeal.status === 'rejected' ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <p style={{ textAlign: 'center', color: colors.textMuted, fontSize: 14, margin: 0 }}>
+                      This deal was rejected
+                    </p>
+                    <button
+                      onClick={handleUnreject}
+                      style={{
+                        width: '100%',
+                        padding: '10px 20px',
+                        fontSize: 14,
+                        fontWeight: 500,
+                        backgroundColor: colors.warningLight,
+                        color: colors.warningText,
+                        border: `1px solid ${colors.warning}`,
+                        borderRadius: 6,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Undo Reject
+                    </button>
+                  </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <button
