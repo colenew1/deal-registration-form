@@ -247,7 +247,8 @@ function RegistrationFormContent({ id }: { id: string }) {
     setAccountError('')
 
     try {
-      const res = await fetch('/api/auth/signup', {
+      const signupUrl = new URL('/api/auth/signup', window.location.origin)
+      const res = await fetch(signupUrl.toString(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

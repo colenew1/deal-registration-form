@@ -197,7 +197,8 @@ export default function RegistrationForm() {
         if (error) throw error
       } else {
         // Sign up via server API (to bypass RLS for profile creation)
-        const res = await fetch('/api/auth/signup', {
+        const signupUrl = new URL('/api/auth/signup', window.location.origin)
+        const res = await fetch(signupUrl.toString(), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
