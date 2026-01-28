@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase-server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, full_name, company_name, tsd_name } = await request.json()
+    const { email, password, full_name, company_name, phone, tsd_name } = await request.json()
 
     if (!email || !password || !full_name) {
       return NextResponse.json({ error: 'Email, password, and full name are required' }, { status: 400 })
@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
         email: email.toLowerCase(),
         full_name,
         company_name: company_name || null,
+        phone: phone || null,
         tsd_name: tsd_name || null,
         role: 'partner',
         is_active: true,

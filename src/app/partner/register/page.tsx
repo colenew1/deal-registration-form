@@ -2,10 +2,10 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClientComponentClient } from '@/lib/supabase'
+import { useSupabaseClient } from '@/lib/supabase-client'
 
 // Light mode color palette (matches admin panel)
 const colors = {
@@ -35,7 +35,7 @@ const TSD_OPTIONS = [
 
 export default function PartnerRegister() {
   const router = useRouter()
-  const supabase = useMemo(() => createClientComponentClient(), [])
+  const supabase = useSupabaseClient()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -69,69 +69,41 @@ export default function PartnerRegister() {
     setIsLoading(true)
 
     try {
-      // 1. Create auth user with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.full_name,
-            company_name: formData.company_name,
-          }
-        }
+      // Use server-side signup API to bypass RLS
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          full_name: formData.full_name,
+          company_name: formData.company_name,
+          phone: formData.phone,
+          tsd_name: formData.tsd_name,
+        }),
       })
 
-      if (authError) {
-        setError(authError.message)
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to create account')
         return
       }
 
-      if (!authData.user) {
-        setError('Failed to create account. Please try again.')
-        return
-      }
-
-      // 2. Create legacy partners record for backwards compatibility
-      const { data: partnerData, error: partnerError } = await supabase
-        .from('partners')
-        .insert({
-          email: formData.email.toLowerCase(),
-          password_hash: 'migrated_to_supabase_auth',
-          full_name: formData.full_name,
-          company_name: formData.company_name,
-          phone: formData.phone || null,
-          tsd_name: formData.tsd_name || null,
-          auth_user_id: authData.user.id,
+      // Sign in with the newly created account
+      if (supabase) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
         })
-        .select('id')
-        .single()
-
-      if (partnerError) {
-        console.error('Partner record creation failed:', partnerError)
-        // Don't fail registration if partner record fails - we can fix this later
+        if (signInError) {
+          console.error('Sign in error:', signInError)
+          // Account was created, just redirect to login
+          router.push('/login?message=Account created. Please sign in.')
+          return
+        }
       }
 
-      // 3. Create user_profile record
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .insert({
-          id: authData.user.id,
-          role: 'partner',
-          full_name: formData.full_name,
-          email: formData.email.toLowerCase(),
-          company_name: formData.company_name,
-          phone: formData.phone || null,
-          tsd_name: formData.tsd_name || null,
-          legacy_partner_id: partnerData?.id || null,
-        })
-
-      if (profileError) {
-        console.error('Profile creation failed:', profileError)
-        setError('Account created but profile setup failed. Please contact support.')
-        return
-      }
-
-      // 4. Redirect to dashboard
+      // Redirect to dashboard
       router.push('/partner/dashboard')
 
     } catch (err) {
