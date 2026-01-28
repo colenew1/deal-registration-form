@@ -195,6 +195,9 @@ export default function RegistrationForm() {
           password: authPassword,
         })
         if (error) throw error
+        // Redirect to partner portal on login
+        router.push('/partner/dashboard')
+        return
       } else {
         // Sign up via server API (to bypass RLS for profile creation)
         const res = await fetch(window.location.origin + '/api/auth/signup', {
@@ -324,21 +327,39 @@ export default function RegistrationForm() {
                   Your partner info is pre-filled below
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={handleLogout}
-                style={{
-                  padding: '8px 16px',
-                  fontSize: 13,
-                  backgroundColor: 'transparent',
-                  color: colors.textMuted,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                }}
-              >
-                Log Out
-              </button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => router.push('/partner/dashboard')}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: 13,
+                    backgroundColor: colors.primary,
+                    color: colors.white,
+                    border: 'none',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                  }}
+                >
+                  Partner Portal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: 13,
+                    backgroundColor: 'transparent',
+                    color: colors.textMuted,
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Log Out
+                </button>
+              </div>
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
