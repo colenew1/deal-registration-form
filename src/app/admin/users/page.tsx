@@ -145,6 +145,28 @@ export default function AdminUsersPage() {
     }
   }
 
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to delete ${userName}? This cannot be undone.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/admin/users?userId=${userId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        alert(data.error || 'Failed to delete user')
+      } else {
+        fetchUsers()
+      }
+    } catch (err) {
+      console.error('Error deleting user:', err)
+      alert('Failed to delete user')
+    }
+  }
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/login')
@@ -261,21 +283,38 @@ export default function AdminUsersPage() {
                   </td>
                   <td style={{ padding: 16 }}>
                     {user.id !== profile?.id && (
-                      <button
-                        onClick={() => handleToggleStatus(user.id, user.is_active)}
-                        style={{
-                          padding: '6px 12px',
-                          fontSize: 13,
-                          fontWeight: 500,
-                          backgroundColor: user.is_active ? colors.errorLight : colors.successLight,
-                          color: user.is_active ? colors.errorText : colors.successText,
-                          border: `1px solid ${user.is_active ? colors.error : colors.success}`,
-                          borderRadius: 6,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {user.is_active ? 'Deactivate' : 'Activate'}
-                      </button>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          onClick={() => handleToggleStatus(user.id, user.is_active)}
+                          style={{
+                            padding: '6px 12px',
+                            fontSize: 13,
+                            fontWeight: 500,
+                            backgroundColor: user.is_active ? colors.warningLight : colors.successLight,
+                            color: user.is_active ? colors.warningText : colors.successText,
+                            border: `1px solid ${user.is_active ? colors.warning : colors.success}`,
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {user.is_active ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(user.id, user.full_name)}
+                          style={{
+                            padding: '6px 12px',
+                            fontSize: 13,
+                            fontWeight: 500,
+                            backgroundColor: colors.errorLight,
+                            color: colors.errorText,
+                            border: `1px solid ${colors.error}`,
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
