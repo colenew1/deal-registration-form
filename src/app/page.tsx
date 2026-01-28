@@ -197,8 +197,8 @@ export default function RegistrationForm() {
         if (error) throw error
       } else {
         // Sign up via server API (to bypass RLS for profile creation)
-        const signupUrl = new URL('/api/auth/signup', window.location.origin)
-        const res = await fetch(signupUrl.toString(), {
+        console.log('Attempting signup to:', window.location.origin + '/api/auth/signup')
+        const res = await fetch(window.location.origin + '/api/auth/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -209,6 +209,7 @@ export default function RegistrationForm() {
             tsd_name: authTsdName,
           }),
         })
+        console.log('Signup response status:', res.status, 'url:', res.url)
 
         const data = await res.json()
         if (!res.ok) {
