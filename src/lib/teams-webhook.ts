@@ -53,6 +53,9 @@ export interface TeamsWebhookPayload {
  */
 export async function sendTeamsNotification(payload: TeamsWebhookPayload): Promise<boolean> {
   const webhookUrl = process.env.TEAMS_NOTIFICATION_WEBHOOK_URL
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : 'https://deal-registration-form.vercel.app')
 
   if (!webhookUrl) {
     console.log('TEAMS_NOTIFICATION_WEBHOOK_URL not configured, skipping Teams notification')
@@ -60,25 +63,17 @@ export async function sendTeamsNotification(payload: TeamsWebhookPayload): Promi
   }
 
   try {
-    // Create a human-readable message for Teams
-    const messageTitle = payload.submission_type === 'new_deal'
-      ? '🆕 New Deal Registration Submitted'
-      : '✅ Pre-filled Form Completed'
-
-    const messageBody = payload.submission_type === 'new_deal'
-      ? `${payload.partner.name} (${payload.partner.company}) submitted a new deal registration for ${payload.customer.company}.`
-      : `${payload.partner.name} (${payload.partner.company}) completed a pre-filled form for ${payload.customer.company}.`
+    const adminUrl = `${appUrl}/admin`
 
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        // Include both structured data and formatted message
+        // Include structured data
         ...payload,
 
-        // Formatted fields for easy Zapier mapping
-        message_title: messageTitle,
-        message_body: messageBody,
+        // Admin panel link
+        admin_url: adminUrl,
 
         // Flattened fields for easier Zapier access
         partner_name: payload.partner.name,
