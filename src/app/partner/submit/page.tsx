@@ -251,6 +251,42 @@ export default function SubmitDeal() {
           </p>
         </div>
 
+        {/* Your Partner Info (from profile) */}
+        <div style={{ backgroundColor: colors.successLight, borderRadius: 12, border: `1px solid ${colors.success}`, overflow: 'hidden', marginBottom: 24 }}>
+          <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.success}`, backgroundColor: 'rgba(22, 163, 74, 0.1)' }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: '#166534', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>Your Partner Info (Auto-filled from Profile)</span>
+              <Link href="/partner/dashboard" style={{ fontSize: 12, color: colors.primary, textDecoration: 'none' }}>Edit Profile</Link>
+            </h2>
+          </div>
+          <div style={{ padding: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16 }}>
+              <div>
+                <label style={{ ...labelStyle, color: '#166534' }}>Name</label>
+                <p style={{ margin: 0, fontSize: 14, color: colors.text, fontWeight: 500 }}>{profile?.full_name || '-'}</p>
+              </div>
+              <div>
+                <label style={{ ...labelStyle, color: '#166534' }}>Company</label>
+                <p style={{ margin: 0, fontSize: 14, color: colors.text, fontWeight: 500 }}>{profile?.company_name || '-'}</p>
+              </div>
+              <div>
+                <label style={{ ...labelStyle, color: '#166534' }}>Email</label>
+                <p style={{ margin: 0, fontSize: 14, color: colors.text, fontWeight: 500 }}>{profile?.email || '-'}</p>
+              </div>
+              <div>
+                <label style={{ ...labelStyle, color: '#166534' }}>Phone</label>
+                <p style={{ margin: 0, fontSize: 14, color: colors.text, fontWeight: 500 }}>{profile?.phone || '-'}</p>
+              </div>
+            </div>
+            {profile?.tsd_name && (
+              <div style={{ marginTop: 16 }}>
+                <label style={{ ...labelStyle, color: '#166534' }}>Default TSD</label>
+                <p style={{ margin: 0, fontSize: 14, color: colors.text, fontWeight: 500 }}>{profile.tsd_name}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Error */}
         {error && (
           <div style={{ marginBottom: 24, padding: 16, backgroundColor: colors.errorLight, border: `1px solid ${colors.error}`, borderRadius: 8 }}>
