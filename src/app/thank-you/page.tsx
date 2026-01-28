@@ -56,62 +56,8 @@ function ThankYouContent() {
             <p className="mb-8" style={{ color: 'var(--foreground-muted)' }}>
               {hasConflicts
                 ? 'Thank you for updating the information. Some of your changes differ from what our team entered. An admin will review and resolve any differences.'
-                : 'Thank you for submitting your deal registration. Our team has received your submission and will review it promptly.'}
+                : 'Thank you for submitting your deal registration. Our team has received your submission.'}
             </p>
-
-            {/* What's Next Section */}
-            <div
-              className="rounded-lg p-5 mb-8 text-left"
-              style={{ backgroundColor: 'var(--background-subtle)' }}
-            >
-              <h2 className="font-semibold mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5" style={{ color: 'var(--primary-600)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                What happens next?
-              </h2>
-              <ul className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-medium"
-                    style={{ backgroundColor: 'var(--primary-100)', color: 'var(--primary-700)' }}
-                  >
-                    1
-                  </div>
-                  <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                    <span className="font-medium" style={{ color: 'var(--foreground)' }}>Internal Review</span>
-                    <br />
-                    We&apos;ll review your registration to ensure alignment and avoid conflicts.
-                  </p>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-medium"
-                    style={{ backgroundColor: 'var(--primary-100)', color: 'var(--primary-700)' }}
-                  >
-                    2
-                  </div>
-                  <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                    <span className="font-medium" style={{ color: 'var(--foreground)' }}>Decision Notification</span>
-                    <br />
-                    You&apos;ll receive an official acceptance or denial within 24 business hours.
-                  </p>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-medium"
-                    style={{ backgroundColor: 'var(--primary-100)', color: 'var(--primary-700)' }}
-                  >
-                    3
-                  </div>
-                  <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                    <span className="font-medium" style={{ color: 'var(--foreground)' }}>Deal Protection</span>
-                    <br />
-                    If approved, your deal will be protected and supported per our program guidelines.
-                  </p>
-                </li>
-              </ul>
-            </div>
 
             {/* Actions */}
             <div className="space-y-3">
