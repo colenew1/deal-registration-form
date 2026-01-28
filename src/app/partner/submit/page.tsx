@@ -87,6 +87,10 @@ export default function SubmitDeal() {
     implementation_timeline: '',
     solutions_interested: [] as string[],
     opportunity_description: '',
+    ta_full_name: '',
+    ta_email: '',
+    ta_phone: '',
+    ta_company_name: '',
     tsd_name: '',
     tsd_contact_name: '',
     tsd_contact_email: '',
@@ -117,10 +121,15 @@ export default function SubmitDeal() {
 
       setProfile(profileData)
 
-      // Pre-fill TSD from profile
-      if (profileData.tsd_name) {
-        setFormData(prev => ({ ...prev, tsd_name: profileData.tsd_name }))
-      }
+      // Pre-fill partner info from profile
+      setFormData(prev => ({
+        ...prev,
+        ta_full_name: profileData.full_name || '',
+        ta_email: profileData.email || '',
+        ta_phone: profileData.phone || '',
+        ta_company_name: profileData.company_name || '',
+        tsd_name: profileData.tsd_name || '',
+      }))
 
       setIsLoading(false)
     }
@@ -153,12 +162,7 @@ export default function SubmitDeal() {
         .from('deal_registrations')
         .insert({
           ...formData,
-          ta_full_name: profile?.full_name || '',
-          ta_email: profile?.email || '',
-          ta_phone: profile?.phone || '',
-          ta_company_name: profile?.company_name || '',
           partner_id: profile?.id || null,
-          tsd_name: formData.tsd_name || profile?.tsd_name || 'Unknown',
           source: 'form',
         })
         .select()
@@ -178,21 +182,7 @@ export default function SubmitDeal() {
           submission_type: 'new_deal',
           id: insertData?.id,
           created_at: insertData?.created_at,
-          ta_full_name: profile?.full_name || '',
-          ta_email: profile?.email || '',
-          ta_company_name: profile?.company_name || '',
-          customer_first_name: formData.customer_first_name,
-          customer_last_name: formData.customer_last_name,
-          customer_company_name: formData.customer_company_name,
-          customer_email: formData.customer_email,
-          customer_phone: formData.customer_phone,
-          agent_count: formData.agent_count,
-          implementation_timeline: formData.implementation_timeline,
-          solutions_interested: formData.solutions_interested,
-          opportunity_description: formData.opportunity_description,
-          tsd_name: formData.tsd_name || profile?.tsd_name,
-          tsd_contact_name: formData.tsd_contact_name,
-          tsd_contact_email: formData.tsd_contact_email,
+          ...formData,
         }),
       }).catch(err => console.log('Teams notification error:', err))
 
@@ -249,42 +239,6 @@ export default function SubmitDeal() {
           <p style={{ marginTop: 8, color: colors.textMuted, fontSize: 14 }}>
             Submitting as <strong>{profile?.full_name}</strong> ({profile?.company_name})
           </p>
-        </div>
-
-        {/* Your Partner Info (from profile) */}
-        <div style={{ backgroundColor: colors.successLight, borderRadius: 12, border: `1px solid ${colors.success}`, overflow: 'hidden', marginBottom: 24 }}>
-          <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.success}`, backgroundColor: 'rgba(22, 163, 74, 0.1)' }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600, color: '#166534', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span>Your Partner Info (Auto-filled from Profile)</span>
-              <Link href="/partner/dashboard" style={{ fontSize: 12, color: colors.primary, textDecoration: 'none' }}>Edit Profile</Link>
-            </h2>
-          </div>
-          <div style={{ padding: 24 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16 }}>
-              <div>
-                <label style={{ ...labelStyle, color: '#166534' }}>Name</label>
-                <p style={{ margin: 0, fontSize: 14, color: colors.text, fontWeight: 500 }}>{profile?.full_name || '-'}</p>
-              </div>
-              <div>
-                <label style={{ ...labelStyle, color: '#166534' }}>Company</label>
-                <p style={{ margin: 0, fontSize: 14, color: colors.text, fontWeight: 500 }}>{profile?.company_name || '-'}</p>
-              </div>
-              <div>
-                <label style={{ ...labelStyle, color: '#166534' }}>Email</label>
-                <p style={{ margin: 0, fontSize: 14, color: colors.text, fontWeight: 500 }}>{profile?.email || '-'}</p>
-              </div>
-              <div>
-                <label style={{ ...labelStyle, color: '#166534' }}>Phone</label>
-                <p style={{ margin: 0, fontSize: 14, color: colors.text, fontWeight: 500 }}>{profile?.phone || '-'}</p>
-              </div>
-            </div>
-            {profile?.tsd_name && (
-              <div style={{ marginTop: 16 }}>
-                <label style={{ ...labelStyle, color: '#166534' }}>Default TSD</label>
-                <p style={{ margin: 0, fontSize: 14, color: colors.text, fontWeight: 500 }}>{profile.tsd_name}</p>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Error */}
@@ -353,11 +307,42 @@ export default function SubmitDeal() {
             </div>
           </div>
 
-          {/* Opportunity Details */}
+          {/* Partner Information (Editable, Pre-filled from Profile) */}
           <div style={{ backgroundColor: colors.white, borderRadius: 12, border: `1px solid ${colors.border}`, overflow: 'hidden', marginBottom: 24 }}>
             <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
               <h2 style={{ fontSize: 16, fontWeight: 600, color: colors.text, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: colors.primary, color: colors.white, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>2</span>
+                Partner Information
+                <span style={{ fontSize: 12, fontWeight: 400, color: colors.textMuted }}>(Pre-filled from your profile - edit if submitting for someone else)</span>
+              </h2>
+            </div>
+            <div style={{ padding: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div>
+                  <label style={labelStyle}>Your Full Name <span style={{ color: colors.error }}>*</span></label>
+                  <input type="text" name="ta_full_name" value={formData.ta_full_name} onChange={handleChange} required placeholder="Your full name" style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Your Company Name</label>
+                  <input type="text" name="ta_company_name" value={formData.ta_company_name} onChange={handleChange} placeholder="Your company" style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Your Email <span style={{ color: colors.error }}>*</span></label>
+                  <input type="email" name="ta_email" value={formData.ta_email} onChange={handleChange} required placeholder="your@email.com" style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Your Phone</label>
+                  <input type="tel" name="ta_phone" value={formData.ta_phone} onChange={handleChange} placeholder="(555) 123-4567" style={inputStyle} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Opportunity Details */}
+          <div style={{ backgroundColor: colors.white, borderRadius: 12, border: `1px solid ${colors.border}`, overflow: 'hidden', marginBottom: 24 }}>
+            <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: colors.text, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: colors.primary, color: colors.white, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</span>
                 Opportunity Details
               </h2>
             </div>
@@ -420,7 +405,7 @@ export default function SubmitDeal() {
           <div style={{ backgroundColor: colors.white, borderRadius: 12, border: `1px solid ${colors.border}`, overflow: 'hidden', marginBottom: 24 }}>
             <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
               <h2 style={{ fontSize: 16, fontWeight: 600, color: colors.text, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: colors.primary, color: colors.white, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</span>
+                <span style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: colors.primary, color: colors.white, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>4</span>
                 TSD Information
                 <span style={{ fontSize: 12, fontWeight: 400, color: colors.textMuted }}>(Optional)</span>
               </h2>
