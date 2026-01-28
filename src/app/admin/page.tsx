@@ -59,6 +59,12 @@ const REQUIRED_FIELDS = [
 
 const ZAPIER_WEBHOOK_URL = process.env.NEXT_PUBLIC_ZAPIER_WEBHOOK_URL || ''
 
+// Sanitize values that may come back as the string "null" or "undefined" from the database
+function clean(val: string | null | undefined): string {
+  if (!val || val === 'null' || val === 'undefined') return ''
+  return val
+}
+
 function getMissingFields(deal: Partial<UnifiedDeal>): string[] {
   return REQUIRED_FIELDS.filter(f => {
     const val = deal[f.key as keyof UnifiedDeal]
@@ -84,14 +90,14 @@ function mapFormStatus(reg: DealRegistration): UnifiedDeal['status'] {
 
 function emailIntakeToUnified(intake: EmailIntake): UnifiedDeal {
   const deal: Partial<UnifiedDeal> = {
-    customer_first_name: intake.extracted_customer_first_name || '',
-    customer_last_name: intake.extracted_customer_last_name || '',
-    customer_company_name: intake.extracted_customer_company_name || '',
-    customer_email: intake.extracted_customer_email || '',
-    ta_full_name: intake.extracted_ta_full_name || '',
-    ta_email: intake.extracted_ta_email || '',
-    ta_company_name: intake.extracted_ta_company_name || '',
-    tsd_name: intake.extracted_tsd_name || '',
+    customer_first_name: clean(intake.extracted_customer_first_name),
+    customer_last_name: clean(intake.extracted_customer_last_name),
+    customer_company_name: clean(intake.extracted_customer_company_name),
+    customer_email: clean(intake.extracted_customer_email),
+    ta_full_name: clean(intake.extracted_ta_full_name),
+    ta_email: clean(intake.extracted_ta_email),
+    ta_company_name: clean(intake.extracted_ta_company_name),
+    tsd_name: clean(intake.extracted_tsd_name),
     solutions_interested: intake.extracted_solutions_interested || [],
   }
   const missingFields = getMissingFields(deal)
@@ -106,25 +112,25 @@ function emailIntakeToUnified(intake: EmailIntake): UnifiedDeal {
     created_at: intake.created_at,
     updated_at: intake.updated_at,
     source_label: 'Email',
-    email_subject: intake.email_subject || undefined,
-    email_from: intake.email_from || undefined,
-    customer_company_name: intake.extracted_customer_company_name || '',
-    customer_first_name: intake.extracted_customer_first_name || '',
-    customer_last_name: intake.extracted_customer_last_name || '',
-    customer_email: intake.extracted_customer_email || '',
-    customer_phone: intake.extracted_customer_phone || undefined,
-    customer_job_title: intake.extracted_customer_job_title || undefined,
-    ta_full_name: intake.extracted_ta_full_name || '',
-    ta_company_name: intake.extracted_ta_company_name || '',
-    ta_email: intake.extracted_ta_email || '',
-    ta_phone: intake.extracted_ta_phone || undefined,
-    tsd_name: intake.extracted_tsd_name || '',
-    tsd_contact_name: intake.extracted_tsd_contact_name || undefined,
-    tsd_contact_email: intake.extracted_tsd_contact_email || undefined,
-    agent_count: intake.extracted_agent_count || undefined,
-    implementation_timeline: intake.extracted_implementation_timeline || undefined,
+    email_subject: clean(intake.email_subject) || undefined,
+    email_from: clean(intake.email_from) || undefined,
+    customer_company_name: clean(intake.extracted_customer_company_name),
+    customer_first_name: clean(intake.extracted_customer_first_name),
+    customer_last_name: clean(intake.extracted_customer_last_name),
+    customer_email: clean(intake.extracted_customer_email),
+    customer_phone: clean(intake.extracted_customer_phone) || undefined,
+    customer_job_title: clean(intake.extracted_customer_job_title) || undefined,
+    ta_full_name: clean(intake.extracted_ta_full_name),
+    ta_company_name: clean(intake.extracted_ta_company_name),
+    ta_email: clean(intake.extracted_ta_email),
+    ta_phone: clean(intake.extracted_ta_phone) || undefined,
+    tsd_name: clean(intake.extracted_tsd_name),
+    tsd_contact_name: clean(intake.extracted_tsd_contact_name) || undefined,
+    tsd_contact_email: clean(intake.extracted_tsd_contact_email) || undefined,
+    agent_count: clean(intake.extracted_agent_count) || undefined,
+    implementation_timeline: clean(intake.extracted_implementation_timeline) || undefined,
     solutions_interested: intake.extracted_solutions_interested || undefined,
-    opportunity_description: intake.extracted_opportunity_description || undefined,
+    opportunity_description: clean(intake.extracted_opportunity_description) || undefined,
     has_conflicts: intake.has_conflicts ?? undefined,
     conflicts: intake.conflicts || undefined,
     email_body_plain: intake.email_body_plain || undefined,
@@ -134,14 +140,14 @@ function emailIntakeToUnified(intake: EmailIntake): UnifiedDeal {
 
 function formSubmissionToUnified(reg: DealRegistration): UnifiedDeal {
   const deal: Partial<UnifiedDeal> = {
-    customer_first_name: reg.customer_first_name || '',
-    customer_last_name: reg.customer_last_name || '',
-    customer_company_name: reg.customer_company_name || '',
-    customer_email: reg.customer_email || '',
-    ta_full_name: reg.ta_full_name || '',
-    ta_email: reg.ta_email || '',
-    ta_company_name: reg.ta_company_name || '',
-    tsd_name: reg.tsd_name || '',
+    customer_first_name: clean(reg.customer_first_name),
+    customer_last_name: clean(reg.customer_last_name),
+    customer_company_name: clean(reg.customer_company_name),
+    customer_email: clean(reg.customer_email),
+    ta_full_name: clean(reg.ta_full_name),
+    ta_email: clean(reg.ta_email),
+    ta_company_name: clean(reg.ta_company_name),
+    tsd_name: clean(reg.tsd_name),
     solutions_interested: reg.solutions_interested || [],
   }
   const missingFields = getMissingFields(deal)
@@ -156,24 +162,24 @@ function formSubmissionToUnified(reg: DealRegistration): UnifiedDeal {
     created_at: reg.created_at,
     updated_at: reg.updated_at || reg.created_at,
     source_label: 'Form',
-    customer_company_name: reg.customer_company_name || '',
-    customer_first_name: reg.customer_first_name || '',
-    customer_last_name: reg.customer_last_name || '',
-    customer_email: reg.customer_email || '',
-    customer_phone: reg.customer_phone || undefined,
-    customer_job_title: reg.customer_job_title || undefined,
-    ta_full_name: reg.ta_full_name || '',
-    ta_company_name: reg.ta_company_name || '',
-    ta_email: reg.ta_email || '',
-    ta_phone: reg.ta_phone || undefined,
-    tsd_name: reg.tsd_name || '',
-    tsd_contact_name: reg.tsd_contact_name || undefined,
-    tsd_contact_email: reg.tsd_contact_email || undefined,
-    agent_count: reg.agent_count || undefined,
-    implementation_timeline: reg.implementation_timeline || undefined,
+    customer_company_name: clean(reg.customer_company_name),
+    customer_first_name: clean(reg.customer_first_name),
+    customer_last_name: clean(reg.customer_last_name),
+    customer_email: clean(reg.customer_email),
+    customer_phone: clean(reg.customer_phone) || undefined,
+    customer_job_title: clean(reg.customer_job_title) || undefined,
+    ta_full_name: clean(reg.ta_full_name),
+    ta_company_name: clean(reg.ta_company_name),
+    ta_email: clean(reg.ta_email),
+    ta_phone: clean(reg.ta_phone) || undefined,
+    tsd_name: clean(reg.tsd_name),
+    tsd_contact_name: clean(reg.tsd_contact_name) || undefined,
+    tsd_contact_email: clean(reg.tsd_contact_email) || undefined,
+    agent_count: clean(reg.agent_count) || undefined,
+    implementation_timeline: clean(reg.implementation_timeline) || undefined,
     solutions_interested: reg.solutions_interested || undefined,
-    opportunity_description: reg.opportunity_description || undefined,
-    rejection_reason: reg.rejection_reason || undefined,
+    opportunity_description: clean(reg.opportunity_description) || undefined,
+    rejection_reason: clean(reg.rejection_reason) || undefined,
     original_data: reg,
   }
 }
@@ -1292,7 +1298,8 @@ ${profile?.full_name || 'AmplifAI Channel Team'}`}
 }
 
 function GridField({ label, value, onChange, editMode, required }: { label: string; value: string | undefined; onChange: (v: string) => void; editMode: boolean; required?: boolean }) {
-  const empty = !value || value.trim() === ''
+  const normalized = (!value || value === 'null' || value === 'undefined') ? '' : value
+  const empty = !normalized || normalized.trim() === ''
   const colors = {
     text: '#1e293b',
     textMuted: '#64748b',
@@ -1309,7 +1316,7 @@ function GridField({ label, value, onChange, editMode, required }: { label: stri
         </label>
         <input
           type="text"
-          value={value || ''}
+          value={normalized}
           onChange={e => onChange(e.target.value)}
           style={{
             width: '100%',
@@ -1327,7 +1334,7 @@ function GridField({ label, value, onChange, editMode, required }: { label: stri
   return (
     <div style={{ marginBottom: 12 }}>
       <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 4, textTransform: 'uppercase' }}>{label}</label>
-      <p style={{ fontSize: 14, color: empty ? colors.textMuted : colors.text, margin: 0 }}>{value || '-'}</p>
+      <p style={{ fontSize: 14, color: empty ? colors.textMuted : colors.text, margin: 0 }}>{normalized || '-'}</p>
     </div>
   )
 }
