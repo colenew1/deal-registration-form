@@ -2,10 +2,11 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClientComponentClient, type UserProfile } from '@/lib/supabase'
+import { useSupabaseClient } from '@/lib/supabase-client'
+import type { UserProfile } from '@/lib/supabase'
 
 // Light mode color palette (matches admin panel)
 const colors = {
@@ -42,16 +43,48 @@ type Submission = {
   reviewed_at: string | null
 }
 
+const TSD_OPTIONS = [
+  'Avant', 'Telarus', 'Intelisys', 'Sandler Partners', 'AppSmart', 'TBI', 'Bridgepointe', 'Other',
+]
+
+const inputStyle = {
+  width: '100%',
+  padding: '10px 12px',
+  fontSize: 14,
+  border: `1px solid ${colors.border}`,
+  borderRadius: 6,
+  backgroundColor: colors.white,
+  color: colors.text,
+}
+
+const labelStyle = {
+  display: 'block',
+  fontSize: 11,
+  fontWeight: 600,
+  color: colors.textMuted,
+  marginBottom: 6,
+  textTransform: 'uppercase' as const,
+}
+
 export default function PartnerDashboard() {
   const router = useRouter()
-  const supabase = useMemo(() => createClientComponentClient(), [])
+  const supabase = useSupabaseClient()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
+  const [showEditProfile, setShowEditProfile] = useState(false)
+  const [editFormData, setEditFormData] = useState({
+    full_name: '',
+    company_name: '',
+    phone: '',
+    tsd_name: '',
+  })
+  const [isSavingProfile, setIsSavingProfile] = useState(false)
+  const [profileSaveMessage, setProfileSaveMessage] = useState('')
 
-  const fetchSubmissions = useCallback(async (legacyPartnerId: string | null) => {
-    if (!legacyPartnerId) {
+  const fetchSubmissions = useCallback(async (partnerId: string | null) => {
+    if (!supabase || !partnerId) {
       setSubmissions([])
       return
     }
@@ -60,7 +93,7 @@ export default function PartnerDashboard() {
       const { data, error } = await supabase
         .from('deal_registrations')
         .select('id, created_at, status, customer_company_name, customer_first_name, customer_last_name, customer_email, agent_count, solutions_interested, rejection_reason, reviewed_at')
-        .eq('partner_id', legacyPartnerId)
+        .eq('partner_id', partnerId)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -75,6 +108,8 @@ export default function PartnerDashboard() {
   }, [supabase])
 
   useEffect(() => {
+    if (!supabase) return
+
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser()
 
@@ -119,7 +154,13 @@ export default function PartnerDashboard() {
         }
 
         setProfile(newProfile as UserProfile)
-        fetchSubmissions(null) // No legacy partner ID for auto-created profiles
+        setEditFormData({
+          full_name: newProfile.full_name,
+          company_name: newProfile.company_name || '',
+          phone: '',
+          tsd_name: '',
+        })
+        fetchSubmissions(newProfile.id) // Use profile ID for submissions
         setIsLoading(false)
         return
       }
@@ -131,7 +172,14 @@ export default function PartnerDashboard() {
       }
 
       setProfile(profileData)
-      fetchSubmissions(profileData.legacy_partner_id)
+      setEditFormData({
+        full_name: profileData.full_name || '',
+        company_name: profileData.company_name || '',
+        phone: profileData.phone || '',
+        tsd_name: profileData.tsd_name || '',
+      })
+      // Use profile ID for submissions (or legacy_partner_id if exists)
+      fetchSubmissions(profileData.legacy_partner_id || profileData.id)
       setIsLoading(false)
     }
 
@@ -139,8 +187,50 @@ export default function PartnerDashboard() {
   }, [router, supabase, fetchSubmissions])
 
   const handleLogout = async () => {
+    if (!supabase) return
     await supabase.auth.signOut()
     router.push('/login')
+  }
+
+  const handleSaveProfile = async () => {
+    if (!supabase || !profile) return
+    setIsSavingProfile(true)
+    setProfileSaveMessage('')
+
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          full_name: editFormData.full_name,
+          company_name: editFormData.company_name || null,
+          phone: editFormData.phone || null,
+          tsd_name: editFormData.tsd_name || null,
+        })
+        .eq('id', profile.id)
+
+      if (error) {
+        console.error('Error updating profile:', error)
+        setProfileSaveMessage('Failed to save changes')
+        return
+      }
+
+      // Update local profile state
+      setProfile(prev => prev ? {
+        ...prev,
+        full_name: editFormData.full_name,
+        company_name: editFormData.company_name || null,
+        phone: editFormData.phone || null,
+        tsd_name: editFormData.tsd_name || null,
+      } : null)
+
+      setProfileSaveMessage('Profile saved successfully!')
+      setTimeout(() => setProfileSaveMessage(''), 3000)
+    } catch (err) {
+      console.error('Error saving profile:', err)
+      setProfileSaveMessage('Failed to save changes')
+    } finally {
+      setIsSavingProfile(false)
+    }
   }
 
   const filteredSubmissions = submissions.filter(sub => {
@@ -207,10 +297,118 @@ export default function PartnerDashboard() {
             </h2>
             <p style={{ fontSize: 14, color: colors.textMuted, margin: '4px 0 0' }}>Manage your deal registrations</p>
           </div>
-          <Link href="/partner/submit" style={{ padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.primary, color: colors.white, borderRadius: 6, textDecoration: 'none' }}>
-            + Submit New Deal
-          </Link>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button
+              onClick={() => setShowEditProfile(!showEditProfile)}
+              style={{
+                padding: '10px 20px',
+                fontSize: 14,
+                fontWeight: 500,
+                backgroundColor: colors.white,
+                color: colors.text,
+                border: `1px solid ${colors.border}`,
+                borderRadius: 6,
+                cursor: 'pointer',
+              }}
+            >
+              {showEditProfile ? 'Hide Profile' : 'Edit Profile'}
+            </button>
+            <Link href="/partner/submit" style={{ padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.primary, color: colors.white, borderRadius: 6, textDecoration: 'none' }}>
+              + Submit New Deal
+            </Link>
+          </div>
         </div>
+
+        {/* Edit Profile Section */}
+        {showEditProfile && (
+          <div style={{ backgroundColor: colors.white, borderRadius: 12, border: `1px solid ${colors.border}`, overflow: 'hidden', marginBottom: 24 }}>
+            <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
+              <h3 style={{ fontSize: 16, fontWeight: 600, color: colors.text, margin: 0 }}>
+                Your Partner Information
+              </h3>
+              <p style={{ fontSize: 13, color: colors.textMuted, margin: '4px 0 0' }}>
+                This information will be auto-filled when you submit new deals
+              </p>
+            </div>
+            <div style={{ padding: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div>
+                  <label style={labelStyle}>Full Name</label>
+                  <input
+                    type="text"
+                    value={editFormData.full_name}
+                    onChange={e => setEditFormData(prev => ({ ...prev, full_name: e.target.value }))}
+                    placeholder="Your full name"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Company Name</label>
+                  <input
+                    type="text"
+                    value={editFormData.company_name}
+                    onChange={e => setEditFormData(prev => ({ ...prev, company_name: e.target.value }))}
+                    placeholder="Your company"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Phone</label>
+                  <input
+                    type="tel"
+                    value={editFormData.phone}
+                    onChange={e => setEditFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="(555) 123-4567"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Default TSD</label>
+                  <select
+                    value={editFormData.tsd_name}
+                    onChange={e => setEditFormData(prev => ({ ...prev, tsd_name: e.target.value }))}
+                    style={inputStyle}
+                  >
+                    <option value="">Select your TSD</option>
+                    {TSD_OPTIONS.map(tsd => (
+                      <option key={tsd} value={tsd}>{tsd}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={isSavingProfile}
+                  style={{
+                    padding: '10px 24px',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    backgroundColor: colors.primary,
+                    color: colors.white,
+                    border: 'none',
+                    borderRadius: 6,
+                    cursor: isSavingProfile ? 'not-allowed' : 'pointer',
+                    opacity: isSavingProfile ? 0.7 : 1,
+                  }}
+                >
+                  {isSavingProfile ? 'Saving...' : 'Save Changes'}
+                </button>
+                {profileSaveMessage && (
+                  <span style={{
+                    fontSize: 14,
+                    color: profileSaveMessage.includes('success') ? colors.success : colors.error,
+                  }}>
+                    {profileSaveMessage}
+                  </span>
+                )}
+              </div>
+              <p style={{ marginTop: 12, fontSize: 12, color: colors.textMuted }}>
+                Email: {profile?.email} (cannot be changed)
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
