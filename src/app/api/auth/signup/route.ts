@@ -63,10 +63,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create user profile' }, { status: 500 })
     }
 
+    // Migrate existing deal registrations that match this email
+    const { data: migratedDeals, error: migrateError } = await adminClient
+      .from('deal_registrations')
+      .update({ partner_id: newUser.user.id })
+      .eq('ta_email', email.toLowerCase())
+      .is('partner_id', null)
+      .select('id')
+
+    if (migrateError) {
+      console.error('Migration error (non-fatal):', migrateError)
+    }
+
+    const migratedCount = migratedDeals?.length || 0
+    console.log(`Migrated ${migratedCount} existing registrations to new account`)
+
     return NextResponse.json({
       success: true,
       userId: newUser.user.id,
       email: newUser.user.email,
+      migratedRegistrations: migratedCount,
     })
   } catch (err) {
     console.error('Signup API error:', err)

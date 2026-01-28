@@ -83,18 +83,31 @@ export default function PartnerDashboard() {
   const [isSavingProfile, setIsSavingProfile] = useState(false)
   const [profileSaveMessage, setProfileSaveMessage] = useState('')
 
-  const fetchSubmissions = useCallback(async (partnerId: string | null) => {
-    if (!supabase || !partnerId) {
+  const fetchSubmissions = useCallback(async (partnerId: string | null, email: string | null) => {
+    if (!supabase) {
       setSubmissions([])
       return
     }
 
     try {
-      const { data, error } = await supabase
+      // Query by partner_id OR by ta_email to catch all submissions
+      let query = supabase
         .from('deal_registrations')
         .select('id, created_at, status, customer_company_name, customer_first_name, customer_last_name, customer_email, agent_count, solutions_interested, rejection_reason, reviewed_at')
-        .eq('partner_id', partnerId)
-        .order('created_at', { ascending: false })
+
+      if (partnerId && email) {
+        // Get submissions by partner_id OR matching email
+        query = query.or(`partner_id.eq.${partnerId},ta_email.ilike.${email}`)
+      } else if (partnerId) {
+        query = query.eq('partner_id', partnerId)
+      } else if (email) {
+        query = query.ilike('ta_email', email)
+      } else {
+        setSubmissions([])
+        return
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false })
 
       if (error) {
         console.error('Error fetching submissions:', error)
@@ -160,7 +173,7 @@ export default function PartnerDashboard() {
           phone: '',
           tsd_name: '',
         })
-        fetchSubmissions(newProfile.id) // Use profile ID for submissions
+        fetchSubmissions(newProfile.id, newProfile.email) // Use profile ID and email
         setIsLoading(false)
         return
       }
@@ -178,8 +191,8 @@ export default function PartnerDashboard() {
         phone: profileData.phone || '',
         tsd_name: profileData.tsd_name || '',
       })
-      // Use profile ID for submissions (or legacy_partner_id if exists)
-      fetchSubmissions(profileData.legacy_partner_id || profileData.id)
+      // Use profile ID and email for submissions
+      fetchSubmissions(profileData.id, profileData.email)
       setIsLoading(false)
     }
 
