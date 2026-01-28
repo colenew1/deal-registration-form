@@ -136,6 +136,16 @@ Extract these fields. Return ONLY valid JSON:
   "opportunity_description": "Brief description"
 }
 
+SOLUTIONS MATCHING — BE STRICT:
+Only include a solution if the email EXPLICITLY mentions it or a very close synonym. Here is what qualifies for each:
+- "Performance Management" → only if they mention performance management, performance tracking, scorecards, KPIs, agent performance
+- "Coaching" → only if they mention coaching, coaching tools, coaching sessions, agent coaching
+- "Conversation Intelligence & Analytics" → only if they mention conversation intelligence, speech analytics, call analytics, interaction analytics, sentiment analysis, AI analytics
+- "Data Consolidation for CX" → only if they mention data consolidation, data unification, CX data, unified reporting, bringing data together
+- "AutoQA / QA" → only if they mention QA, quality assurance, quality management, auto QA, QM, call scoring, call monitoring, Virtual Observer
+- "Gamification" → only if they mention gamification, leaderboards, contests, game mechanics, engagement programs
+Do NOT infer solutions from vague phrases. "WFM" or "WFO" alone does NOT map to all solutions. "AI" alone does NOT map to all solutions. If unsure, leave it out — the admin can add it later. Return an empty array [] if no solutions are clearly identifiable.
+
 ABSOLUTE RULES:
 1. NEVER put @amplifai.com emails in ta_email, tsd_contact_email, or customer_email - these are internal
 2. If the email explicitly labels someone as "Partner" or "Partner Info", THAT is the Partner/TA — even if someone else sent the email
@@ -143,7 +153,7 @@ ABSOLUTE RULES:
 4. If someone says "reach out to our partner", "passing along from my partner", or similar, they are TSD, not the TA
 5. If you can't find non-@amplifai.com Partner/TA info, return null for those fields
 6. Convert agent counts: "~2000" → "1000 to 2499", "300 seats" → "250 to 499"
-7. Solutions must match exactly from the list above
+7. Solutions must match exactly from the list above — only include ones explicitly mentioned
 8. For tsd_name, do NOT default to "Other" when no TSD is mentioned — return null instead. Only use "Other" when the email explicitly names a TSD that isn't in the known list
 
 Return ONLY the JSON object.`
