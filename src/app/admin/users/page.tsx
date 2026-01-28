@@ -75,15 +75,16 @@ export default function AdminUsersPage() {
   }, [router, supabase])
 
   const fetchUsers = async () => {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching users:', error)
-    } else {
-      setUsers(data || [])
+    try {
+      const response = await fetch('/api/admin/users')
+      if (response.ok) {
+        const data = await response.json()
+        setUsers(data || [])
+      } else {
+        console.error('Error fetching users:', await response.text())
+      }
+    } catch (err) {
+      console.error('Error fetching users:', err)
     }
     setIsLoading(false)
   }
@@ -119,15 +120,20 @@ export default function AdminUsersPage() {
   }
 
   const handleToggleStatus = async (userId: string, isActive: boolean) => {
-    const { error } = await supabase
-      .from('user_profiles')
-      .update({ is_active: !isActive })
-      .eq('id', userId)
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, is_active: !isActive }),
+      })
 
-    if (error) {
-      console.error('Error updating user status:', error)
-    } else {
-      fetchUsers()
+      if (!response.ok) {
+        console.error('Error updating user status:', await response.text())
+      } else {
+        fetchUsers()
+      }
+    } catch (err) {
+      console.error('Error updating user status:', err)
     }
   }
 
