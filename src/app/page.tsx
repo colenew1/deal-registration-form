@@ -295,7 +295,7 @@ export default function RegistrationForm() {
     try {
       const submitData = {
         ...formData,
-        partner_id: user?.id || null,
+        partner_id: (user && !user.email?.endsWith('@amplifai.com')) ? user.id : null,
       }
       const res = await fetch('/api/registrations', {
         method: 'POST',
