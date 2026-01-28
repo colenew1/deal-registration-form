@@ -23,7 +23,7 @@ const ADMIN_ROUTES = ['/admin']
 // Partner routes (accessible by partners and admins)
 const PARTNER_ROUTES = ['/partner']
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
 
   // Check if route is public BEFORE initializing Supabase
