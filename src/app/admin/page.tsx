@@ -519,15 +519,15 @@ export default function AdminDashboard() {
                         </span>
                       )}
                       {missing.length > 0 && deal.status !== 'completed' && deal.status !== 'rejected' && (
-                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, color: colors.textMuted }}>
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: colors.warningLight, color: colors.warningText }}>
                           Missing {missing.length} field{missing.length > 1 ? 's' : ''}
                         </span>
                       )}
                       {deal.status === 'completed' && (
-                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, color: colors.textLight }}>Sent</span>
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: colors.successLight, color: colors.successText }}>Sent</span>
                       )}
                       {deal.status === 'rejected' && (
-                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, color: colors.textLight }}>Rejected</span>
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: colors.errorLight, color: colors.errorText }}>Rejected</span>
                       )}
                       {/* Context — plain text, no colored badges */}
                       <span style={{ fontSize: 11, color: colors.textLight }}>
