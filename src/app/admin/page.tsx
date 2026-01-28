@@ -376,7 +376,7 @@ export default function AdminDashboard() {
             <h1 style={{ fontSize: 20, fontWeight: 600, color: colors.text, margin: 0 }}>Deal Registrations</h1>
             <div style={{ display: 'flex', gap: 8 }}>
               <button
-                onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/register`); alert('Registration link copied!') }}
+                onClick={() => { navigator.clipboard.writeText(window.location.origin); alert('Form link copied!') }}
                 style={{ padding: '6px 12px', fontSize: 12, backgroundColor: colors.primaryLight, color: colors.primaryText, border: 'none', borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
               >
                 <svg style={{ width: 14, height: 14 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
