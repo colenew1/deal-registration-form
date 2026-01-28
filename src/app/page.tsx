@@ -135,8 +135,9 @@ export default function RegistrationForm() {
           return
         }
         setUser(user)
-        if (user) {
-          // Fetch user profile
+        const isInternal = user?.email?.endsWith('@amplifai.com')
+        if (user && !isInternal) {
+          // Fetch user profile (skip for internal team)
           const { data: profile } = await supabase
             .from('user_profiles')
             .select('*')
@@ -171,23 +172,26 @@ export default function RegistrationForm() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         setUser(session.user)
-        // Fetch profile after sign in
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
+        const isInternal = session.user.email?.endsWith('@amplifai.com')
+        if (!isInternal) {
+          // Fetch profile after sign in (skip for internal team)
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single()
 
-        if (profile) {
-          setUserProfile(profile)
-          setFormData(prev => ({
-            ...prev,
-            ta_full_name: profile.full_name || prev.ta_full_name,
-            ta_email: profile.email || prev.ta_email,
-            ta_phone: profile.phone || prev.ta_phone,
-            ta_company_name: profile.company_name || prev.ta_company_name,
-            tsd_name: profile.tsd_name || prev.tsd_name,
-          }))
+          if (profile) {
+            setUserProfile(profile)
+            setFormData(prev => ({
+              ...prev,
+              ta_full_name: profile.full_name || prev.ta_full_name,
+              ta_email: profile.email || prev.ta_email,
+              ta_phone: profile.phone || prev.ta_phone,
+              ta_company_name: profile.company_name || prev.ta_company_name,
+              tsd_name: profile.tsd_name || prev.tsd_name,
+            }))
+          }
         }
         setShowAuthModal(false)
       } else if (event === 'SIGNED_OUT') {
@@ -331,7 +335,8 @@ export default function RegistrationForm() {
           </p>
         </div>
 
-        {/* Auth Section */}
+        {/* Auth Section — hidden for internal @amplifai.com users */}
+        {!(user?.email?.endsWith('@amplifai.com')) && (
         <div style={{ marginBottom: 24, padding: 16, backgroundColor: colors.white, borderRadius: 8, border: `1px solid ${colors.border}` }}>
           {authLoading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
@@ -429,6 +434,7 @@ export default function RegistrationForm() {
             </div>
           )}
         </div>
+        )}
 
         {/* Auth Modal */}
         {showAuthModal && (
