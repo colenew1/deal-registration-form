@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createApiClient } from '@/lib/supabase-server'
+import { sendTeamsNotification, buildTeamsPayload } from '@/lib/teams-webhook'
 
 /**
  * POST /api/email-intake/[id]/partner-submit
@@ -154,6 +155,37 @@ export async function POST(
 
     if (updateError) {
       throw updateError
+    }
+
+    // Send Teams notification for completed pre-filled form (fire and forget)
+    try {
+      const teamsPayload = buildTeamsPayload(
+        'completed_prefill',
+        {
+          id: id,
+          created_at: data?.updated_at || new Date().toISOString(),
+          ta_full_name: (partnerValues.extracted_ta_full_name as string) || intake.extracted_ta_full_name || '',
+          ta_email: (partnerValues.extracted_ta_email as string) || intake.extracted_ta_email || '',
+          ta_company_name: (partnerValues.extracted_ta_company_name as string) || intake.extracted_ta_company_name || '',
+          ta_phone: (partnerValues.extracted_ta_phone as string) || intake.extracted_ta_phone,
+          customer_first_name: (partnerValues.extracted_customer_first_name as string) || intake.extracted_customer_first_name || '',
+          customer_last_name: (partnerValues.extracted_customer_last_name as string) || intake.extracted_customer_last_name || '',
+          customer_company_name: (partnerValues.extracted_customer_company_name as string) || intake.extracted_customer_company_name || '',
+          customer_email: (partnerValues.extracted_customer_email as string) || intake.extracted_customer_email || '',
+          customer_phone: (partnerValues.extracted_customer_phone as string) || intake.extracted_customer_phone,
+          agent_count: (partnerValues.extracted_agent_count as string) || intake.extracted_agent_count,
+          implementation_timeline: (partnerValues.extracted_implementation_timeline as string) || intake.extracted_implementation_timeline,
+          solutions_interested: (partnerValues.extracted_solutions_interested as string[]) || intake.extracted_solutions_interested,
+          opportunity_description: (partnerValues.extracted_opportunity_description as string) || intake.extracted_opportunity_description,
+          tsd_name: (partnerValues.extracted_tsd_name as string) || intake.extracted_tsd_name,
+          tsd_contact_name: (partnerValues.extracted_tsd_contact_name as string) || intake.extracted_tsd_contact_name,
+          tsd_contact_email: (partnerValues.extracted_tsd_contact_email as string) || intake.extracted_tsd_contact_email,
+        },
+        id
+      )
+      await sendTeamsNotification(teamsPayload)
+    } catch (webhookError) {
+      console.error('Teams notification failed (non-blocking):', webhookError)
     }
 
     return NextResponse.json({

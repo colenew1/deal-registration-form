@@ -207,7 +207,12 @@ export default function AdminDashboard() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login?redirect=/admin'); return }
       const { data: profileData, error } = await supabase.from('user_profiles').select('*').eq('id', user.id).single()
-      if (error || !profileData || profileData.role !== 'admin') { router.push('/partner/dashboard'); return }
+      // If no profile or not admin, redirect to partner dashboard (which can auto-create profile if needed)
+      if (error || !profileData || profileData.role !== 'admin') {
+        console.log('Not admin or no profile, redirecting to partner dashboard')
+        router.push('/partner/dashboard')
+        return
+      }
       setProfile(profileData)
       setIsAuthChecking(false)
     }

@@ -90,6 +90,40 @@ export default function PartnerDashboard() {
         .eq('id', user.id)
         .single()
 
+      // If no profile exists, try to create one from auth metadata
+      if (profileError && profileError.code === 'PGRST116') {
+        console.log('No profile found, attempting to create one...')
+        const metadata = user.user_metadata || {}
+        const newProfile = {
+          id: user.id,
+          role: 'partner' as const,
+          full_name: metadata.full_name || user.email?.split('@')[0] || 'Unknown',
+          email: user.email || '',
+          company_name: metadata.company_name || null,
+          phone: null,
+          tsd_name: null,
+          legacy_partner_id: null,
+          is_active: true,
+          created_at: new Date().toISOString(),
+        }
+
+        const { error: createError } = await supabase
+          .from('user_profiles')
+          .insert(newProfile)
+
+        if (createError) {
+          console.error('Failed to create profile:', createError)
+          await supabase.auth.signOut()
+          router.push('/login?error=profile_missing')
+          return
+        }
+
+        setProfile(newProfile as UserProfile)
+        fetchSubmissions(null) // No legacy partner ID for auto-created profiles
+        setIsLoading(false)
+        return
+      }
+
       if (profileError || !profileData) {
         console.error('Error fetching profile:', profileError)
         router.push('/login')

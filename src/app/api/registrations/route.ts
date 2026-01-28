@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerComponentClient } from '@/lib/supabase-server'
+import { sendTeamsNotification, buildTeamsPayload } from '@/lib/teams-webhook'
 
 export async function GET() {
   try {
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Send webhook notification for new registration
+    // Send webhook notification for new registration (existing HubSpot webhook)
     const newRegistrationWebhookUrl = process.env.NEW_REGISTRATION_WEBHOOK_URL
     if (newRegistrationWebhookUrl) {
       try {
@@ -141,6 +142,33 @@ export async function POST(request: NextRequest) {
         // Log but don't fail the request if webhook fails
         console.error('Failed to send new registration webhook:', webhookError)
       }
+    }
+
+    // Send Teams notification webhook
+    try {
+      const teamsPayload = buildTeamsPayload('new_deal', {
+        id: data.id,
+        created_at: data.created_at,
+        ta_full_name: data.ta_full_name,
+        ta_email: data.ta_email,
+        ta_company_name: data.ta_company_name,
+        ta_phone: data.ta_phone,
+        customer_first_name: data.customer_first_name,
+        customer_last_name: data.customer_last_name,
+        customer_company_name: data.customer_company_name,
+        customer_email: data.customer_email,
+        customer_phone: data.customer_phone,
+        agent_count: data.agent_count,
+        implementation_timeline: data.implementation_timeline,
+        solutions_interested: data.solutions_interested,
+        opportunity_description: data.opportunity_description,
+        tsd_name: data.tsd_name,
+        tsd_contact_name: data.tsd_contact_name,
+        tsd_contact_email: data.tsd_contact_email,
+      })
+      await sendTeamsNotification(teamsPayload)
+    } catch (teamsError) {
+      console.error('Teams notification failed (non-blocking):', teamsError)
     }
 
     return NextResponse.json(data, { status: 201 })

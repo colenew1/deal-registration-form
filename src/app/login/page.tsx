@@ -49,14 +49,56 @@ function LoginForm() {
       try {
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
-          setAuthState('redirecting')
           // Get user profile to determine redirect
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('user_profiles')
-            .select('role')
+            .select('role, is_active')
             .eq('id', user.id)
             .single()
 
+          // If no profile exists, try to create one from auth metadata
+          if (profileError && profileError.code === 'PGRST116') {
+            console.log('No profile found, attempting to create one...')
+            const metadata = user.user_metadata || {}
+            const { error: createError } = await supabase
+              .from('user_profiles')
+              .insert({
+                id: user.id,
+                role: 'partner',
+                full_name: metadata.full_name || user.email?.split('@')[0] || 'Unknown',
+                email: user.email || '',
+                company_name: metadata.company_name || null,
+              })
+
+            if (createError) {
+              console.error('Failed to create profile:', createError)
+              await supabase.auth.signOut()
+              setError('Your account is missing profile data. Please contact support or register again.')
+              setAuthState('ready')
+              return
+            }
+
+            // Profile created, redirect to partner dashboard
+            setAuthState('redirecting')
+            router.replace('/partner/dashboard')
+            return
+          }
+
+          if (profileError) {
+            console.error('Profile fetch error:', profileError)
+            setAuthState('ready')
+            return
+          }
+
+          // Check if account is active
+          if (profile && !profile.is_active) {
+            await supabase.auth.signOut()
+            setError('Your account has been deactivated. Please contact support.')
+            setAuthState('ready')
+            return
+          }
+
+          setAuthState('redirecting')
           if (profile?.role === 'admin') {
             router.replace('/admin')
           } else {
@@ -96,11 +138,38 @@ function LoginForm() {
       }
 
       // Check user profile and redirect based on role
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('role, is_active')
         .eq('id', data.user.id)
         .single()
+
+      // If no profile exists, try to create one from auth metadata
+      if (profileError && profileError.code === 'PGRST116') {
+        console.log('No profile found after login, creating one...')
+        const metadata = data.user.user_metadata || {}
+        const { error: createError } = await supabase
+          .from('user_profiles')
+          .insert({
+            id: data.user.id,
+            role: 'partner',
+            full_name: metadata.full_name || data.user.email?.split('@')[0] || 'Unknown',
+            email: data.user.email || '',
+            company_name: metadata.company_name || null,
+          })
+
+        if (createError) {
+          console.error('Failed to create profile:', createError)
+          await supabase.auth.signOut()
+          setError('Failed to set up your account. Please contact support.')
+          setIsLoading(false)
+          return
+        }
+
+        // Profile created, redirect to partner dashboard
+        router.replace('/partner/dashboard')
+        return
+      }
 
       if (profile && !profile.is_active) {
         await supabase.auth.signOut()

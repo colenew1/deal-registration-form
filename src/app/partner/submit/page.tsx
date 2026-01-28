@@ -135,7 +135,7 @@ export default function SubmitDeal() {
 
     try {
       // Submit directly to Supabase
-      const { error: insertError } = await supabase
+      const { data: insertData, error: insertError } = await supabase
         .from('deal_registrations')
         .insert({
           ...formData,
@@ -149,12 +149,40 @@ export default function SubmitDeal() {
           tsd_name: formData.tsd_name || profile?.tsd_name || 'Unknown',
           source: 'form',
         })
+        .select()
+        .single()
 
       if (insertError) {
         console.error('Insert error:', insertError)
         setError(insertError.message || 'Failed to submit deal')
         return
       }
+
+      // Send Teams notification webhook (fire and forget)
+      fetch('/api/webhooks/teams-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          submission_type: 'new_deal',
+          id: insertData?.id,
+          created_at: insertData?.created_at,
+          ta_full_name: profile?.full_name || '',
+          ta_email: profile?.email || '',
+          ta_company_name: profile?.company_name || '',
+          customer_first_name: formData.customer_first_name,
+          customer_last_name: formData.customer_last_name,
+          customer_company_name: formData.customer_company_name,
+          customer_email: formData.customer_email,
+          customer_phone: formData.customer_phone,
+          agent_count: formData.agent_count,
+          implementation_timeline: formData.implementation_timeline,
+          solutions_interested: formData.solutions_interested,
+          opportunity_description: formData.opportunity_description,
+          tsd_name: formData.tsd_name || profile?.tsd_name,
+          tsd_contact_name: formData.tsd_contact_name,
+          tsd_contact_email: formData.tsd_contact_email,
+        }),
+      }).catch(err => console.log('Teams notification error (non-blocking):', err))
 
       router.push('/partner/dashboard?submitted=true')
 
