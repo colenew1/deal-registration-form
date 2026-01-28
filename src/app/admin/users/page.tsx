@@ -92,6 +92,14 @@ export default function AdminUsersPage() {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault()
     setCreateError('')
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(newUser.email)) {
+      setCreateError('Please enter a valid email address')
+      return
+    }
+
     setIsCreating(true)
 
     try {
