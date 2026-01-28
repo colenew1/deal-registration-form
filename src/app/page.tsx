@@ -1,7 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSupabaseClient } from '@/lib/supabase-client'
+import type { User } from '@supabase/supabase-js'
+import type { UserProfile } from '@/lib/supabase'
 
 // Light mode color palette
 const colors = {
@@ -67,8 +70,21 @@ const labelStyle = {
 
 export default function RegistrationForm() {
   const router = useRouter()
+  const supabase = useSupabaseClient()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [authLoading, setAuthLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(null)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
+  const [authEmail, setAuthEmail] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
+  const [authFullName, setAuthFullName] = useState('')
+  const [authCompanyName, setAuthCompanyName] = useState('')
+  const [authTsdName, setAuthTsdName] = useState('')
+  const [authError, setAuthError] = useState('')
+  const [authSubmitting, setAuthSubmitting] = useState(false)
 
   const [formData, setFormData] = useState({
     customer_first_name: '',
@@ -94,6 +110,137 @@ export default function RegistrationForm() {
     tsd_contact_name: '',
     tsd_contact_email: '',
   })
+
+  // Check auth state on mount
+  useEffect(() => {
+    if (!supabase) return
+
+    const checkAuth = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        setUser(user)
+        if (user) {
+          // Fetch user profile
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+
+          if (profile) {
+            setUserProfile(profile)
+            // Pre-fill partner fields
+            setFormData(prev => ({
+              ...prev,
+              ta_full_name: profile.full_name || prev.ta_full_name,
+              ta_email: profile.email || prev.ta_email,
+              ta_phone: profile.phone || prev.ta_phone,
+              ta_company_name: profile.company_name || prev.ta_company_name,
+              tsd_name: profile.tsd_name || prev.tsd_name,
+            }))
+          }
+        }
+      } catch (err) {
+        console.error('Auth check error:', err)
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+
+    checkAuth()
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setUser(session.user)
+        // Fetch profile after sign in
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+
+        if (profile) {
+          setUserProfile(profile)
+          setFormData(prev => ({
+            ...prev,
+            ta_full_name: profile.full_name || prev.ta_full_name,
+            ta_email: profile.email || prev.ta_email,
+            ta_phone: profile.phone || prev.ta_phone,
+            ta_company_name: profile.company_name || prev.ta_company_name,
+            tsd_name: profile.tsd_name || prev.tsd_name,
+          }))
+        }
+        setShowAuthModal(false)
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null)
+        setUserProfile(null)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [supabase])
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!supabase) return
+
+    setAuthError('')
+    setAuthSubmitting(true)
+
+    try {
+      if (authMode === 'login') {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: authEmail,
+          password: authPassword,
+        })
+        if (error) throw error
+      } else {
+        // Sign up via server API (to bypass RLS for profile creation)
+        const res = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: authEmail,
+            password: authPassword,
+            full_name: authFullName,
+            company_name: authCompanyName,
+            tsd_name: authTsdName,
+          }),
+        })
+
+        const data = await res.json()
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to create account')
+        }
+
+        // Now sign in with the newly created account
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: authEmail,
+          password: authPassword,
+        })
+        if (signInError) throw signInError
+      }
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : 'Authentication failed')
+    } finally {
+      setAuthSubmitting(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    if (!supabase) return
+    await supabase.auth.signOut()
+    // Clear pre-filled fields
+    setFormData(prev => ({
+      ...prev,
+      ta_full_name: '',
+      ta_email: '',
+      ta_phone: '',
+      ta_company_name: '',
+      tsd_name: '',
+    }))
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -121,10 +268,14 @@ export default function RegistrationForm() {
     }
 
     try {
+      const submitData = {
+        ...formData,
+        partner_id: user?.id || null,
+      }
       const res = await fetch('/api/registrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       })
 
       if (!res.ok) {
@@ -152,12 +303,263 @@ export default function RegistrationForm() {
 
       <main style={{ maxWidth: 800, margin: '0 auto', padding: 24 }}>
         {/* Page Title */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <h1 style={{ fontSize: 28, fontWeight: 600, color: colors.text, margin: 0 }}>Partner Deal Registration</h1>
           <p style={{ marginTop: 8, color: colors.textMuted, fontSize: 14 }}>
             Register a new sales opportunity to protect your deal and receive support from AmplifAI
           </p>
         </div>
+
+        {/* Auth Section */}
+        <div style={{ marginBottom: 24, padding: 16, backgroundColor: colors.white, borderRadius: 8, border: `1px solid ${colors.border}` }}>
+          {authLoading ? (
+            <p style={{ margin: 0, textAlign: 'center', color: colors.textMuted, fontSize: 14 }}>Loading...</p>
+          ) : user ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+              <div>
+                <p style={{ margin: 0, fontSize: 14, color: colors.text }}>
+                  Logged in as <strong>{userProfile?.full_name || user.email}</strong>
+                </p>
+                <p style={{ margin: '4px 0 0', fontSize: 12, color: colors.textMuted }}>
+                  Your partner info is pre-filled below
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: 13,
+                  backgroundColor: 'transparent',
+                  color: colors.textMuted,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                }}
+              >
+                Log Out
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+              <div>
+                <p style={{ margin: 0, fontSize: 14, color: colors.text }}>
+                  Save your partner info for next time
+                </p>
+                <p style={{ margin: '4px 0 0', fontSize: 12, color: colors.textMuted }}>
+                  Log in or create an account to auto-fill your info on future submissions
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode('login'); setShowAuthModal(true); setAuthError('') }}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: 13,
+                    backgroundColor: colors.primary,
+                    color: colors.white,
+                    border: 'none',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                  }}
+                >
+                  Log In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode('signup'); setShowAuthModal(true); setAuthError('') }}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: 13,
+                    backgroundColor: 'transparent',
+                    color: colors.primary,
+                    border: `1px solid ${colors.primary}`,
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                  }}
+                >
+                  Create Account
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Auth Modal */}
+        {showAuthModal && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: 16,
+            }}
+            onClick={() => setShowAuthModal(false)}
+          >
+            <div
+              style={{
+                position: 'relative',
+                backgroundColor: colors.white,
+                borderRadius: 12,
+                padding: 24,
+                width: '100%',
+                maxWidth: 400,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 600, color: colors.text }}>
+                {authMode === 'login' ? 'Log In' : 'Create Account'}
+              </h2>
+              <p style={{ margin: '0 0 20px', fontSize: 14, color: colors.textMuted }}>
+                {authMode === 'login'
+                  ? 'Welcome back! Log in to auto-fill your partner info.'
+                  : 'Create an account to save your info for future submissions.'}
+              </p>
+
+              {authError && (
+                <div style={{ marginBottom: 16, padding: 12, backgroundColor: colors.errorLight, borderRadius: 6 }}>
+                  <p style={{ margin: 0, fontSize: 13, color: colors.errorText }}>{authError}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleAuth}>
+                {authMode === 'signup' && (
+                  <>
+                    <div style={{ marginBottom: 12 }}>
+                      <label style={{ ...labelStyle, marginBottom: 4 }}>Full Name</label>
+                      <input
+                        type="text"
+                        value={authFullName}
+                        onChange={e => setAuthFullName(e.target.value)}
+                        required
+                        placeholder="Jane Doe"
+                        style={inputStyle}
+                      />
+                    </div>
+                    <div style={{ marginBottom: 12 }}>
+                      <label style={{ ...labelStyle, marginBottom: 4 }}>Company Name</label>
+                      <input
+                        type="text"
+                        value={authCompanyName}
+                        onChange={e => setAuthCompanyName(e.target.value)}
+                        required
+                        placeholder="Partner Co"
+                        style={inputStyle}
+                      />
+                    </div>
+                    <div style={{ marginBottom: 12 }}>
+                      <label style={{ ...labelStyle, marginBottom: 4 }}>TSD Name (optional)</label>
+                      <input
+                        type="text"
+                        value={authTsdName}
+                        onChange={e => setAuthTsdName(e.target.value)}
+                        placeholder="Avant"
+                        style={inputStyle}
+                      />
+                    </div>
+                  </>
+                )}
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ ...labelStyle, marginBottom: 4 }}>Email</label>
+                  <input
+                    type="email"
+                    value={authEmail}
+                    onChange={e => setAuthEmail(e.target.value)}
+                    required
+                    placeholder="you@company.com"
+                    style={inputStyle}
+                  />
+                </div>
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ ...labelStyle, marginBottom: 4 }}>Password</label>
+                  <input
+                    type="password"
+                    value={authPassword}
+                    onChange={e => setAuthPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    placeholder="••••••••"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={authSubmitting}
+                  style={{
+                    width: '100%',
+                    padding: '12px 20px',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    backgroundColor: colors.primary,
+                    color: colors.white,
+                    border: 'none',
+                    borderRadius: 8,
+                    cursor: authSubmitting ? 'not-allowed' : 'pointer',
+                    opacity: authSubmitting ? 0.7 : 1,
+                  }}
+                >
+                  {authSubmitting ? 'Please wait...' : authMode === 'login' ? 'Log In' : 'Create Account'}
+                </button>
+              </form>
+
+              <p style={{ margin: '16px 0 0', textAlign: 'center', fontSize: 13, color: colors.textMuted }}>
+                {authMode === 'login' ? (
+                  <>
+                    Don&apos;t have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => { setAuthMode('signup'); setAuthError('') }}
+                      style={{ background: 'none', border: 'none', color: colors.primary, cursor: 'pointer', padding: 0, fontSize: 13 }}
+                    >
+                      Create one
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    Already have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => { setAuthMode('login'); setAuthError('') }}
+                      style={{ background: 'none', border: 'none', color: colors.primary, cursor: 'pointer', padding: 0, fontSize: 13 }}
+                    >
+                      Log in
+                    </button>
+                  </>
+                )}
+              </p>
+
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(false)}
+                style={{
+                  position: 'absolute',
+                  top: 12,
+                  right: 12,
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 20,
+                  color: colors.textMuted,
+                  cursor: 'pointer',
+                  padding: 4,
+                }}
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Error Alert */}
         {error && (
