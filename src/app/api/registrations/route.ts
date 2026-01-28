@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerComponentClient } from '@/lib/supabase-server'
+import { createServerComponentClient, createAdminClient } from '@/lib/supabase-server'
 import { sendTeamsNotification, buildTeamsPayload } from '@/lib/teams-webhook'
 
 export async function GET() {
@@ -69,21 +69,30 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate partner_id if provided - must exist in user_profiles
+    // Use admin client to bypass RLS (guest users can't read user_profiles)
     let partnerId = body.partner_id || null
     if (partnerId) {
-      const { data: partnerProfile } = await supabase
-        .from('user_profiles')
-        .select('id')
-        .eq('id', partnerId)
-        .single()
+      try {
+        const adminClient = createAdminClient()
+        const { data: partnerProfile } = await adminClient
+          .from('user_profiles')
+          .select('id')
+          .eq('id', partnerId)
+          .single()
 
-      if (!partnerProfile) {
-        console.warn('partner_id not found in user_profiles, setting to null:', partnerId)
+        if (!partnerProfile) {
+          console.warn('partner_id not found in user_profiles, setting to null:', partnerId)
+          partnerId = null
+        }
+      } catch (validationError) {
+        console.warn('Failed to validate partner_id, setting to null:', validationError)
         partnerId = null
       }
     }
 
-    const { data, error } = await supabase
+    // Use admin client for insert to bypass RLS (supports both guest and auth submissions)
+    const adminClient = createAdminClient()
+    const { data, error } = await adminClient
       .from('deal_registrations')
       .insert([{
         customer_first_name: body.customer_first_name,

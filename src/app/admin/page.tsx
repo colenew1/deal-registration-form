@@ -201,6 +201,7 @@ export default function AdminDashboard() {
   const [editData, setEditData] = useState<Partial<UnifiedDeal>>({})
   const [saving, setSaving] = useState(false)
   const [sendingToHubSpot, setSendingToHubSpot] = useState(false)
+  const [showApproveConfirm, setShowApproveConfirm] = useState(false)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -391,14 +392,14 @@ export default function AdminDashboard() {
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 onClick={() => { navigator.clipboard.writeText(window.location.origin); alert('Form link copied!') }}
-                style={{ padding: '6px 12px', fontSize: 12, backgroundColor: colors.primaryLight, color: colors.primaryText, border: 'none', borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                style={{ padding: '6px 12px', fontSize: 12, backgroundColor: colors.white, color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
               >
                 <svg style={{ width: 14, height: 14 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                 Copy Form Link
               </button>
               <button
                 onClick={() => { navigator.clipboard.writeText('Channel.dkj2hu@zapiermail.com'); alert('Forwarding email copied!') }}
-                style={{ padding: '6px 12px', fontSize: 12, backgroundColor: colors.successLight, color: colors.successText, border: 'none', borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                style={{ padding: '6px 12px', fontSize: 12, backgroundColor: colors.white, color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
               >
                 <svg style={{ width: 14, height: 14 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                 Copy Forwarding Email
@@ -431,8 +432,8 @@ export default function AdminDashboard() {
                 padding: '10px 20px',
                 fontSize: 14,
                 fontWeight: 500,
-                backgroundColor: activeTab === tab.id ? colors.primary : colors.white,
-                color: activeTab === tab.id ? colors.white : colors.text,
+                backgroundColor: activeTab === tab.id ? colors.text : colors.white,
+                color: activeTab === tab.id ? colors.white : colors.textMuted,
                 border: activeTab === tab.id ? 'none' : `1px solid ${colors.border}`,
                 borderRadius: 8,
                 cursor: 'pointer',
@@ -448,7 +449,7 @@ export default function AdminDashboard() {
                   borderRadius: 12,
                   fontSize: 12,
                   fontWeight: 600,
-                  backgroundColor: activeTab === tab.id ? 'rgba(255,255,255,0.2)' : colors.bg,
+                  backgroundColor: activeTab === tab.id ? 'rgba(255,255,255,0.15)' : colors.bg,
                   color: activeTab === tab.id ? colors.white : colors.textMuted,
                 }}>
                   {tab.count}
@@ -458,9 +459,7 @@ export default function AdminDashboard() {
           ))}
           {activeTab === 'inbox' && stats.inbox > 0 && (
             <span style={{ fontSize: 13, color: colors.textMuted, marginLeft: 8 }}>
-              <span style={{ color: colors.success, fontWeight: 600 }}>{stats.ready}</span> ready
-              {' / '}
-              <span style={{ color: colors.warning, fontWeight: 600 }}>{stats.needsInfo}</span> needs info
+              {stats.ready} ready / {stats.needsInfo} needs info
             </span>
           )}
         </div>
@@ -482,14 +481,11 @@ export default function AdminDashboard() {
                       textAlign: 'left',
                       padding: 16,
                       borderRadius: 8,
-                      backgroundColor: isSelected ? colors.primaryLight : colors.white,
-                      border: isSelected ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
-                      borderLeft: isSelected ? `2px solid ${colors.primary}` : `4px solid ${
+                      backgroundColor: isSelected ? colors.bg : colors.white,
+                      border: isSelected ? `1px solid ${colors.text}` : `1px solid ${colors.border}`,
+                      borderLeft: isSelected ? `2px solid ${colors.text}` : `3px solid ${
                         deal.status === 'ready' ? colors.success
                         : deal.has_conflicts ? colors.error
-                        : missing.length > 0 ? colors.warning
-                        : deal.status === 'completed' ? colors.success
-                        : deal.status === 'rejected' ? colors.error
                         : colors.border
                       }`,
                       cursor: 'pointer',
@@ -510,43 +506,33 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                      {/* Status indicator - prominent first badge */}
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                      {/* Status indicator */}
                       {deal.status === 'ready' && (
-                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: colors.successLight, color: colors.success }}>
-                          Ready to Send
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: colors.successLight, color: colors.successText }}>
+                          Ready
                         </span>
                       )}
                       {deal.has_conflicts && deal.status !== 'completed' && deal.status !== 'rejected' && (
                         <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: colors.errorLight, color: colors.errorText }}>
-                          Has Conflicts
+                          Conflicts
                         </span>
                       )}
                       {missing.length > 0 && deal.status !== 'completed' && deal.status !== 'rejected' && (
-                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: colors.warningLight, color: colors.warningText }}>
-                          Missing: {missing.join(', ')}
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, color: colors.textMuted }}>
+                          Missing {missing.length} field{missing.length > 1 ? 's' : ''}
                         </span>
                       )}
                       {deal.status === 'completed' && (
-                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: colors.successLight, color: colors.success }}>Sent</span>
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, color: colors.textLight }}>Sent</span>
                       )}
                       {deal.status === 'rejected' && (
-                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: colors.errorLight, color: colors.errorText }}>Rejected</span>
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, color: colors.textLight }}>Rejected</span>
                       )}
-                      {/* Source and context badges */}
-                      <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, backgroundColor: deal.type === 'email_intake' ? colors.primaryLight : '#e0f2fe', color: deal.type === 'email_intake' ? colors.primaryText : '#0369a1' }}>
-                        {deal.source_label}
+                      {/* Context — plain text, no colored badges */}
+                      <span style={{ fontSize: 11, color: colors.textLight }}>
+                        {deal.source_label}{deal.ta_company_name ? ` · ${deal.ta_company_name}` : ''}{deal.tsd_name ? ` · ${deal.tsd_name}` : ''}
                       </span>
-                      {deal.tsd_name && (
-                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, backgroundColor: colors.bg, color: colors.textMuted }}>
-                          {deal.tsd_name}
-                        </span>
-                      )}
-                      {deal.ta_company_name && (
-                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, backgroundColor: colors.purpleLight, color: colors.purple }}>
-                          {deal.ta_company_name}
-                        </span>
-                      )}
                     </div>
                   </button>
                 )
@@ -642,8 +628,8 @@ export default function AdminDashboard() {
 
                   {/* Partner Section */}
                   <div style={{ gridColumn: '2 / 3', border: `1px solid ${colors.border}`, borderRadius: 8, overflow: 'hidden' }}>
-                    <div style={{ padding: '10px 16px', backgroundColor: colors.purpleLight, borderBottom: `1px solid ${colors.border}` }}>
-                      <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: colors.purple, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Partner / TA</h3>
+                    <div style={{ padding: '10px 16px', backgroundColor: colors.bg, borderBottom: `1px solid ${colors.border}` }}>
+                      <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: colors.text, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Partner / TA</h3>
                     </div>
                     <div style={{ padding: 16 }}>
                       <GridField label="Name" value={editMode ? editData.ta_full_name : selectedDeal.ta_full_name} onChange={v => setEditData(p => ({ ...p, ta_full_name: v }))} editMode={editMode} required />
@@ -685,8 +671,8 @@ export default function AdminDashboard() {
 
                   {/* Opportunity Section */}
                   <div style={{ gridColumn: '1 / 3', border: `1px solid ${colors.border}`, borderRadius: 8, overflow: 'hidden' }}>
-                    <div style={{ padding: '10px 16px', backgroundColor: colors.successLight, borderBottom: `1px solid ${colors.border}` }}>
-                      <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: colors.successText, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Opportunity</h3>
+                    <div style={{ padding: '10px 16px', backgroundColor: colors.bg, borderBottom: `1px solid ${colors.border}` }}>
+                      <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: colors.text, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Opportunity</h3>
                     </div>
                     <div style={{ padding: 16 }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
@@ -767,7 +753,7 @@ export default function AdminDashboard() {
                           }}>
                             {(selectedDeal.solutions_interested || []).length > 0 ?
                               selectedDeal.solutions_interested!.map(s => (
-                                <span key={s} style={{ padding: '4px 10px', backgroundColor: colors.primaryLight, color: colors.primaryText, borderRadius: 4, fontSize: 13, fontWeight: 500 }}>{s}</span>
+                                <span key={s} style={{ padding: '4px 10px', backgroundColor: colors.bg, color: colors.text, borderRadius: 4, fontSize: 13, fontWeight: 500, border: `1px solid ${colors.border}` }}>{s}</span>
                               )) :
                               <span style={{ color: colors.errorText, fontSize: 14, fontWeight: 500 }}>No solutions selected - required</span>
                             }
@@ -806,7 +792,7 @@ export default function AdminDashboard() {
                   </div>
                 ) : selectedDeal.status === 'completed' ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <p style={{ textAlign: 'center', color: colors.successText, fontSize: 14, margin: 0 }}>
+                    <p style={{ textAlign: 'center', color: colors.textMuted, fontSize: 13, margin: 0 }}>
                       Sent to HubSpot
                     </p>
                     <button
@@ -817,9 +803,9 @@ export default function AdminDashboard() {
                         padding: '10px 20px',
                         fontSize: 14,
                         fontWeight: 500,
-                        backgroundColor: colors.primaryLight,
-                        color: colors.primaryText,
-                        border: `1px solid ${colors.primary}`,
+                        backgroundColor: colors.white,
+                        color: colors.textMuted,
+                        border: `1px solid ${colors.border}`,
                         borderRadius: 6,
                         cursor: sendingToHubSpot ? 'not-allowed' : 'pointer',
                         opacity: sendingToHubSpot ? 0.7 : 1,
@@ -840,9 +826,9 @@ export default function AdminDashboard() {
                         padding: '10px 20px',
                         fontSize: 14,
                         fontWeight: 500,
-                        backgroundColor: colors.warningLight,
-                        color: colors.warningText,
-                        border: `1px solid ${colors.warning}`,
+                        backgroundColor: colors.white,
+                        color: colors.textMuted,
+                        border: `1px solid ${colors.border}`,
                         borderRadius: 6,
                         cursor: 'pointer'
                       }}
@@ -853,7 +839,7 @@ export default function AdminDashboard() {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <button
-                      onClick={handleSendToHubSpot}
+                      onClick={() => setShowApproveConfirm(true)}
                       disabled={!canSend || sendingToHubSpot}
                       style={{
                         width: '100%',
@@ -867,14 +853,14 @@ export default function AdminDashboard() {
                         cursor: canSend ? 'pointer' : 'not-allowed'
                       }}
                     >
-                      {sendingToHubSpot ? 'Sending...' : canSend ? 'Send to HubSpot' : 'Complete required fields to send'}
+                      {sendingToHubSpot ? 'Sending...' : canSend ? 'Approve & Send to HubSpot' : 'Complete required fields to send'}
                     </button>
                     <div style={{ display: 'flex', gap: 12 }}>
                       <button onClick={() => { setEditMode(true); setEditData({ ...selectedDeal }) }} style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.white, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>Edit</button>
                       {selectedDeal.type === 'email_intake' && (
-                        <button onClick={handleRequestInfo} style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.warningLight, color: colors.warningText, border: `1px solid ${colors.warning}`, borderRadius: 6, cursor: 'pointer' }}>Request Info</button>
+                        <button onClick={handleRequestInfo} style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.white, color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>Request Info</button>
                       )}
-                      <button onClick={handleReject} style={{ padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.errorLight, color: colors.errorText, border: `1px solid ${colors.error}`, borderRadius: 6, cursor: 'pointer' }}>Reject</button>
+                      <button onClick={handleReject} style={{ padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.white, color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>Reject</button>
                     </div>
                   </div>
                 )}
@@ -883,6 +869,89 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
+
+      {/* Approve & Send Confirmation Modal */}
+      {showApproveConfirm && selectedDeal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: 16,
+          }}
+          onClick={() => setShowApproveConfirm(false)}
+        >
+          <div
+            style={{
+              backgroundColor: colors.white,
+              borderRadius: 12,
+              padding: 24,
+              width: '100%',
+              maxWidth: 440,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 600, color: colors.text }}>
+              Approve & Send to HubSpot
+            </h3>
+            <p style={{ margin: '0 0 16px', fontSize: 14, color: colors.textMuted }}>
+              Are you sure you want to approve this deal and send it to HubSpot?
+            </p>
+            <div style={{ padding: 12, backgroundColor: colors.bg, borderRadius: 8, marginBottom: 20, border: `1px solid ${colors.border}` }}>
+              <p style={{ margin: 0, fontSize: 13, color: colors.text }}>
+                <strong>{selectedDeal.customer_first_name} {selectedDeal.customer_last_name}</strong> at {selectedDeal.customer_company_name}
+              </p>
+              <p style={{ margin: '4px 0 0', fontSize: 12, color: colors.textMuted }}>
+                Partner: {selectedDeal.ta_full_name} ({selectedDeal.ta_company_name})
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                onClick={() => setShowApproveConfirm(false)}
+                style={{
+                  flex: 1,
+                  padding: '10px 20px',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  backgroundColor: colors.white,
+                  color: colors.text,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  setShowApproveConfirm(false)
+                  await handleSendToHubSpot()
+                }}
+                disabled={sendingToHubSpot}
+                style={{
+                  flex: 1,
+                  padding: '10px 20px',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  backgroundColor: colors.success,
+                  color: colors.white,
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: sendingToHubSpot ? 'not-allowed' : 'pointer',
+                  opacity: sendingToHubSpot ? 0.7 : 1,
+                }}
+              >
+                {sendingToHubSpot ? 'Sending...' : 'Confirm & Send'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

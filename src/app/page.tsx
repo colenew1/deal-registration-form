@@ -113,8 +113,12 @@ export default function RegistrationForm() {
 
   // Check auth state on mount
   useEffect(() => {
-    if (!supabase) return
+    if (!supabase) {
+      setAuthLoading(false)
+      return
+    }
 
+    setAuthLoading(true)
     const checkAuth = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()

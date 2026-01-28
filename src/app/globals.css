@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light only;
+
   /* Brand Colors - Professional and Trustworthy */
   --primary-600: #4f46e5;
   --primary-700: #4338ca;
@@ -66,27 +68,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --background-subtle: #1e293b;
-    --foreground: #f1f5f9;
-    --foreground-muted: #94a3b8;
-    --border-color: #334155;
-    --border-color-strong: #475569;
-    --card-bg: #1e293b;
-    --input-bg: #0f172a;
-    --input-border: #475569;
-    --input-border-focus: var(--primary-400);
-
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.4);
-
-    --focus-ring: 0 0 0 3px rgba(129, 140, 248, 0.3);
-  }
-}
+/* Force light mode only - no dark mode support */
 
 /* Base styles */
 * {
@@ -176,11 +158,6 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 0.5rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .form-label {
-    color: var(--gray-300);
-  }
-}
 
 .form-label-required::after {
   content: ' *';
@@ -255,17 +232,6 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--gray-400);
 }
 
-@media (prefers-color-scheme: dark) {
-  .btn-secondary {
-    background-color: var(--background-subtle);
-    color: var(--gray-200);
-    border-color: var(--border-color-strong);
-  }
-
-  .btn-secondary:hover:not(:disabled) {
-    background-color: var(--gray-700);
-  }
-}
 
 .btn-large {
   padding: 1rem 2rem;
@@ -316,22 +282,6 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--error-600);
 }
 
-@media (prefers-color-scheme: dark) {
-  .badge-pending {
-    background-color: rgba(245, 158, 11, 0.15);
-    color: #fbbf24;
-  }
-
-  .badge-approved {
-    background-color: rgba(16, 185, 129, 0.15);
-    color: #34d399;
-  }
-
-  .badge-rejected {
-    background-color: rgba(239, 68, 68, 0.15);
-    color: #f87171;
-  }
-}
 
 /* Checkbox styling */
 .form-checkbox {
@@ -432,25 +382,6 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--primary-700);
 }
 
-@media (prefers-color-scheme: dark) {
-  .alert-error {
-    background-color: rgba(239, 68, 68, 0.1);
-    border-color: rgba(239, 68, 68, 0.2);
-    color: #fca5a5;
-  }
-
-  .alert-success {
-    background-color: rgba(16, 185, 129, 0.1);
-    border-color: rgba(16, 185, 129, 0.2);
-    color: #6ee7b7;
-  }
-
-  .alert-info {
-    background-color: rgba(99, 102, 241, 0.1);
-    border-color: rgba(99, 102, 241, 0.2);
-    color: #a5b4fc;
-  }
-}
 
 /* Table styles */
 .table-container {
@@ -618,15 +549,6 @@ a:hover {
   text-decoration: underline;
 }
 
-@media (prefers-color-scheme: dark) {
-  a {
-    color: var(--primary-400);
-  }
-
-  a:hover {
-    color: var(--primary-300);
-  }
-}
 
 /* Selection option grid (for checkboxes) */
 .option-grid {
