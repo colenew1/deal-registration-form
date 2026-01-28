@@ -14,6 +14,7 @@ const PUBLIC_ROUTE_PREFIXES = [
   '/register/', // /register/[id] for pre-filled forms
   '/api/registrations', // POST is public for guest submissions
   '/api/email-intake', // Webhook endpoint
+  '/api/auth/', // Auth endpoints (signup, etc.) must be public
 ]
 
 // Admin-only routes
