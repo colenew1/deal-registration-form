@@ -195,7 +195,7 @@ export default function AdminDashboard() {
   const [isAuthChecking, setIsAuthChecking] = useState(true)
   const [deals, setDeals] = useState<UnifiedDeal[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'inbox' | 'pending_info' | 'ready' | 'archive'>('inbox')
+  const [activeTab, setActiveTab] = useState<'inbox' | 'archive'>('inbox')
   const [selectedDeal, setSelectedDeal] = useState<UnifiedDeal | null>(null)
   const [editMode, setEditMode] = useState(false)
   const [editData, setEditData] = useState<Partial<UnifiedDeal>>({})
@@ -241,15 +241,18 @@ export default function AdminDashboard() {
 
   const filteredDeals = useMemo(() => {
     if (activeTab === 'archive') return deals.filter(d => d.status === 'completed' || d.status === 'rejected')
-    return deals.filter(d => d.status === activeTab)
+    return deals.filter(d => d.status === 'inbox' || d.status === 'pending_info' || d.status === 'ready')
   }, [deals, activeTab])
 
-  const stats = useMemo(() => ({
-    inbox: deals.filter(d => d.status === 'inbox').length,
-    pending_info: deals.filter(d => d.status === 'pending_info').length,
-    ready: deals.filter(d => d.status === 'ready').length,
-    archive: deals.filter(d => d.status === 'completed' || d.status === 'rejected').length,
-  }), [deals])
+  const stats = useMemo(() => {
+    const active = deals.filter(d => d.status === 'inbox' || d.status === 'pending_info' || d.status === 'ready')
+    return {
+      inbox: active.length,
+      ready: active.filter(d => d.status === 'ready').length,
+      needsInfo: active.filter(d => d.status !== 'ready').length,
+      archive: deals.filter(d => d.status === 'completed' || d.status === 'rejected').length,
+    }
+  }, [deals])
 
   const formatDate = (date: string) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   const formatTime = (date: string) => new Date(date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
@@ -416,11 +419,9 @@ export default function AdminDashboard() {
 
       <div style={{ maxWidth: 1400, margin: '0 auto', padding: 24 }}>
         {/* Tab Bar */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 24, alignItems: 'center' }}>
           {[
             { id: 'inbox', label: 'Inbox', count: stats.inbox },
-            { id: 'pending_info', label: 'Waiting for Info', count: stats.pending_info },
-            { id: 'ready', label: 'Ready to Send', count: stats.ready },
             { id: 'archive', label: 'Archive', count: stats.archive },
           ].map(tab => (
             <button
@@ -455,6 +456,13 @@ export default function AdminDashboard() {
               )}
             </button>
           ))}
+          {activeTab === 'inbox' && stats.inbox > 0 && (
+            <span style={{ fontSize: 13, color: colors.textMuted, marginLeft: 8 }}>
+              <span style={{ color: colors.success, fontWeight: 600 }}>{stats.ready}</span> ready
+              {' / '}
+              <span style={{ color: colors.warning, fontWeight: 600 }}>{stats.needsInfo}</span> needs info
+            </span>
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: 24 }}>
@@ -476,6 +484,14 @@ export default function AdminDashboard() {
                       borderRadius: 8,
                       backgroundColor: isSelected ? colors.primaryLight : colors.white,
                       border: isSelected ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+                      borderLeft: isSelected ? `2px solid ${colors.primary}` : `4px solid ${
+                        deal.status === 'ready' ? colors.success
+                        : deal.has_conflicts ? colors.error
+                        : missing.length > 0 ? colors.warning
+                        : deal.status === 'completed' ? colors.success
+                        : deal.status === 'rejected' ? colors.error
+                        : colors.border
+                      }`,
                       cursor: 'pointer',
                     }}
                   >
@@ -495,7 +511,30 @@ export default function AdminDashboard() {
                     </div>
 
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                      <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: deal.type === 'email_intake' ? colors.primaryLight : colors.successLight, color: deal.type === 'email_intake' ? colors.primaryText : colors.successText }}>
+                      {/* Status indicator - prominent first badge */}
+                      {deal.status === 'ready' && (
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: colors.successLight, color: colors.success }}>
+                          Ready to Send
+                        </span>
+                      )}
+                      {deal.has_conflicts && deal.status !== 'completed' && deal.status !== 'rejected' && (
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: colors.errorLight, color: colors.errorText }}>
+                          Has Conflicts
+                        </span>
+                      )}
+                      {missing.length > 0 && deal.status !== 'completed' && deal.status !== 'rejected' && (
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: colors.warningLight, color: colors.warningText }}>
+                          Missing: {missing.join(', ')}
+                        </span>
+                      )}
+                      {deal.status === 'completed' && (
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: colors.successLight, color: colors.success }}>Sent</span>
+                      )}
+                      {deal.status === 'rejected' && (
+                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600, backgroundColor: colors.errorLight, color: colors.errorText }}>Rejected</span>
+                      )}
+                      {/* Source and context badges */}
+                      <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, backgroundColor: deal.type === 'email_intake' ? colors.primaryLight : '#e0f2fe', color: deal.type === 'email_intake' ? colors.primaryText : '#0369a1' }}>
                         {deal.source_label}
                       </span>
                       {deal.tsd_name && (
@@ -508,22 +547,6 @@ export default function AdminDashboard() {
                           {deal.ta_company_name}
                         </span>
                       )}
-                      {missing.length > 0 && deal.status !== 'completed' && deal.status !== 'rejected' && (
-                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, backgroundColor: colors.warningLight, color: colors.warningText }}>
-                          {missing.length} missing
-                        </span>
-                      )}
-                      {deal.has_conflicts && (
-                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, backgroundColor: colors.errorLight, color: colors.errorText }}>
-                          Conflicts
-                        </span>
-                      )}
-                      {deal.status === 'completed' && (
-                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, backgroundColor: colors.successLight, color: colors.successText }}>Sent</span>
-                      )}
-                      {deal.status === 'rejected' && (
-                        <span style={{ padding: '3px 8px', borderRadius: 4, fontSize: 11, fontWeight: 500, backgroundColor: colors.errorLight, color: colors.errorText }}>Rejected</span>
-                      )}
                     </div>
                   </button>
                 )
@@ -531,7 +554,7 @@ export default function AdminDashboard() {
 
               {filteredDeals.length === 0 && (
                 <div style={{ textAlign: 'center', padding: 48, color: colors.textMuted, backgroundColor: colors.white, borderRadius: 8, border: `1px solid ${colors.border}` }}>
-                  No deals in {activeTab === 'archive' ? 'archive' : activeTab.replace('_', ' ')}
+                  No deals in {activeTab === 'archive' ? 'archive' : 'inbox'}
                 </div>
               )}
             </div>
