@@ -57,21 +57,32 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user profile
-    const { error: profileError } = await adminClient
+    console.log('Creating profile for user:', newUser.user.id)
+    const { data: profileData, error: profileError } = await adminClient
       .from('user_profiles')
       .insert({
         id: newUser.user.id,
         role: role || 'partner',
         full_name,
         email: email.toLowerCase(),
+        is_active: true,
       })
+      .select()
+      .single()
 
     if (profileError) {
-      console.error('Profile error:', profileError)
+      console.error('Profile error details:', {
+        code: profileError.code,
+        message: profileError.message,
+        details: profileError.details,
+        hint: profileError.hint,
+      })
       // Try to clean up the auth user
       await adminClient.auth.admin.deleteUser(newUser.user.id)
-      return NextResponse.json({ error: 'Failed to create user profile' }, { status: 500 })
+      return NextResponse.json({ error: `Failed to create user profile: ${profileError.message}` }, { status: 500 })
     }
+
+    console.log('Profile created successfully:', profileData)
 
     return NextResponse.json({
       success: true,
