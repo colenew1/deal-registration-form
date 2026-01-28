@@ -782,9 +782,29 @@ export default function AdminDashboard() {
                     <button onClick={handleSave} disabled={saving} style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.primary, color: colors.white, border: 'none', borderRadius: 6, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>{saving ? 'Saving...' : 'Save Changes'}</button>
                   </div>
                 ) : selectedDeal.status === 'completed' ? (
-                  <p style={{ textAlign: 'center', color: colors.textMuted, fontSize: 14, margin: 0 }}>
-                    Sent to HubSpot
-                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <p style={{ textAlign: 'center', color: colors.successText, fontSize: 14, margin: 0 }}>
+                      Sent to HubSpot
+                    </p>
+                    <button
+                      onClick={handleSendToHubSpot}
+                      disabled={sendingToHubSpot}
+                      style={{
+                        width: '100%',
+                        padding: '10px 20px',
+                        fontSize: 14,
+                        fontWeight: 500,
+                        backgroundColor: colors.primaryLight,
+                        color: colors.primaryText,
+                        border: `1px solid ${colors.primary}`,
+                        borderRadius: 6,
+                        cursor: sendingToHubSpot ? 'not-allowed' : 'pointer',
+                        opacity: sendingToHubSpot ? 0.7 : 1,
+                      }}
+                    >
+                      {sendingToHubSpot ? 'Resubmitting...' : 'Resubmit to HubSpot'}
+                    </button>
+                  </div>
                 ) : selectedDeal.status === 'rejected' ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <p style={{ textAlign: 'center', color: colors.textMuted, fontSize: 14, margin: 0 }}>
