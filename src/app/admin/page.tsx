@@ -366,15 +366,16 @@ export default function AdminDashboard() {
     if (!selectedDeal) return
     setDeleting(true)
     try {
-      let result
-      if (selectedDeal.type === 'email_intake') {
-        result = await supabase.from('email_intakes').delete().eq('id', selectedDeal.id)
-      } else {
-        result = await supabase.from('deal_registrations').delete().eq('id', selectedDeal.id)
-      }
+      const table = selectedDeal.type === 'email_intake' ? 'email_intakes' : 'deal_registrations'
+      const result = await supabase.from(table).delete().eq('id', selectedDeal.id).select()
       if (result.error) {
         console.error('Delete error:', result.error)
         alert('Failed to delete: ' + result.error.message)
+        return
+      }
+      if (!result.data || result.data.length === 0) {
+        alert('Delete failed — the record may be protected by a database policy. Check the browser console for details.')
+        console.error('Delete returned no rows. Table:', table, 'ID:', selectedDeal.id, 'Type:', selectedDeal.type)
         return
       }
       setSelectedDeal(null)
