@@ -202,6 +202,9 @@ export default function AdminDashboard() {
   const [saving, setSaving] = useState(false)
   const [sendingToHubSpot, setSendingToHubSpot] = useState(false)
   const [showApproveConfirm, setShowApproveConfirm] = useState(false)
+  const [showRejectModal, setShowRejectModal] = useState(false)
+  const [rejectPath, setRejectPath] = useState<'choose' | 'custom'>('choose')
+  const [rejectCopied, setRejectCopied] = useState(false)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -352,6 +355,17 @@ export default function AdminDashboard() {
       await supabase.from('email_intakes').update({ status: 'new' }).eq('id', selectedDeal.id)
     } else {
       await fetch(`/api/registrations/${selectedDeal.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'unreject' }) })
+    }
+    await fetchData()
+    setSelectedDeal(null)
+  }
+
+  const handleDelete = async () => {
+    if (!selectedDeal) return
+    if (selectedDeal.type === 'email_intake') {
+      await supabase.from('email_intakes').delete().eq('id', selectedDeal.id)
+    } else {
+      await supabase.from('deal_registrations').delete().eq('id', selectedDeal.id)
     }
     await fetchData()
     setSelectedDeal(null)
@@ -819,22 +833,40 @@ export default function AdminDashboard() {
                     <p style={{ textAlign: 'center', color: colors.textMuted, fontSize: 14, margin: 0 }}>
                       This deal was rejected
                     </p>
-                    <button
-                      onClick={handleUnreject}
-                      style={{
-                        width: '100%',
-                        padding: '10px 20px',
-                        fontSize: 14,
-                        fontWeight: 500,
-                        backgroundColor: colors.white,
-                        color: colors.textMuted,
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: 6,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Undo Reject
-                    </button>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <button
+                        onClick={handleUnreject}
+                        style={{
+                          flex: 1,
+                          padding: '10px 20px',
+                          fontSize: 14,
+                          fontWeight: 500,
+                          backgroundColor: colors.white,
+                          color: colors.textMuted,
+                          border: `1px solid ${colors.border}`,
+                          borderRadius: 6,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Unreject
+                      </button>
+                      <button
+                        onClick={handleDelete}
+                        style={{
+                          flex: 1,
+                          padding: '10px 20px',
+                          fontSize: 14,
+                          fontWeight: 500,
+                          backgroundColor: colors.error,
+                          color: colors.white,
+                          border: 'none',
+                          borderRadius: 6,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Delete Permanently
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -860,7 +892,7 @@ export default function AdminDashboard() {
                       {selectedDeal.type === 'email_intake' && (
                         <button onClick={handleRequestInfo} style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.white, color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>Request Info</button>
                       )}
-                      <button onClick={handleReject} style={{ padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.white, color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>Reject</button>
+                      <button onClick={() => { setShowRejectModal(true); setRejectPath('choose'); setRejectCopied(false) }} style={{ padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.white, color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>Reject</button>
                     </div>
                   </div>
                 )}
@@ -949,6 +981,178 @@ export default function AdminDashboard() {
                 {sendingToHubSpot ? 'Sending...' : 'Confirm & Send'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Modal */}
+      {showRejectModal && selectedDeal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: 16,
+          }}
+          onClick={() => setShowRejectModal(false)}
+        >
+          <div
+            style={{
+              backgroundColor: colors.white,
+              borderRadius: 12,
+              padding: 24,
+              width: '100%',
+              maxWidth: 480,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {rejectPath === 'choose' ? (
+              <>
+                <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 600, color: colors.text }}>
+                  Reject Deal
+                </h3>
+                <p style={{ margin: '0 0 20px', fontSize: 14, color: colors.textMuted }}>
+                  How would you like to handle this rejection?
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <button
+                    onClick={async () => {
+                      setShowRejectModal(false)
+                      await handleReject()
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '14px 20px',
+                      fontSize: 14,
+                      fontWeight: 500,
+                      backgroundColor: colors.bg,
+                      color: colors.text,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span style={{ display: 'block', fontWeight: 600, marginBottom: 2 }}>Junk / Spam</span>
+                    <span style={{ fontSize: 13, color: colors.textMuted }}>Reject and archive immediately</span>
+                  </button>
+                  <button
+                    onClick={() => setRejectPath('custom')}
+                    style={{
+                      width: '100%',
+                      padding: '14px 20px',
+                      fontSize: 14,
+                      fontWeight: 500,
+                      backgroundColor: colors.bg,
+                      color: colors.text,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span style={{ display: 'block', fontWeight: 600, marginBottom: 2 }}>Send Rejection Notice</span>
+                    <span style={{ fontSize: 13, color: colors.textMuted }}>Copy a rejection email to send to the partner</span>
+                  </button>
+                </div>
+                <button
+                  onClick={() => setShowRejectModal(false)}
+                  style={{
+                    width: '100%',
+                    marginTop: 12,
+                    padding: '10px 20px',
+                    fontSize: 14,
+                    fontWeight: 500,
+                    backgroundColor: colors.white,
+                    color: colors.textMuted,
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 600, color: colors.text }}>
+                  Rejection Notice
+                </h3>
+                <p style={{ margin: '0 0 16px', fontSize: 14, color: colors.textMuted }}>
+                  Copy this message and send it to the partner.
+                </p>
+                <div
+                  style={{
+                    padding: 16,
+                    backgroundColor: colors.bg,
+                    borderRadius: 8,
+                    border: `1px solid ${colors.border}`,
+                    marginBottom: 16,
+                    fontSize: 14,
+                    lineHeight: 1.6,
+                    color: colors.text,
+                    whiteSpace: 'pre-wrap',
+                  }}
+                >
+{`Hello ${selectedDeal.ta_full_name || 'Partner'},
+
+Thank you for submitting a deal registration for ${selectedDeal.customer_company_name || 'the customer'}.
+
+Unfortunately, we are unable to process this registration at this time.
+
+If you have questions or believe this was in error, please contact us at greynolds@amplifai.com.
+
+Best regards,
+AmplifAI Channel Team`}
+                </div>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button
+                    onClick={async () => {
+                      const text = `Hello ${selectedDeal.ta_full_name || 'Partner'},\n\nThank you for submitting a deal registration for ${selectedDeal.customer_company_name || 'the customer'}.\n\nUnfortunately, we are unable to process this registration at this time.\n\nIf you have questions or believe this was in error, please contact us at greynolds@amplifai.com.\n\nBest regards,\nAmplifAI Channel Team`
+                      await navigator.clipboard.writeText(text)
+                      setRejectCopied(true)
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '10px 20px',
+                      fontSize: 14,
+                      fontWeight: 500,
+                      backgroundColor: rejectCopied ? colors.successLight : colors.white,
+                      color: rejectCopied ? colors.successText : colors.text,
+                      border: `1px solid ${rejectCopied ? colors.success : colors.border}`,
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {rejectCopied ? 'Copied!' : 'Copy to Clipboard'}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setShowRejectModal(false)
+                      await handleReject()
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '10px 20px',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      backgroundColor: colors.error,
+                      color: colors.white,
+                      border: 'none',
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Reject & Close
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
