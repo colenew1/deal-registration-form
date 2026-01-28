@@ -3,6 +3,20 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+// Light mode color palette
+const colors = {
+  bg: '#f8fafc',
+  white: '#ffffff',
+  border: '#e2e8f0',
+  text: '#1e293b',
+  textMuted: '#64748b',
+  primary: '#2563eb',
+  primaryLight: '#dbeafe',
+  error: '#dc2626',
+  errorLight: '#fee2e2',
+  errorText: '#991b1b',
+}
+
 const SOLUTIONS = [
   'Performance Management',
   'Coaching',
@@ -32,95 +46,23 @@ const TIMELINES = [
   '12+ months',
 ]
 
-// Reusable Input Component
-function FormInput({
-  label,
-  required,
-  type = 'text',
-  name,
-  value,
-  onChange,
-  placeholder,
-  className = '',
-}: {
-  label: string
-  required?: boolean
-  type?: string
-  name: string
-  value: string
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  placeholder?: string
-  className?: string
-}) {
-  return (
-    <div className={className}>
-      <label htmlFor={name} className={`form-label ${required ? 'form-label-required' : ''}`}>
-        {label}
-      </label>
-      <input
-        type={type}
-        id={name}
-        name={name}
-        value={value}
-        onChange={onChange}
-        required={required}
-        placeholder={placeholder}
-        className="form-input"
-      />
-    </div>
-  )
+const inputStyle = {
+  width: '100%',
+  padding: '10px 12px',
+  fontSize: 14,
+  border: `1px solid ${colors.border}`,
+  borderRadius: 6,
+  backgroundColor: colors.white,
+  color: colors.text,
 }
 
-// Reusable Select Component
-function FormSelect({
-  label,
-  required,
-  name,
-  value,
-  onChange,
-  options,
-  placeholder = 'Select an option',
-  className = '',
-}: {
-  label: string
-  required?: boolean
-  name: string
-  value: string
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void
-  options: string[]
-  placeholder?: string
-  className?: string
-}) {
-  return (
-    <div className={className}>
-      <label htmlFor={name} className={`form-label ${required ? 'form-label-required' : ''}`}>
-        {label}
-      </label>
-      <select
-        id={name}
-        name={name}
-        value={value}
-        onChange={onChange}
-        required={required}
-        className="form-input form-select"
-      >
-        <option value="">{placeholder}</option>
-        {options.map(option => (
-          <option key={option} value={option}>{option}</option>
-        ))}
-      </select>
-    </div>
-  )
-}
-
-// Section Header Component
-function SectionHeader({ step, title }: { step: number; title: string }) {
-  return (
-    <h2 className="section-heading">
-      <span className="step-indicator">{step}</span>
-      {title}
-    </h2>
-  )
+const labelStyle = {
+  display: 'block',
+  fontSize: 11,
+  fontWeight: 600,
+  color: colors.textMuted,
+  marginBottom: 6,
+  textTransform: 'uppercase' as const,
 }
 
 export default function RegistrationForm() {
@@ -199,324 +141,239 @@ export default function RegistrationForm() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--background-subtle)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
       {/* Header */}
-      <header className="page-header">
-        <div className="container">
-          <div className="flex items-center gap-3">
-            <div className="icon-container w-10 h-10 rounded-lg" style={{ backgroundColor: 'var(--primary-600)' }}>
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold">AmplifAI Partner Portal</h1>
-              <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Deal Registration</p>
-            </div>
-          </div>
+      <header style={{ backgroundColor: colors.white, borderBottom: `1px solid ${colors.border}`, padding: '16px 24px' }}>
+        <div style={{ maxWidth: 800, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: colors.primary, margin: 0 }}>AmplifAI</h1>
+          <span style={{ padding: '4px 10px', backgroundColor: colors.bg, borderRadius: 4, fontSize: 12, color: colors.textMuted }}>Deal Registration</span>
         </div>
       </header>
 
-      <main className="container py-8">
-        <div className="max-w-3xl mx-auto">
-          {/* Page Title */}
-          <div className="text-center mb-8 animate-fade-in">
-            <h1 className="text-3xl font-semibold mb-2">Partner Deal Registration</h1>
-            <p style={{ color: 'var(--foreground-muted)' }}>
-              Register a new sales opportunity to protect your deal and receive support from AmplifAI
-            </p>
+      <main style={{ maxWidth: 800, margin: '0 auto', padding: 24 }}>
+        {/* Page Title */}
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <h1 style={{ fontSize: 28, fontWeight: 600, color: colors.text, margin: 0 }}>Partner Deal Registration</h1>
+          <p style={{ marginTop: 8, color: colors.textMuted, fontSize: 14 }}>
+            Register a new sales opportunity to protect your deal and receive support from AmplifAI
+          </p>
+        </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div style={{ marginBottom: 24, padding: 16, backgroundColor: colors.errorLight, border: `1px solid ${colors.error}`, borderRadius: 8 }}>
+            <p style={{ margin: 0, fontSize: 14, color: colors.errorText }}>{error}</p>
+          </div>
+        )}
+
+        {/* Main Form Card */}
+        <form onSubmit={handleSubmit} style={{ backgroundColor: colors.white, borderRadius: 12, border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
+          {/* Section 1: Customer Information */}
+          <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: colors.text, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: colors.primary, color: colors.white, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>1</span>
+              Customer Information
+            </h2>
+          </div>
+          <div style={{ padding: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div>
+                <label style={labelStyle}>First Name <span style={{ color: colors.error }}>*</span></label>
+                <input type="text" name="customer_first_name" value={formData.customer_first_name} onChange={handleChange} required placeholder="John" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Last Name <span style={{ color: colors.error }}>*</span></label>
+                <input type="text" name="customer_last_name" value={formData.customer_last_name} onChange={handleChange} required placeholder="Smith" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Job Title <span style={{ color: colors.error }}>*</span></label>
+                <input type="text" name="customer_job_title" value={formData.customer_job_title} onChange={handleChange} required placeholder="Contact Center Manager" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Company Name <span style={{ color: colors.error }}>*</span></label>
+                <input type="text" name="customer_company_name" value={formData.customer_company_name} onChange={handleChange} required placeholder="Acme Corp" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Email <span style={{ color: colors.error }}>*</span></label>
+                <input type="email" name="customer_email" value={formData.customer_email} onChange={handleChange} required placeholder="jsmith@company.com" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Phone</label>
+                <input type="tel" name="customer_phone" value={formData.customer_phone} onChange={handleChange} placeholder="(555) 123-4567" style={inputStyle} />
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>Street Address</label>
+                <input type="text" name="customer_street_address" value={formData.customer_street_address} onChange={handleChange} placeholder="123 Main St" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>City</label>
+                <input type="text" name="customer_city" value={formData.customer_city} onChange={handleChange} placeholder="Austin" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>State / Region</label>
+                <input type="text" name="customer_state" value={formData.customer_state} onChange={handleChange} placeholder="TX" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Postal Code</label>
+                <input type="text" name="customer_postal_code" value={formData.customer_postal_code} onChange={handleChange} placeholder="78701" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Country</label>
+                <input type="text" name="customer_country" value={formData.customer_country} onChange={handleChange} placeholder="USA" style={inputStyle} />
+              </div>
+            </div>
           </div>
 
-          {/* Error Alert */}
-          {error && (
-            <div className="alert alert-error mb-6 animate-fade-in">
-              <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-              <p>{error}</p>
-            </div>
-          )}
-
-          {/* Main Form Card */}
-          <form onSubmit={handleSubmit} className="card card-elevated p-6 sm:p-8 animate-fade-in">
-            {/* Section 1: Customer Information */}
-            <section className="opacity-0 animate-fade-in stagger-1">
-              <SectionHeader step={1} title="Customer Information" />
-
-              <div className="grid-form">
-                <FormInput
-                  label="First Name"
-                  required
-                  name="customer_first_name"
-                  value={formData.customer_first_name}
-                  onChange={handleChange}
-                  placeholder="John"
-                />
-                <FormInput
-                  label="Last Name"
-                  required
-                  name="customer_last_name"
-                  value={formData.customer_last_name}
-                  onChange={handleChange}
-                  placeholder="Smith"
-                />
-                <FormInput
-                  label="Job Title"
-                  required
-                  name="customer_job_title"
-                  value={formData.customer_job_title}
-                  onChange={handleChange}
-                  placeholder="Contact Center Manager"
-                />
-                <FormInput
-                  label="Company Name"
-                  required
-                  name="customer_company_name"
-                  value={formData.customer_company_name}
-                  onChange={handleChange}
-                  placeholder="SMSC Gaming Enterprise"
-                />
-                <FormInput
-                  label="Email"
-                  required
-                  type="email"
-                  name="customer_email"
-                  value={formData.customer_email}
-                  onChange={handleChange}
-                  placeholder="jsmith@company.com"
-                />
-                <FormInput
-                  label="Phone"
-                  type="tel"
-                  name="customer_phone"
-                  value={formData.customer_phone}
-                  onChange={handleChange}
-                  placeholder="952-445-9000"
-                />
-                <FormInput
-                  label="Street Address"
-                  name="customer_street_address"
-                  value={formData.customer_street_address}
-                  onChange={handleChange}
-                  placeholder="2400 Mystic Lake Blvd"
-                  className="grid-form-full"
-                />
-                <FormInput
-                  label="City"
-                  name="customer_city"
-                  value={formData.customer_city}
-                  onChange={handleChange}
-                  placeholder="Prior Lake"
-                />
-                <FormInput
-                  label="State / Region"
-                  name="customer_state"
-                  value={formData.customer_state}
-                  onChange={handleChange}
-                  placeholder="MN"
-                />
-                <FormInput
-                  label="Postal Code"
-                  name="customer_postal_code"
-                  value={formData.customer_postal_code}
-                  onChange={handleChange}
-                  placeholder="55372"
-                />
-                <FormInput
-                  label="Country"
-                  name="customer_country"
-                  value={formData.customer_country}
-                  onChange={handleChange}
-                  placeholder="USA"
-                />
+          {/* Section 2: Opportunity Details */}
+          <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, borderTop: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: colors.text, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: colors.primary, color: colors.white, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>2</span>
+              Opportunity Details
+            </h2>
+          </div>
+          <div style={{ padding: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div>
+                <label style={labelStyle}>Number of Contact Center Agents <span style={{ color: colors.error }}>*</span></label>
+                <select name="agent_count" value={formData.agent_count} onChange={handleChange} required style={inputStyle}>
+                  <option value="">Select range</option>
+                  {AGENT_COUNTS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
               </div>
-            </section>
-
-            <div className="section-divider" />
-
-            {/* Section 2: Opportunity Details */}
-            <section className="opacity-0 animate-fade-in stagger-2">
-              <SectionHeader step={2} title="Opportunity Details" />
-
-              <div className="grid-form">
-                <FormSelect
-                  label="Number of Contact Center Agents"
-                  required
-                  name="agent_count"
-                  value={formData.agent_count}
-                  onChange={handleChange}
-                  options={AGENT_COUNTS}
-                  placeholder="Select range"
-                />
-                <FormSelect
-                  label="Implementation Timeline"
-                  name="implementation_timeline"
-                  value={formData.implementation_timeline}
-                  onChange={handleChange}
-                  options={TIMELINES}
-                  placeholder="Select timeline"
-                />
-
-                {/* Solutions Checkboxes */}
-                <div className="grid-form-full">
-                  <label className="form-label form-label-required">
-                    Which solutions are they looking for?
-                  </label>
-                  <div className="option-grid">
-                    {SOLUTIONS.map(solution => (
-                      <div key={solution} className="option-item">
-                        <input
-                          type="checkbox"
-                          id={`solution-${solution}`}
-                          checked={formData.solutions_interested.includes(solution)}
-                          onChange={() => handleSolutionChange(solution)}
-                          className="form-checkbox"
-                        />
-                        <label htmlFor={`solution-${solution}`}>{solution}</label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Opportunity Description */}
-                <div className="grid-form-full">
-                  <label htmlFor="opportunity_description" className="form-label form-label-required">
-                    Opportunity Description
-                  </label>
-                  <p className="form-helper" style={{ marginTop: 0, marginBottom: '0.5rem' }}>
-                    Describe the customer&apos;s use case, challenges, and goals. Include any competing solutions or integrations needed.
-                  </p>
-                  <textarea
-                    id="opportunity_description"
-                    name="opportunity_description"
-                    value={formData.opportunity_description}
-                    onChange={handleChange}
-                    required
-                    rows={4}
-                    placeholder="Customer's use case, challenges, goals, current solutions, and any competition..."
-                    className="form-input form-textarea"
-                  />
+              <div>
+                <label style={labelStyle}>Implementation Timeline</label>
+                <select name="implementation_timeline" value={formData.implementation_timeline} onChange={handleChange} style={inputStyle}>
+                  <option value="">Select timeline</option>
+                  {TIMELINES.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>Which solutions are they looking for? <span style={{ color: colors.error }}>*</span></label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+                  {SOLUTIONS.map(solution => (
+                    <button
+                      key={solution}
+                      type="button"
+                      onClick={() => handleSolutionChange(solution)}
+                      style={{
+                        padding: '8px 14px',
+                        fontSize: 13,
+                        borderRadius: 6,
+                        border: `1px solid ${formData.solutions_interested.includes(solution) ? colors.primary : colors.border}`,
+                        backgroundColor: formData.solutions_interested.includes(solution) ? colors.primaryLight : colors.white,
+                        color: formData.solutions_interested.includes(solution) ? colors.primary : colors.text,
+                        cursor: 'pointer',
+                        fontWeight: formData.solutions_interested.includes(solution) ? 500 : 400,
+                      }}
+                    >
+                      {solution}
+                    </button>
+                  ))}
                 </div>
               </div>
-            </section>
-
-            <div className="section-divider" />
-
-            {/* Section 3: Partner Information */}
-            <section className="opacity-0 animate-fade-in stagger-3">
-              <SectionHeader step={3} title="Partner Information (Trusted Advisor)" />
-
-              <div className="grid-form">
-                <FormInput
-                  label="Full Name"
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>Opportunity Description <span style={{ color: colors.error }}>*</span></label>
+                <p style={{ fontSize: 12, color: colors.textMuted, margin: '0 0 8px' }}>Describe the customer&apos;s use case, challenges, and goals.</p>
+                <textarea
+                  name="opportunity_description"
+                  value={formData.opportunity_description}
+                  onChange={handleChange}
                   required
-                  name="ta_full_name"
-                  value={formData.ta_full_name}
-                  onChange={handleChange}
-                  placeholder="Mallory Santucci"
-                />
-                <FormInput
-                  label="Company Name"
-                  required
-                  name="ta_company_name"
-                  value={formData.ta_company_name}
-                  onChange={handleChange}
-                  placeholder="SHI"
-                />
-                <FormInput
-                  label="Email"
-                  required
-                  type="email"
-                  name="ta_email"
-                  value={formData.ta_email}
-                  onChange={handleChange}
-                  placeholder="mallory_santucci@shi.com"
-                />
-                <FormInput
-                  label="Phone"
-                  type="tel"
-                  name="ta_phone"
-                  value={formData.ta_phone}
-                  onChange={handleChange}
-                  placeholder="555-555-5555"
+                  rows={4}
+                  placeholder="Customer's use case, challenges, goals, current solutions, and any competition..."
+                  style={{ ...inputStyle, resize: 'vertical' }}
                 />
               </div>
-            </section>
-
-            <div className="section-divider" />
-
-            {/* Section 4: TSD Information */}
-            <section className="opacity-0 animate-fade-in stagger-4">
-              <SectionHeader step={4} title="TSD Information" />
-
-              <div className="grid-form">
-                <FormInput
-                  label="TSD Name"
-                  required
-                  name="tsd_name"
-                  value={formData.tsd_name}
-                  onChange={handleChange}
-                  placeholder="Avant"
-                />
-                <FormInput
-                  label="Contact Name"
-                  name="tsd_contact_name"
-                  value={formData.tsd_contact_name}
-                  onChange={handleChange}
-                  placeholder="Emely Irula"
-                />
-                <FormInput
-                  label="Contact Email"
-                  type="email"
-                  name="tsd_contact_email"
-                  value={formData.tsd_contact_email}
-                  onChange={handleChange}
-                  placeholder="eirula@goavant.net"
-                  className="grid-form-full sm:col-span-1"
-                />
-              </div>
-            </section>
-
-            {/* Submit Button */}
-            <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border-color)' }}>
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn btn-primary btn-large w-full"
-              >
-                {loading ? (
-                  <>
-                    <svg className="w-5 h-5 spinner" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Submitting Registration...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Submit Deal Registration
-                  </>
-                )}
-              </button>
-              <p className="text-center mt-4 text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                By submitting, you agree to our deal registration program terms and conditions.
-              </p>
             </div>
-          </form>
+          </div>
 
-          {/* Footer */}
-          <footer className="text-center py-8">
-            <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
-              Need help? Contact <a href="mailto:greynolds@amplifai.com" className="hover:underline" style={{ color: 'var(--primary-600)' }}>greynolds@amplifai.com</a>
+          {/* Section 3: Partner Information */}
+          <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, borderTop: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: colors.text, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: colors.primary, color: colors.white, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</span>
+              Partner Information (Trusted Advisor)
+            </h2>
+          </div>
+          <div style={{ padding: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div>
+                <label style={labelStyle}>Full Name <span style={{ color: colors.error }}>*</span></label>
+                <input type="text" name="ta_full_name" value={formData.ta_full_name} onChange={handleChange} required placeholder="Jane Doe" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Company Name <span style={{ color: colors.error }}>*</span></label>
+                <input type="text" name="ta_company_name" value={formData.ta_company_name} onChange={handleChange} required placeholder="Partner Co" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Email <span style={{ color: colors.error }}>*</span></label>
+                <input type="email" name="ta_email" value={formData.ta_email} onChange={handleChange} required placeholder="jane@partner.com" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Phone</label>
+                <input type="tel" name="ta_phone" value={formData.ta_phone} onChange={handleChange} placeholder="(555) 123-4567" style={inputStyle} />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 4: TSD Information */}
+          <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, borderTop: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: colors.text, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: colors.primary, color: colors.white, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>4</span>
+              TSD Information
+            </h2>
+          </div>
+          <div style={{ padding: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div>
+                <label style={labelStyle}>TSD Name <span style={{ color: colors.error }}>*</span></label>
+                <input type="text" name="tsd_name" value={formData.tsd_name} onChange={handleChange} required placeholder="Avant" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Contact Name</label>
+                <input type="text" name="tsd_contact_name" value={formData.tsd_contact_name} onChange={handleChange} placeholder="Contact Name" style={inputStyle} />
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>Contact Email</label>
+                <input type="email" name="tsd_contact_email" value={formData.tsd_contact_email} onChange={handleChange} placeholder="contact@tsd.com" style={inputStyle} />
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <div style={{ padding: 24, borderTop: `1px solid ${colors.border}` }}>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '14px 20px',
+                fontSize: 15,
+                fontWeight: 600,
+                backgroundColor: colors.primary,
+                color: colors.white,
+                border: 'none',
+                borderRadius: 8,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1,
+              }}
+            >
+              {loading ? 'Submitting...' : 'Submit Deal Registration'}
+            </button>
+            <p style={{ textAlign: 'center', marginTop: 12, fontSize: 13, color: colors.textMuted }}>
+              By submitting, you agree to our deal registration program terms and conditions.
             </p>
-            <p className="text-sm mt-2" style={{ color: 'var(--foreground-muted)' }}>
-              Powered by AmplifAI
-            </p>
-          </footer>
-        </div>
+          </div>
+        </form>
+
+        {/* Footer */}
+        <footer style={{ textAlign: 'center', padding: '32px 0' }}>
+          <p style={{ fontSize: 13, color: colors.textMuted, margin: 0 }}>
+            Need help? Contact{' '}
+            <a href="mailto:greynolds@amplifai.com" style={{ color: colors.primary, textDecoration: 'none' }}>
+              greynolds@amplifai.com
+            </a>
+          </p>
+        </footer>
       </main>
     </div>
   )
