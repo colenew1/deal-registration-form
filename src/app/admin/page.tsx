@@ -360,6 +360,7 @@ export default function AdminDashboard() {
     }
     await fetchData()
     setSelectedDeal(null)
+    setActiveTab('inbox')
   }
 
   const handleDelete = async () => {
