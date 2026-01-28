@@ -669,8 +669,28 @@ export function parseEmail(
   // --- Extract Partner/TA Information ---
   // Priority: 1) Forwarded sender (if from Amplifai), 2) Structured partner section, 3) Email sender (if not TSD)
 
-  // If email is from Amplifai, the TA is the ORIGINAL sender in the forwarded content
-  if (senderIsAmplifai && (forwardedInfo.originalFrom.name || forwardedInfo.originalFrom.email)) {
+  // Check if the original forwarded sender is from a TSD domain
+  let originalSenderIsTsd = false
+  if (forwardedInfo.originalFrom.email) {
+    const origDomain = forwardedInfo.originalFrom.email.toLowerCase()
+    const tsdDomains = ['goavant.net', 'avant.com', 'telarus.com', 'intelisys.com', 'sandlerpartners.com', 'appsmart.com', 'tbicom.com']
+    originalSenderIsTsd = tsdDomains.some(domain => origDomain.includes(domain))
+  }
+
+  // If original forwarded sender is from a TSD, use them as TSD contact instead of TA
+  if (senderIsAmplifai && originalSenderIsTsd && (forwardedInfo.originalFrom.name || forwardedInfo.originalFrom.email)) {
+    if (forwardedInfo.originalFrom.name) {
+      data.tsd_contact_name = forwardedInfo.originalFrom.name
+      confidence.tsd_contact_name = 90
+    }
+    if (forwardedInfo.originalFrom.email) {
+      data.tsd_contact_email = forwardedInfo.originalFrom.email
+      confidence.tsd_contact_email = 90
+    }
+  }
+
+  // If email is from Amplifai and original sender is NOT a TSD, use them as TA
+  if (senderIsAmplifai && !originalSenderIsTsd && (forwardedInfo.originalFrom.name || forwardedInfo.originalFrom.email)) {
     if (forwardedInfo.originalFrom.name) {
       data.ta_full_name = forwardedInfo.originalFrom.name
       confidence.ta_full_name = 90
@@ -767,7 +787,7 @@ export function parseEmail(
       data.tsd_contact_email = emailFrom
       confidence.tsd_contact_email = 90
     }
-  } else {
+  } else if (!data.tsd_contact_name) {
     const tsdContactLabeled = extractLabeledValue(searchText, ['tsd contact', 'distributor contact', 'tsd rep'])
     if (tsdContactLabeled) {
       data.tsd_contact_name = tsdContactLabeled
