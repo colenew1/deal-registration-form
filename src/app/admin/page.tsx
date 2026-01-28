@@ -133,10 +133,26 @@ function emailIntakeToUnified(intake: EmailIntake): UnifiedDeal {
 }
 
 function formSubmissionToUnified(reg: DealRegistration): UnifiedDeal {
+  const deal: Partial<UnifiedDeal> = {
+    customer_first_name: reg.customer_first_name || '',
+    customer_last_name: reg.customer_last_name || '',
+    customer_company_name: reg.customer_company_name || '',
+    customer_email: reg.customer_email || '',
+    ta_full_name: reg.ta_full_name || '',
+    ta_email: reg.ta_email || '',
+    ta_company_name: reg.ta_company_name || '',
+    tsd_name: reg.tsd_name || '',
+    solutions_interested: reg.solutions_interested || [],
+  }
+  const missingFields = getMissingFields(deal)
+  let status = mapFormStatus(reg)
+  if (missingFields.length === 0 && status === 'inbox') {
+    status = 'ready'
+  }
   return {
     id: reg.id,
     type: 'form_submission',
-    status: mapFormStatus(reg),
+    status,
     created_at: reg.created_at,
     updated_at: reg.updated_at || reg.created_at,
     source_label: 'Form',
