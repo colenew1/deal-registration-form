@@ -337,7 +337,7 @@ export default function PartnerDashboard() {
           <div style={{ backgroundColor: colors.white, borderRadius: 12, border: `1px solid ${colors.border}`, overflow: 'hidden', marginBottom: 24 }}>
             <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, color: colors.text, margin: 0 }}>
-                Your Partner Information
+                Your TA Information
               </h3>
               <p style={{ fontSize: 13, color: colors.textMuted, margin: '4px 0 0' }}>
                 This information will be auto-filled when you submit new deals

@@ -312,7 +312,7 @@ export default function SubmitDeal() {
             <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
               <h2 style={{ fontSize: 16, fontWeight: 600, color: colors.text, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: colors.primary, color: colors.white, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>2</span>
-                Partner Information
+                Trusted Advisor (TA) Information
                 <span style={{ fontSize: 12, fontWeight: 400, color: colors.textMuted }}>(Pre-filled from your profile - edit if submitting for someone else)</span>
               </h2>
             </div>

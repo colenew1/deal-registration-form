@@ -50,9 +50,9 @@ const REQUIRED_FIELDS = [
   { key: 'customer_last_name', label: 'Customer Last Name' },
   { key: 'customer_company_name', label: 'Company' },
   { key: 'customer_email', label: 'Customer Email' },
-  { key: 'ta_full_name', label: 'Partner Name' },
-  { key: 'ta_email', label: 'Partner Email' },
-  { key: 'ta_company_name', label: 'Partner Company' },
+  { key: 'ta_full_name', label: 'TA Name' },
+  { key: 'ta_email', label: 'TA Email' },
+  { key: 'ta_company_name', label: 'TA Company' },
   { key: 'tsd_name', label: 'TSD' },
   { key: 'solutions_interested', label: 'Solutions' },
 ]
@@ -727,7 +727,7 @@ export default function AdminDashboard() {
                   {/* Partner Section */}
                   <div style={{ gridColumn: '2 / 3', border: `1px solid ${colors.border}`, borderRadius: 8, overflow: 'hidden' }}>
                     <div style={{ padding: '10px 16px', backgroundColor: colors.bg, borderBottom: `1px solid ${colors.border}` }}>
-                      <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: colors.text, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Partner / TA</h3>
+                      <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: colors.text, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Trusted Advisor (TA)</h3>
                     </div>
                     <div style={{ padding: 16 }}>
                       <GridField label="Name" value={editMode ? editData.ta_full_name : selectedDeal.ta_full_name} onChange={v => setEditData(p => ({ ...p, ta_full_name: v }))} editMode={editMode} required />
@@ -1044,7 +1044,7 @@ export default function AdminDashboard() {
                 <strong>{selectedDeal.customer_first_name} {selectedDeal.customer_last_name}</strong> at {selectedDeal.customer_company_name}
               </p>
               <p style={{ margin: '4px 0 0', fontSize: 12, color: colors.textMuted }}>
-                Partner: {selectedDeal.ta_full_name} ({selectedDeal.ta_company_name})
+                TA: {selectedDeal.ta_full_name} ({selectedDeal.ta_company_name})
               </p>
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
@@ -1297,7 +1297,7 @@ ${profile?.full_name || 'AmplifAI Channel Team'}`}
                 <strong>{selectedDeal.customer_first_name} {selectedDeal.customer_last_name}</strong> at {selectedDeal.customer_company_name}
               </p>
               <p style={{ margin: '4px 0 0', fontSize: 12, color: colors.textMuted }}>
-                Partner: {selectedDeal.ta_full_name} ({selectedDeal.ta_company_name})
+                TA: {selectedDeal.ta_full_name} ({selectedDeal.ta_company_name})
               </p>
             </div>
             <div style={{ marginBottom: 20 }}>

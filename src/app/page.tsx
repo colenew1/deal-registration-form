@@ -502,7 +502,7 @@ export default function RegistrationForm() {
                         value={authCompanyName}
                         onChange={e => setAuthCompanyName(e.target.value)}
                         required
-                        placeholder="Partner Co"
+                        placeholder="TA Company"
                         style={inputStyle}
                       />
                     </div>
@@ -741,7 +741,7 @@ export default function RegistrationForm() {
           <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, borderTop: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, color: colors.text, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: colors.primary, color: colors.white, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</span>
-              Partner Information (Trusted Advisor)
+              Trusted Advisor (TA) Information
             </h2>
           </div>
           <div style={{ padding: 24 }}>
@@ -752,11 +752,11 @@ export default function RegistrationForm() {
               </div>
               <div>
                 <label style={labelStyle}>Company Name <span style={{ color: colors.error }}>*</span></label>
-                <input type="text" name="ta_company_name" value={formData.ta_company_name} onChange={handleChange} required placeholder="Partner Co" style={inputStyle} />
+                <input type="text" name="ta_company_name" value={formData.ta_company_name} onChange={handleChange} required placeholder="TA Company" style={inputStyle} />
               </div>
               <div>
                 <label style={labelStyle}>Email <span style={{ color: colors.error }}>*</span></label>
-                <input type="email" name="ta_email" value={formData.ta_email} onChange={handleChange} required placeholder="jane@partner.com" style={inputStyle} />
+                <input type="email" name="ta_email" value={formData.ta_email} onChange={handleChange} required placeholder="jane@company.com" style={inputStyle} />
               </div>
               <div>
                 <label style={labelStyle}>Phone</label>

@@ -736,7 +736,7 @@ function RegistrationFormContent({ id }: { id: string }) {
             <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
               <h2 style={{ fontSize: 16, fontWeight: 600, color: colors.text, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: colors.primary, color: colors.white, fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>3</span>
-                Partner Information (Trusted Advisor)
+                Trusted Advisor (TA) Information
                 {partnerProfile && <span style={{ fontSize: 11, fontWeight: 400, color: colors.success, marginLeft: 8 }}>Auto-filled</span>}
               </h2>
             </div>
@@ -748,11 +748,11 @@ function RegistrationFormContent({ id }: { id: string }) {
                 </div>
                 <div>
                   <label style={labelStyle}>Company Name <span style={{ color: colors.error }}>*</span></label>
-                  <input type="text" name="ta_company_name" value={formData.ta_company_name} onChange={handleChange} required placeholder={getPlaceholder('ta_company_name', 'Partner Co', formData.ta_company_name)} style={getFieldInputStyle('ta_company_name', formData.ta_company_name)} />
+                  <input type="text" name="ta_company_name" value={formData.ta_company_name} onChange={handleChange} required placeholder={getPlaceholder('ta_company_name', 'TA Company', formData.ta_company_name)} style={getFieldInputStyle('ta_company_name', formData.ta_company_name)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Email <span style={{ color: colors.error }}>*</span></label>
-                  <input type="email" name="ta_email" value={formData.ta_email} onChange={handleChange} required placeholder={getPlaceholder('ta_email', 'jane@partner.com', formData.ta_email)} style={getFieldInputStyle('ta_email', formData.ta_email)} />
+                  <input type="email" name="ta_email" value={formData.ta_email} onChange={handleChange} required placeholder={getPlaceholder('ta_email', 'jane@company.com', formData.ta_email)} style={getFieldInputStyle('ta_email', formData.ta_email)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Phone</label>
