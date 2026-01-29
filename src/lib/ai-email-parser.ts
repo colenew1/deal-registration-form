@@ -124,11 +124,11 @@ Extract these fields. Return ONLY valid JSON:
   "customer_email": "End customer email",
   "customer_phone": "End customer phone",
   "customer_job_title": "End customer job title",
-  "customer_street_address": "Street address",
-  "customer_city": "City",
-  "customer_state": "State (2-letter)",
-  "customer_postal_code": "ZIP code",
-  "customer_country": "Country",
+  "customer_street_address": "Street address - extract from any address block near the customer info (e.g. '3200 Peachtree Rd NE')",
+  "customer_city": "City - parse from address line (e.g. 'Atlanta')",
+  "customer_state": "State - 2-letter abbreviation (e.g. 'GA'). Convert full state names to abbreviations.",
+  "customer_postal_code": "ZIP code (e.g. '30305')",
+  "customer_country": "Country if mentioned, otherwise null",
 
   "agent_count": "Use ranges: 1-19, 20-49, 50-100, 101 to 249, 250 to 499, 500 to 999, 1000 to 2499, 2500 to 4999, 5000+",
   "implementation_timeline": "Use: 0-3 months, 4-6 months, 6-12 months, 12+ months",
@@ -155,6 +155,7 @@ ABSOLUTE RULES:
 6. Convert agent counts: "~2000" → "1000 to 2499", "300 seats" → "250 to 499"
 7. Solutions must match exactly from the list above — only include ones explicitly mentioned
 8. For tsd_name, do NOT default to "Other" when no TSD is mentioned — return null instead. Only use "Other" when the email explicitly names a TSD that isn't in the known list
+9. Always extract customer address fields when present — parse "3200 Peachtree Rd NE, Atlanta, GA 30305" into street/city/state/zip. Also check "Customer Company Info" sections which often include the address right after the company name
 
 Return ONLY the JSON object.`
 
