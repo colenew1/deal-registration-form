@@ -52,14 +52,27 @@ const OPTIONAL_FIELDS = new Set([
 
 function getFieldInputStyle(fieldName: string, value: string | string[]) {
   const isEmpty = Array.isArray(value) ? value.length === 0 : !value
-  if (!isEmpty) return inputStyle
+  if (!isEmpty) {
+    // Pre-filled fields get a subtle green-tinted style so they look distinct from empty ones
+    return { ...inputStyle, border: `1.5px solid #86efac`, backgroundColor: '#f0fdf4' }
+  }
   if (REQUIRED_FIELDS.has(fieldName)) {
-    return { ...inputStyle, border: `2px solid ${colors.error}`, backgroundColor: colors.errorLight }
+    return { ...inputStyle, border: `2px solid ${colors.error}`, backgroundColor: '#fff5f5' }
   }
   if (OPTIONAL_FIELDS.has(fieldName)) {
-    return { ...inputStyle, border: `2px solid ${colors.warning}`, backgroundColor: colors.warningLight }
+    return { ...inputStyle, border: `2px solid ${colors.warning}`, backgroundColor: '#fffbeb' }
   }
   return inputStyle
+}
+
+// Returns empty string for placeholder when the field is highlighted (empty),
+// so the user doesn't confuse placeholder text with actual data
+function getPlaceholder(fieldName: string, defaultPlaceholder: string, value: string | string[]) {
+  const isEmpty = Array.isArray(value) ? value.length === 0 : !value
+  if (isEmpty && (REQUIRED_FIELDS.has(fieldName) || OPTIONAL_FIELDS.has(fieldName))) {
+    return ''
+  }
+  return defaultPlaceholder
 }
 
 const labelStyle = {
@@ -449,16 +462,16 @@ function RegistrationFormContent({ id }: { id: string }) {
           </p>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${colors.error}`, backgroundColor: colors.errorLight, display: 'inline-block' }} />
+              <span style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${colors.error}`, backgroundColor: '#fff5f5', display: 'inline-block' }} />
               <span style={{ fontSize: 12, color: colors.text }}>Required — needs to be filled</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${colors.warning}`, backgroundColor: colors.warningLight, display: 'inline-block' }} />
+              <span style={{ width: 16, height: 16, borderRadius: 3, border: `2px solid ${colors.warning}`, backgroundColor: '#fffbeb', display: 'inline-block' }} />
               <span style={{ fontSize: 12, color: colors.text }}>Optional — helpful if you have it</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ width: 16, height: 16, borderRadius: 3, border: `1px solid ${colors.border}`, backgroundColor: colors.white, display: 'inline-block' }} />
-              <span style={{ fontSize: 12, color: colors.text }}>Pre-filled — verify accuracy</span>
+              <span style={{ width: 16, height: 16, borderRadius: 3, border: `1.5px solid #86efac`, backgroundColor: '#f0fdf4', display: 'inline-block' }} />
+              <span style={{ fontSize: 12, color: colors.text }}>Pre-filled — please verify</span>
             </div>
           </div>
         </div>
@@ -604,47 +617,47 @@ function RegistrationFormContent({ id }: { id: string }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={labelStyle}>First Name <span style={{ color: colors.error }}>*</span></label>
-                  <input type="text" name="customer_first_name" value={formData.customer_first_name} onChange={handleChange} required placeholder="John" style={getFieldInputStyle('customer_first_name', formData.customer_first_name)} />
+                  <input type="text" name="customer_first_name" value={formData.customer_first_name} onChange={handleChange} required placeholder={getPlaceholder('customer_first_name', 'John', formData.customer_first_name)} style={getFieldInputStyle('customer_first_name', formData.customer_first_name)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Last Name <span style={{ color: colors.error }}>*</span></label>
-                  <input type="text" name="customer_last_name" value={formData.customer_last_name} onChange={handleChange} required placeholder="Smith" style={getFieldInputStyle('customer_last_name', formData.customer_last_name)} />
+                  <input type="text" name="customer_last_name" value={formData.customer_last_name} onChange={handleChange} required placeholder={getPlaceholder('customer_last_name', 'Smith', formData.customer_last_name)} style={getFieldInputStyle('customer_last_name', formData.customer_last_name)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Job Title <span style={{ color: colors.error }}>*</span></label>
-                  <input type="text" name="customer_job_title" value={formData.customer_job_title} onChange={handleChange} required placeholder="Contact Center Manager" style={getFieldInputStyle('customer_job_title', formData.customer_job_title)} />
+                  <input type="text" name="customer_job_title" value={formData.customer_job_title} onChange={handleChange} required placeholder={getPlaceholder('customer_job_title', 'Contact Center Manager', formData.customer_job_title)} style={getFieldInputStyle('customer_job_title', formData.customer_job_title)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Company Name <span style={{ color: colors.error }}>*</span></label>
-                  <input type="text" name="customer_company_name" value={formData.customer_company_name} onChange={handleChange} required placeholder="Acme Corp" style={getFieldInputStyle('customer_company_name', formData.customer_company_name)} />
+                  <input type="text" name="customer_company_name" value={formData.customer_company_name} onChange={handleChange} required placeholder={getPlaceholder('customer_company_name', 'Acme Corp', formData.customer_company_name)} style={getFieldInputStyle('customer_company_name', formData.customer_company_name)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Email <span style={{ color: colors.error }}>*</span></label>
-                  <input type="email" name="customer_email" value={formData.customer_email} onChange={handleChange} required placeholder="jsmith@company.com" style={getFieldInputStyle('customer_email', formData.customer_email)} />
+                  <input type="email" name="customer_email" value={formData.customer_email} onChange={handleChange} required placeholder={getPlaceholder('customer_email', 'jsmith@company.com', formData.customer_email)} style={getFieldInputStyle('customer_email', formData.customer_email)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Phone</label>
-                  <input type="tel" name="customer_phone" value={formData.customer_phone} onChange={handleChange} placeholder="(555) 123-4567" style={getFieldInputStyle('customer_phone', formData.customer_phone)} />
+                  <input type="tel" name="customer_phone" value={formData.customer_phone} onChange={handleChange} placeholder={getPlaceholder('customer_phone', '(555) 123-4567', formData.customer_phone)} style={getFieldInputStyle('customer_phone', formData.customer_phone)} />
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>Street Address</label>
-                  <input type="text" name="customer_street_address" value={formData.customer_street_address} onChange={handleChange} placeholder="123 Main St" style={getFieldInputStyle('customer_street_address', formData.customer_street_address)} />
+                  <input type="text" name="customer_street_address" value={formData.customer_street_address} onChange={handleChange} placeholder={getPlaceholder('customer_street_address', '123 Main St', formData.customer_street_address)} style={getFieldInputStyle('customer_street_address', formData.customer_street_address)} />
                 </div>
                 <div>
                   <label style={labelStyle}>City</label>
-                  <input type="text" name="customer_city" value={formData.customer_city} onChange={handleChange} placeholder="Austin" style={getFieldInputStyle('customer_city', formData.customer_city)} />
+                  <input type="text" name="customer_city" value={formData.customer_city} onChange={handleChange} placeholder={getPlaceholder('customer_city', 'Austin', formData.customer_city)} style={getFieldInputStyle('customer_city', formData.customer_city)} />
                 </div>
                 <div>
                   <label style={labelStyle}>State</label>
-                  <input type="text" name="customer_state" value={formData.customer_state} onChange={handleChange} placeholder="TX" style={getFieldInputStyle('customer_state', formData.customer_state)} />
+                  <input type="text" name="customer_state" value={formData.customer_state} onChange={handleChange} placeholder={getPlaceholder('customer_state', 'TX', formData.customer_state)} style={getFieldInputStyle('customer_state', formData.customer_state)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Postal Code</label>
-                  <input type="text" name="customer_postal_code" value={formData.customer_postal_code} onChange={handleChange} placeholder="78701" style={getFieldInputStyle('customer_postal_code', formData.customer_postal_code)} />
+                  <input type="text" name="customer_postal_code" value={formData.customer_postal_code} onChange={handleChange} placeholder={getPlaceholder('customer_postal_code', '78701', formData.customer_postal_code)} style={getFieldInputStyle('customer_postal_code', formData.customer_postal_code)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Country</label>
-                  <input type="text" name="customer_country" value={formData.customer_country} onChange={handleChange} placeholder="USA" style={getFieldInputStyle('customer_country', formData.customer_country)} />
+                  <input type="text" name="customer_country" value={formData.customer_country} onChange={handleChange} placeholder={getPlaceholder('customer_country', 'USA', formData.customer_country)} style={getFieldInputStyle('customer_country', formData.customer_country)} />
                 </div>
               </div>
             </div>
@@ -710,7 +723,7 @@ function RegistrationFormContent({ id }: { id: string }) {
                     onChange={handleChange}
                     required
                     rows={4}
-                    placeholder="Customer's use case, challenges, goals..."
+                    placeholder={getPlaceholder('opportunity_description', "Customer's use case, challenges, goals...", formData.opportunity_description)}
                     style={{ ...getFieldInputStyle('opportunity_description', formData.opportunity_description), resize: 'vertical' as const }}
                   />
                 </div>
@@ -731,19 +744,19 @@ function RegistrationFormContent({ id }: { id: string }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={labelStyle}>Full Name <span style={{ color: colors.error }}>*</span></label>
-                  <input type="text" name="ta_full_name" value={formData.ta_full_name} onChange={handleChange} required placeholder="Jane Doe" style={getFieldInputStyle('ta_full_name', formData.ta_full_name)} />
+                  <input type="text" name="ta_full_name" value={formData.ta_full_name} onChange={handleChange} required placeholder={getPlaceholder('ta_full_name', 'Jane Doe', formData.ta_full_name)} style={getFieldInputStyle('ta_full_name', formData.ta_full_name)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Company Name <span style={{ color: colors.error }}>*</span></label>
-                  <input type="text" name="ta_company_name" value={formData.ta_company_name} onChange={handleChange} required placeholder="Partner Co" style={getFieldInputStyle('ta_company_name', formData.ta_company_name)} />
+                  <input type="text" name="ta_company_name" value={formData.ta_company_name} onChange={handleChange} required placeholder={getPlaceholder('ta_company_name', 'Partner Co', formData.ta_company_name)} style={getFieldInputStyle('ta_company_name', formData.ta_company_name)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Email <span style={{ color: colors.error }}>*</span></label>
-                  <input type="email" name="ta_email" value={formData.ta_email} onChange={handleChange} required placeholder="jane@partner.com" style={getFieldInputStyle('ta_email', formData.ta_email)} />
+                  <input type="email" name="ta_email" value={formData.ta_email} onChange={handleChange} required placeholder={getPlaceholder('ta_email', 'jane@partner.com', formData.ta_email)} style={getFieldInputStyle('ta_email', formData.ta_email)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Phone</label>
-                  <input type="tel" name="ta_phone" value={formData.ta_phone} onChange={handleChange} placeholder="(555) 123-4567" style={getFieldInputStyle('ta_phone', formData.ta_phone)} />
+                  <input type="tel" name="ta_phone" value={formData.ta_phone} onChange={handleChange} placeholder={getPlaceholder('ta_phone', '(555) 123-4567', formData.ta_phone)} style={getFieldInputStyle('ta_phone', formData.ta_phone)} />
                 </div>
               </div>
             </div>
@@ -761,15 +774,15 @@ function RegistrationFormContent({ id }: { id: string }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={labelStyle}>TSD Name <span style={{ color: colors.error }}>*</span></label>
-                  <input type="text" name="tsd_name" value={formData.tsd_name} onChange={handleChange} required placeholder="Avant" style={getFieldInputStyle('tsd_name', formData.tsd_name)} />
+                  <input type="text" name="tsd_name" value={formData.tsd_name} onChange={handleChange} required placeholder={getPlaceholder('tsd_name', 'e.g. Avant, Telarus...', formData.tsd_name)} style={getFieldInputStyle('tsd_name', formData.tsd_name)} />
                 </div>
                 <div>
                   <label style={labelStyle}>Contact Name</label>
-                  <input type="text" name="tsd_contact_name" value={formData.tsd_contact_name} onChange={handleChange} placeholder="Contact Name" style={getFieldInputStyle('tsd_contact_name', formData.tsd_contact_name)} />
+                  <input type="text" name="tsd_contact_name" value={formData.tsd_contact_name} onChange={handleChange} placeholder={getPlaceholder('tsd_contact_name', 'Contact Name', formData.tsd_contact_name)} style={getFieldInputStyle('tsd_contact_name', formData.tsd_contact_name)} />
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>Contact Email</label>
-                  <input type="email" name="tsd_contact_email" value={formData.tsd_contact_email} onChange={handleChange} placeholder="contact@tsd.com" style={getFieldInputStyle('tsd_contact_email', formData.tsd_contact_email)} />
+                  <input type="email" name="tsd_contact_email" value={formData.tsd_contact_email} onChange={handleChange} placeholder={getPlaceholder('tsd_contact_email', 'contact@tsd.com', formData.tsd_contact_email)} style={getFieldInputStyle('tsd_contact_email', formData.tsd_contact_email)} />
                 </div>
               </div>
             </div>
