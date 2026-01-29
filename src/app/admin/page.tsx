@@ -230,6 +230,7 @@ export default function AdminDashboard() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -912,7 +913,7 @@ export default function AdminDashboard() {
                         {sendingToHubSpot ? 'Resubmitting...' : 'Resubmit to HubSpot'}
                       </button>
                       <button
-                        onClick={() => setShowDeleteConfirm(true)}
+                        onClick={() => { setShowDeleteConfirm(true); setDeleteConfirmText('') }}
                         style={{
                           flex: 1,
                           padding: '10px 20px',
@@ -952,7 +953,7 @@ export default function AdminDashboard() {
                         Unreject
                       </button>
                       <button
-                        onClick={() => setShowDeleteConfirm(true)}
+                        onClick={() => { setShowDeleteConfirm(true); setDeleteConfirmText('') }}
                         style={{
                           flex: 1,
                           padding: '10px 20px',
@@ -994,6 +995,9 @@ export default function AdminDashboard() {
                         <button onClick={handleRequestInfo} style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.white, color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>Request Info</button>
                       )}
                       <button onClick={() => { setShowRejectModal(true); setRejectPath('choose'); setRejectCopied(false) }} style={{ padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.white, color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>Reject</button>
+                      <button onClick={() => { setShowDeleteConfirm(true); setDeleteConfirmText('') }} title="Delete" style={{ padding: '10px 12px', fontSize: 14, backgroundColor: colors.white, color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                        <svg style={{ width: 16, height: 16 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
                     </div>
                   </div>
                 )}
@@ -1256,7 +1260,7 @@ ${profile?.full_name || 'AmplifAI Channel Team'}`}
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal — type "delete" to confirm */}
       {showDeleteConfirm && selectedDeal && (
         <div
           style={{
@@ -1288,13 +1292,33 @@ ${profile?.full_name || 'AmplifAI Channel Team'}`}
             <p style={{ margin: '0 0 16px', fontSize: 14, color: colors.textMuted }}>
               This will permanently delete this deal registration. This action cannot be undone.
             </p>
-            <div style={{ padding: 12, backgroundColor: colors.errorLight, borderRadius: 8, marginBottom: 20, border: `1px solid ${colors.error}` }}>
+            <div style={{ padding: 12, backgroundColor: colors.errorLight, borderRadius: 8, marginBottom: 16, border: `1px solid ${colors.error}` }}>
               <p style={{ margin: 0, fontSize: 13, color: colors.text }}>
                 <strong>{selectedDeal.customer_first_name} {selectedDeal.customer_last_name}</strong> at {selectedDeal.customer_company_name}
               </p>
               <p style={{ margin: '4px 0 0', fontSize: 12, color: colors.textMuted }}>
                 Partner: {selectedDeal.ta_full_name} ({selectedDeal.ta_company_name})
               </p>
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 14, color: colors.text, marginBottom: 8 }}>
+                Type <strong>delete</strong> to confirm:
+              </label>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={e => setDeleteConfirmText(e.target.value)}
+                placeholder="delete"
+                autoFocus
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  fontSize: 14,
+                  border: `1px solid ${deleteConfirmText.toLowerCase() === 'delete' ? colors.error : colors.border}`,
+                  borderRadius: 6,
+                  backgroundColor: colors.white,
+                }}
+              />
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <button
@@ -1315,17 +1339,17 @@ ${profile?.full_name || 'AmplifAI Channel Team'}`}
               </button>
               <button
                 onClick={handleDelete}
-                disabled={deleting}
+                disabled={deleting || deleteConfirmText.toLowerCase() !== 'delete'}
                 style={{
                   flex: 1,
                   padding: '10px 20px',
                   fontSize: 14,
                   fontWeight: 600,
-                  backgroundColor: colors.error,
+                  backgroundColor: deleteConfirmText.toLowerCase() === 'delete' ? colors.error : '#d1d5db',
                   color: colors.white,
                   border: 'none',
                   borderRadius: 6,
-                  cursor: deleting ? 'not-allowed' : 'pointer',
+                  cursor: (deleting || deleteConfirmText.toLowerCase() !== 'delete') ? 'not-allowed' : 'pointer',
                   opacity: deleting ? 0.7 : 1,
                 }}
               >
