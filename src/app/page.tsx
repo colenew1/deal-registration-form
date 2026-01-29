@@ -20,6 +20,8 @@ const colors = {
   errorText: '#991b1b',
 }
 
+const TSD_OPTIONS = ['Avant', 'Telarus', 'Intelisys', 'Sandler Partners', 'AppSmart', 'TBI', 'Bridgepointe', 'Other']
+
 const SOLUTIONS = [
   'Performance Management',
   'Coaching',
@@ -776,7 +778,10 @@ export default function RegistrationForm() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div>
                 <label style={labelStyle}>TSD Name <span style={{ color: colors.error }}>*</span></label>
-                <input type="text" name="tsd_name" value={formData.tsd_name} onChange={handleChange} required placeholder="Avant" style={inputStyle} />
+                <select name="tsd_name" value={formData.tsd_name} onChange={handleChange} required style={inputStyle}>
+                  <option value="">Select TSD...</option>
+                  {TSD_OPTIONS.map(tsd => <option key={tsd} value={tsd}>{tsd}</option>)}
+                </select>
               </div>
               <div>
                 <label style={labelStyle}>Contact Name</label>

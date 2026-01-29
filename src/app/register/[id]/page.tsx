@@ -84,6 +84,8 @@ const labelStyle = {
   textTransform: 'uppercase' as const,
 }
 
+const TSD_OPTIONS = ['Avant', 'Telarus', 'Intelisys', 'Sandler Partners', 'AppSmart', 'TBI', 'Bridgepointe', 'Other']
+
 const SOLUTIONS = [
   'Performance Management',
   'Coaching',
@@ -774,7 +776,10 @@ function RegistrationFormContent({ id }: { id: string }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={labelStyle}>TSD Name <span style={{ color: colors.error }}>*</span></label>
-                  <input type="text" name="tsd_name" value={formData.tsd_name} onChange={handleChange} required placeholder={getPlaceholder('tsd_name', 'e.g. Avant, Telarus...', formData.tsd_name)} style={getFieldInputStyle('tsd_name', formData.tsd_name)} />
+                  <select name="tsd_name" value={formData.tsd_name} onChange={handleChange} required style={getFieldInputStyle('tsd_name', formData.tsd_name)}>
+                    <option value="">Select TSD...</option>
+                    {TSD_OPTIONS.map(tsd => <option key={tsd} value={tsd}>{tsd}</option>)}
+                  </select>
                 </div>
                 <div>
                   <label style={labelStyle}>Contact Name</label>
