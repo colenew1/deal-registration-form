@@ -111,7 +111,7 @@ function emailIntakeToUnified(intake: EmailIntake): UnifiedDeal {
     status,
     created_at: intake.created_at,
     updated_at: intake.updated_at,
-    source_label: 'Email',
+    source_label: clean(intake.email_from) ? 'Email' : 'Manual',
     email_subject: clean(intake.email_subject) || undefined,
     email_from: clean(intake.email_from) || undefined,
     customer_company_name: clean(intake.extracted_customer_company_name),
@@ -229,6 +229,7 @@ export default function AdminDashboard() {
   const [rejectCopied, setRejectCopied] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [creating, setCreating] = useState(false)
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -426,6 +427,32 @@ export default function AdminDashboard() {
     if (data) setSelectedDeal(emailIntakeToUnified(data))
   }
 
+  const handleCreateNew = async () => {
+    setCreating(true)
+    try {
+      const { data, error } = await supabase.from('email_intakes').insert({
+        status: 'pending',
+        email_subject: 'Manually Created',
+      }).select().single()
+      if (error || !data) {
+        console.error('Create error:', error)
+        alert('Failed to create new deal.')
+        return
+      }
+      await fetchData()
+      const unified = emailIntakeToUnified(data)
+      setActiveTab('inbox')
+      setSelectedDeal(unified)
+      setEditMode(true)
+      setEditData({ ...unified })
+    } catch (err) {
+      console.error('Create error:', err)
+      alert('Failed to create new deal.')
+    } finally {
+      setCreating(false)
+    }
+  }
+
   if (isAuthChecking || loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
@@ -465,6 +492,14 @@ export default function AdminDashboard() {
               >
                 <svg style={{ width: 14, height: 14 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                 Copy Partner Portal Link
+              </button>
+              <button
+                onClick={handleCreateNew}
+                disabled={creating}
+                style={{ padding: '6px 12px', fontSize: 12, backgroundColor: colors.primary, color: colors.white, border: 'none', borderRadius: 4, cursor: creating ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: creating ? 0.7 : 1 }}
+              >
+                <svg style={{ width: 14, height: 14 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                {creating ? 'Creating...' : 'Create New'}
               </button>
             </div>
           </div>
