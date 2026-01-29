@@ -507,9 +507,6 @@ export default function PartnerDashboard() {
                     </td>
                     <td style={{ padding: 16 }}>
                       {getStatusBadge(sub.status)}
-                      {sub.status === 'rejected' && sub.rejection_reason && (
-                        <p style={{ fontSize: 12, marginTop: 4, color: colors.errorText }}>{sub.rejection_reason}</p>
-                      )}
                     </td>
                   </tr>
                 ))}

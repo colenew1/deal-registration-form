@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { Suspense, useState, useEffect } from 'react'
+import { useSupabaseClient } from '@/lib/supabase-client'
 
 // Light mode color palette
 const colors = {
@@ -12,14 +13,32 @@ const colors = {
   text: '#1e293b',
   textMuted: '#64748b',
   primary: '#2563eb',
+  primaryLight: '#dbeafe',
   success: '#16a34a',
   successLight: '#dcfce7',
 }
 
 function ThankYouContent() {
   const searchParams = useSearchParams()
+  const supabase = useSupabaseClient()
   const message = searchParams.get('message')
   const hasConflicts = message === 'submitted-with-conflicts'
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
+
+  useEffect(() => {
+    if (!supabase) {
+      setAuthChecked(true)
+      return
+    }
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user && !user.email?.endsWith('@amplifai.com')) {
+        setIsLoggedIn(true)
+      }
+      setAuthChecked(true)
+    }).catch(() => setAuthChecked(true))
+  }, [supabase])
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
@@ -52,6 +71,58 @@ function ThankYouContent() {
               : 'Thank you for submitting your deal registration. Our team has received your submission.'}
           </p>
 
+          {/* Partner Portal CTA */}
+          {authChecked && (
+            <div style={{ marginBottom: 24, padding: 20, backgroundColor: colors.primaryLight, borderRadius: 10, border: `1px solid ${colors.primary}20` }}>
+              {isLoggedIn ? (
+                <>
+                  <p style={{ margin: '0 0 12px', fontSize: 14, color: colors.text }}>
+                    Track the status of your submission in the Partner Portal.
+                  </p>
+                  <Link
+                    href="/partner/dashboard"
+                    style={{
+                      display: 'inline-block',
+                      padding: '10px 20px',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      backgroundColor: colors.primary,
+                      color: colors.white,
+                      borderRadius: 8,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Go to Partner Portal
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 500, color: colors.text }}>
+                    Want to track your submission?
+                  </p>
+                  <p style={{ margin: '0 0 12px', fontSize: 13, color: colors.textMuted }}>
+                    Log in or create an account to see updates on your deal registrations.
+                  </p>
+                  <Link
+                    href="/login?redirect=/partner/dashboard"
+                    style={{
+                      display: 'inline-block',
+                      padding: '10px 20px',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      backgroundColor: colors.primary,
+                      color: colors.white,
+                      borderRadius: 8,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Log In to Partner Portal
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Actions */}
           <Link
             href="/"
@@ -60,8 +131,9 @@ function ThankYouContent() {
               padding: '12px 24px',
               fontSize: 14,
               fontWeight: 600,
-              backgroundColor: colors.primary,
-              color: colors.white,
+              backgroundColor: colors.white,
+              color: colors.primary,
+              border: `1px solid ${colors.primary}`,
               borderRadius: 8,
               textDecoration: 'none',
             }}
