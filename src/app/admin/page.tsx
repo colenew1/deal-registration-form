@@ -471,7 +471,8 @@ export default function AdminDashboard() {
       <header style={{ backgroundColor: colors.white, borderBottom: `1px solid ${colors.border}`, padding: '16px 24px' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-            <h1 style={{ fontSize: 20, fontWeight: 600, color: colors.text, margin: 0 }}>Deal Registrations</h1>
+            <img src="/Amp Logo.png" alt="AmplifAI" style={{ height: 32 }} />
+            <span style={{ fontSize: 14, color: colors.textMuted }}>Deal Registrations</span>
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 onClick={() => { navigator.clipboard.writeText(window.location.origin); alert('Form link copied!') }}
