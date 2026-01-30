@@ -15,9 +15,12 @@ DROP POLICY IF EXISTS "Partners view own submissions" ON deal_registrations;
 --   b) ta_email (case-insensitive) matches their profile email
 CREATE POLICY "Partners view own submissions" ON deal_registrations
   FOR SELECT USING (
-    (partner_id = auth.uid())
-    OR
-    (LOWER(ta_email) = LOWER((SELECT email FROM user_profiles WHERE id = auth.uid())))
+    partner_id = auth.uid()
+    OR EXISTS (
+      SELECT 1 FROM user_profiles
+      WHERE user_profiles.id = auth.uid()
+        AND lower(user_profiles.email) = lower(deal_registrations.ta_email)
+    )
   );
 
 -- ============================================
@@ -27,5 +30,9 @@ CREATE POLICY "Partners view own submissions" ON deal_registrations
 -- Partners can view email_intakes where extracted_ta_email matches their profile email
 CREATE POLICY "Partners view own email intakes" ON email_intakes
   FOR SELECT USING (
-    LOWER(extracted_ta_email) = LOWER((SELECT email FROM user_profiles WHERE id = auth.uid()))
+    EXISTS (
+      SELECT 1 FROM user_profiles
+      WHERE user_profiles.id = auth.uid()
+        AND lower(user_profiles.email) = lower(email_intakes.extracted_ta_email)
+    )
   );
