@@ -152,6 +152,7 @@ function RegistrationFormContent({ id }: { id: string }) {
   const [accountCompanyName, setAccountCompanyName] = useState('')
   const [creatingAccount, setCreatingAccount] = useState(false)
   const [accountError, setAccountError] = useState('')
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
 
   const [formData, setFormData] = useState({
     customer_first_name: '',
@@ -349,14 +350,31 @@ function RegistrationFormContent({ id }: { id: string }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSubmitting(true)
+    setHasAttemptedSubmit(true)
     setError('')
 
-    if (formData.solutions_interested.length === 0) {
-      setError('Please select at least one solution')
-      setSubmitting(false)
+    // Custom validation for all required fields
+    const missingFields: string[] = []
+    REQUIRED_FIELDS.forEach(field => {
+      if (field === 'solutions_interested') {
+        if (formData.solutions_interested.length === 0) missingFields.push('Solutions Interested')
+      } else {
+        const val = formData[field as keyof typeof formData]
+        if (!val || (typeof val === 'string' && !val.trim())) missingFields.push(field)
+      }
+    })
+
+    if (missingFields.length > 0) {
+      setError(`Please fill in all required fields (${missingFields.length} missing)`)
+      // Scroll to the first empty required field
+      const firstMissing = missingFields[0]
+      const fieldName = firstMissing === 'Solutions Interested' ? 'solutions_interested' : firstMissing
+      const el = document.querySelector(`[name="${fieldName}"]`) as HTMLElement
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       return
     }
+
+    setSubmitting(true)
 
     try {
       if (requestInfo && intake) {
@@ -606,7 +624,7 @@ function RegistrationFormContent({ id }: { id: string }) {
         )}
 
         {/* Main Form */}
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           {/* Section 1: Customer Information */}
           <div style={{ backgroundColor: colors.white, borderRadius: 12, border: `1px solid ${colors.border}`, overflow: 'hidden', marginBottom: 24 }}>
             <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, backgroundColor: colors.bg }}>
