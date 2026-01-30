@@ -207,8 +207,8 @@ export default function SubmitDeal() {
       <header style={{ backgroundColor: colors.white, borderBottom: `1px solid ${colors.border}`, padding: '16px 24px' }}>
         <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Link href="/partner/dashboard" style={{ fontSize: 20, fontWeight: 700, color: colors.primary, textDecoration: 'none' }}>
-              AmplifAI
+            <Link href="/partner/dashboard" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+              <img src="/Amp Logo.png" alt="AmplifAI" style={{ height: 32 }} />
             </Link>
             <span style={{ padding: '4px 10px', backgroundColor: colors.bg, borderRadius: 4, fontSize: 12, color: colors.textMuted }}>
               Partner Portal

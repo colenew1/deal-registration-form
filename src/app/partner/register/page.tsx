@@ -111,7 +111,7 @@ export default function PartnerRegister() {
       <div style={{ width: '100%', maxWidth: 440 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: colors.primary, margin: 0 }}>AmplifAI</h1>
+          <img src="/Amp Logo.png" alt="AmplifAI" style={{ height: 40 }} />
           <p style={{ marginTop: 8, color: colors.textMuted, fontSize: 14 }}>Partner Portal</p>
         </div>
 

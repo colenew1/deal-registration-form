@@ -458,7 +458,7 @@ function RegistrationFormContent({ id }: { id: string }) {
       {/* Header */}
       <header style={{ backgroundColor: colors.white, borderBottom: `1px solid ${colors.border}`, padding: '16px 24px' }}>
         <div style={{ maxWidth: 800, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: colors.primary, margin: 0 }}>AmplifAI</h1>
+          <img src="/Amp Logo.png" alt="AmplifAI" style={{ height: 32 }} />
           <span style={{ padding: '4px 10px', backgroundColor: colors.bg, borderRadius: 4, fontSize: 12, color: colors.textMuted }}>Deal Registration</span>
         </div>
       </header>
