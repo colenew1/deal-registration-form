@@ -84,7 +84,7 @@ const labelStyle = {
   textTransform: 'uppercase' as const,
 }
 
-const TSD_OPTIONS = ['Avant', 'Telarus', 'Intelisys', 'Sandler Partners', 'AppSmart', 'TBI', 'Bridgepointe', 'Other']
+const TSD_OPTIONS = ['Avant', 'Telarus']
 
 const SOLUTIONS = [
   'Performance Management',

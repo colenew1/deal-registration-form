@@ -40,7 +40,7 @@ type UnifiedDeal = {
   original_data: EmailIntake | DealRegistration
 }
 
-const TSD_OPTIONS = ['Avant', 'Telarus', 'Intelisys', 'Sandler Partners', 'AppSmart', 'TBI', 'Bridgepointe', 'Other']
+const TSD_OPTIONS = ['Avant', 'Telarus']
 const AGENT_COUNT_OPTIONS = ['1-19', '20-49', '50-100', '101 to 249', '250 to 499', '500 to 999', '1000 to 2499', '2500 to 4999', '5000+']
 const TIMELINE_OPTIONS = ['0-3 months', '4-6 months', '6-12 months', '12+ months']
 const SOLUTIONS_OPTIONS = ['Performance Management', 'Coaching', 'Conversation Intelligence & Analytics', 'Data Consolidation for CX', 'AutoQA / QA', 'Gamification', 'Other']

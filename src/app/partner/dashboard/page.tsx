@@ -55,9 +55,7 @@ function mapIntakeStatus(status: string): 'pending' | 'approved' | 'rejected' {
   return 'pending' // new, pending, reviewed all show as pending to the partner
 }
 
-const TSD_OPTIONS = [
-  'Avant', 'Telarus', 'Intelisys', 'Sandler Partners', 'AppSmart', 'TBI', 'Bridgepointe', 'Other',
-]
+const TSD_OPTIONS = ['Avant', 'Telarus']
 
 const inputStyle = {
   width: '100%',

@@ -20,7 +20,7 @@ const colors = {
   errorText: '#991b1b',
 }
 
-const TSD_OPTIONS = ['Avant', 'Telarus', 'Intelisys', 'Sandler Partners', 'AppSmart', 'TBI', 'Bridgepointe', 'Other']
+const TSD_OPTIONS = ['Avant', 'Telarus']
 
 const SOLUTIONS = [
   'Performance Management',

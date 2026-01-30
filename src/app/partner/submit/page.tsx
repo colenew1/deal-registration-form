@@ -59,9 +59,7 @@ const SOLUTIONS = [
   'Other',
 ]
 
-const TSD_OPTIONS = [
-  'Avant', 'Telarus', 'Intelisys', 'Sandler Partners', 'AppSmart', 'TBI', 'Bridgepointe', 'Other',
-]
+const TSD_OPTIONS = ['Avant', 'Telarus']
 
 export default function SubmitDeal() {
   const router = useRouter()
