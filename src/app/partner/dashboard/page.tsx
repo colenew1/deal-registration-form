@@ -33,6 +33,7 @@ type Submission = {
   id: string
   created_at: string
   status: 'pending' | 'approved' | 'rejected'
+  source: 'form' | 'email'
   customer_company_name: string
   customer_first_name: string
   customer_last_name: string
@@ -41,6 +42,17 @@ type Submission = {
   solutions_interested: string[] | null
   rejection_reason: string | null
   reviewed_at: string | null
+}
+
+function clean(val: string | null | undefined): string {
+  if (!val || val === 'null' || val === 'undefined') return ''
+  return val
+}
+
+function mapIntakeStatus(status: string): 'pending' | 'approved' | 'rejected' {
+  if (status === 'converted') return 'approved'
+  if (status === 'discarded') return 'rejected'
+  return 'pending' // new, pending, reviewed all show as pending to the partner
 }
 
 const TSD_OPTIONS = [
@@ -89,32 +101,65 @@ export default function PartnerDashboard() {
       return
     }
 
+    if (!partnerId && !email) {
+      setSubmissions([])
+      return
+    }
+
     try {
-      // Query by partner_id OR by ta_email to catch all submissions
-      let query = supabase
+      // Query deal_registrations by partner_id OR ta_email
+      let regQuery = supabase
         .from('deal_registrations')
         .select('id, created_at, status, customer_company_name, customer_first_name, customer_last_name, customer_email, agent_count, solutions_interested, rejection_reason, reviewed_at')
 
       if (partnerId && email) {
-        // Get submissions by partner_id OR matching email
-        query = query.or(`partner_id.eq.${partnerId},ta_email.ilike.${email}`)
+        regQuery = regQuery.or(`partner_id.eq.${partnerId},ta_email.ilike.${email}`)
       } else if (partnerId) {
-        query = query.eq('partner_id', partnerId)
-      } else if (email) {
-        query = query.ilike('ta_email', email)
+        regQuery = regQuery.eq('partner_id', partnerId)
       } else {
-        setSubmissions([])
-        return
+        regQuery = regQuery.ilike('ta_email', email!)
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false })
+      // Query email_intakes by extracted_ta_email
+      const intakeQuery = email
+        ? supabase
+            .from('email_intakes')
+            .select('id, created_at, status, extracted_customer_company_name, extracted_customer_first_name, extracted_customer_last_name, extracted_customer_email, extracted_agent_count, extracted_solutions_interested')
+            .ilike('extracted_ta_email', email)
+        : null
 
-      if (error) {
-        console.error('Error fetching submissions:', error)
-        return
-      }
+      const [regResult, intakeResult] = await Promise.all([
+        regQuery.order('created_at', { ascending: false }),
+        intakeQuery ? intakeQuery.order('created_at', { ascending: false }) : Promise.resolve({ data: null, error: null }),
+      ])
 
-      setSubmissions(data || [])
+      if (regResult.error) console.error('Error fetching registrations:', regResult.error)
+      if (intakeResult.error) console.error('Error fetching intakes:', intakeResult.error)
+
+      const formSubmissions: Submission[] = (regResult.data || []).map(r => ({
+        ...r,
+        source: 'form' as const,
+      }))
+
+      const intakeSubmissions: Submission[] = (intakeResult.data || []).map(i => ({
+        id: i.id,
+        created_at: i.created_at,
+        status: mapIntakeStatus(i.status),
+        source: 'email' as const,
+        customer_company_name: clean(i.extracted_customer_company_name),
+        customer_first_name: clean(i.extracted_customer_first_name),
+        customer_last_name: clean(i.extracted_customer_last_name),
+        customer_email: clean(i.extracted_customer_email),
+        agent_count: clean(i.extracted_agent_count) || null,
+        solutions_interested: i.extracted_solutions_interested || null,
+        rejection_reason: null,
+        reviewed_at: null,
+      }))
+
+      const all = [...formSubmissions, ...intakeSubmissions]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+      setSubmissions(all)
     } catch (err) {
       console.error('Error fetching submissions:', err)
     }
@@ -487,7 +532,7 @@ export default function PartnerDashboard() {
               </thead>
               <tbody>
                 {filteredSubmissions.map(sub => (
-                  <tr key={sub.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
+                  <tr key={`${sub.source}-${sub.id}`} style={{ borderBottom: `1px solid ${colors.border}` }}>
                     <td style={{ padding: 16 }}>
                       <p style={{ fontWeight: 500, color: colors.text, margin: 0, fontSize: 14 }}>{sub.customer_company_name}</p>
                       <p style={{ fontSize: 13, color: colors.textMuted, margin: '4px 0 0' }}>
