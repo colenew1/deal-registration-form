@@ -481,7 +481,7 @@ export default function AdminDashboard() {
                 Copy Form Link
               </button>
               <button
-                onClick={() => { navigator.clipboard.writeText('Channel.dkj2hu@zapiermail.com'); alert('Forwarding email copied!') }}
+                onClick={() => { navigator.clipboard.writeText('channel.dkj2hu@zapiermail.com'); alert('Forwarding email copied!') }}
                 style={{ padding: '6px 12px', fontSize: 12, backgroundColor: colors.white, color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
               >
                 <svg style={{ width: 14, height: 14 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
