@@ -53,9 +53,9 @@ export interface TeamsWebhookPayload {
  */
 export async function sendTeamsNotification(payload: TeamsWebhookPayload): Promise<boolean> {
   const webhookUrl = process.env.TEAMS_NOTIFICATION_WEBHOOK_URL
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL
+  const appUrl = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
-    : 'https://deal-registration-form.vercel.app')
+    : 'https://partner.amplifai.com')
 
   if (!webhookUrl) {
     console.log('TEAMS_NOTIFICATION_WEBHOOK_URL not configured, skipping Teams notification')

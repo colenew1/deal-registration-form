@@ -7,6 +7,8 @@ const PUBLIC_ROUTES = [
   '/login',
   '/thank-you',
   '/partner/register',
+  '/forgot-password',
+  '/reset-password',
 ]
 
 // Routes that start with these paths are public

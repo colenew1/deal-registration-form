@@ -239,7 +239,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate URLs
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.headers.get('origin') || 'http://localhost:3000'
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.headers.get('origin') || 'https://partner.amplifai.com'
     const prefillUrl = `${baseUrl}/register/${data.id}`
     const adminReviewUrl = `${baseUrl}/admin/intakes?id=${data.id}`
 

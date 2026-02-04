@@ -322,84 +322,48 @@ export default function RegistrationForm() {
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
       {/* Header */}
       <header style={{ backgroundColor: colors.white, borderBottom: `1px solid ${colors.border}`, padding: '16px 24px' }}>
-        <div style={{ maxWidth: 800, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <img src="/Amp Logo.png" alt="AmplifAI" style={{ height: 32 }} />
-          <span style={{ padding: '4px 10px', backgroundColor: colors.bg, borderRadius: 4, fontSize: 12, color: colors.textMuted }}>Deal Registration</span>
-        </div>
-      </header>
-
-      <main style={{ maxWidth: 800, margin: '0 auto', padding: 24 }}>
-        {/* Page Title */}
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 600, color: colors.text, margin: 0 }}>Partner Deal Registration</h1>
-          <p style={{ marginTop: 8, color: colors.textMuted, fontSize: 14 }}>
-            Register a new sales opportunity to protect your deal and receive support from AmplifAI
-          </p>
-        </div>
-
-        {/* Auth Section — hidden for internal @amplifai.com users */}
-        {!(user?.email?.endsWith('@amplifai.com')) && (
-        <div style={{ marginBottom: 24, padding: 16, backgroundColor: colors.white, borderRadius: 8, border: `1px solid ${colors.border}` }}>
-          {authLoading ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <div style={{ width: 16, height: 16, border: `2px solid ${colors.primary}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-              <p style={{ margin: 0, color: colors.textMuted, fontSize: 14 }}>Checking login...</p>
-            </div>
-          ) : user ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-              <div>
-                <p style={{ margin: 0, fontSize: 14, color: colors.text }}>
-                  Logged in as <strong>{userProfile?.full_name || user.email}</strong>
-                </p>
-                <p style={{ margin: '4px 0 0', fontSize: 12, color: colors.textMuted }}>
-                  Your partner info is pre-filled below
-                </p>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => router.push('/partner/dashboard')}
-                  style={{
-                    padding: '8px 16px',
-                    fontSize: 13,
-                    backgroundColor: colors.primary,
-                    color: colors.white,
-                    border: 'none',
-                    borderRadius: 6,
-                    cursor: 'pointer',
-                    fontWeight: 500,
-                  }}
-                >
-                  Partner Portal
-                </button>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  style={{
-                    padding: '8px 16px',
-                    fontSize: 13,
-                    backgroundColor: 'transparent',
-                    color: colors.textMuted,
-                    border: `1px solid ${colors.border}`,
-                    borderRadius: 6,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Log Out
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-              <div>
-                <p style={{ margin: 0, fontSize: 14, color: colors.text }}>
-                  Save your partner info for next time
-                </p>
-                <p style={{ margin: '4px 0 0', fontSize: 12, color: colors.textMuted }}>
-                  Log in or create an account to auto-fill your info on future submissions
-                </p>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ maxWidth: 800, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <img src="/Amp Logo.png" alt="AmplifAI" style={{ height: 32 }} />
+            <span style={{ padding: '4px 10px', backgroundColor: colors.bg, borderRadius: 4, fontSize: 12, color: colors.textMuted }}>Deal Registration</span>
+          </div>
+          {!authLoading && !user?.email?.endsWith('@amplifai.com') && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {user ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/partner/dashboard')}
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: 13,
+                      backgroundColor: colors.primary,
+                      color: colors.white,
+                      border: 'none',
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Partner Portal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: 13,
+                      backgroundColor: 'transparent',
+                      color: colors.textMuted,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: 6,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Log Out
+                  </button>
+                </>
+              ) : (
                 <button
                   type="button"
                   onClick={() => { setAuthMode('login'); setShowAuthModal(true); setAuthError('') }}
@@ -414,28 +378,30 @@ export default function RegistrationForm() {
                     fontWeight: 500,
                   }}
                 >
-                  Log In
+                  Partner Login
                 </button>
-                <button
-                  type="button"
-                  onClick={() => { setAuthMode('signup'); setShowAuthModal(true); setAuthError('') }}
-                  style={{
-                    padding: '8px 16px',
-                    fontSize: 13,
-                    backgroundColor: 'transparent',
-                    color: colors.primary,
-                    border: `1px solid ${colors.primary}`,
-                    borderRadius: 6,
-                    cursor: 'pointer',
-                    fontWeight: 500,
-                  }}
-                >
-                  Create Account
-                </button>
-              </div>
+              )}
             </div>
           )}
         </div>
+      </header>
+
+      <main style={{ maxWidth: 800, margin: '0 auto', padding: 24 }}>
+        {/* Page Title */}
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <h1 style={{ fontSize: 28, fontWeight: 600, color: colors.text, margin: 0 }}>Partner Deal Registration</h1>
+          <p style={{ marginTop: 8, color: colors.textMuted, fontSize: 14 }}>
+            Register a new sales opportunity to protect your deal and receive support from AmplifAI
+          </p>
+        </div>
+
+        {/* Auth Status — hidden for internal @amplifai.com users */}
+        {!authLoading && !(user?.email?.endsWith('@amplifai.com')) && user && (
+          <div style={{ marginBottom: 24, padding: 12, backgroundColor: colors.primaryLight, borderRadius: 8, border: `1px solid ${colors.primary}20` }}>
+            <p style={{ margin: 0, fontSize: 14, color: colors.primary, textAlign: 'center' }}>
+              Logged in as <strong>{userProfile?.full_name || user.email}</strong> — your partner info is pre-filled below
+            </p>
+          </div>
         )}
 
         {/* Auth Modal */}

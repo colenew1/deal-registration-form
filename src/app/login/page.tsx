@@ -252,7 +252,7 @@ function LoginForm() {
               />
             </div>
 
-            <div style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 12 }}>
               <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: colors.textMuted, marginBottom: 6, textTransform: 'uppercase' }}>
                 Password
               </label>
@@ -265,6 +265,12 @@ function LoginForm() {
                 disabled={isLoading}
                 style={{ width: '100%', padding: '10px 12px', fontSize: 14, border: `1px solid ${colors.border}`, borderRadius: 6, backgroundColor: colors.white, color: colors.text }}
               />
+            </div>
+
+            <div style={{ marginBottom: 20, textAlign: 'right' }}>
+              <Link href="/forgot-password" style={{ fontSize: 13, color: colors.primary, textDecoration: 'none' }}>
+                Forgot password?
+              </Link>
             </div>
 
             <button
