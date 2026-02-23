@@ -71,7 +71,7 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { action, rejection_reason, assigned_ae_name, assigned_ae_email } = body
+    const { action, rejection_reason, assigned_ae_name, assigned_ae_email, deal_name } = body
 
     let updateData: Record<string, unknown> = {}
 
@@ -132,6 +132,7 @@ export async function PATCH(
         reviewed_at: new Date().toISOString(),
         assigned_ae_name: assigned_ae_name || null,
         assigned_ae_email: assigned_ae_email || null,
+        deal_name: deal_name || null,
       }
 
       // Fire Zapier webhook
@@ -150,6 +151,7 @@ export async function PATCH(
               event: 'deal_registration_approved',
               registration_id: id,
               approved_at: updateData.reviewed_at,
+              deal_name: deal_name || null,
               assigned_ae: {
                 name: assigned_ae_name,
                 email: assigned_ae_email,

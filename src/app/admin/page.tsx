@@ -37,6 +37,7 @@ type UnifiedDeal = {
   conflicts?: Array<{ field: string; admin_value: unknown; partner_value: unknown }>
   email_body_plain?: string
   rejection_reason?: string
+  deal_name?: string
   original_data: EmailIntake | DealRegistration
 }
 
@@ -134,6 +135,7 @@ function emailIntakeToUnified(intake: EmailIntake): UnifiedDeal {
     has_conflicts: intake.has_conflicts ?? undefined,
     conflicts: intake.conflicts || undefined,
     email_body_plain: intake.email_body_plain || undefined,
+    deal_name: clean(intake.deal_name) || undefined,
     original_data: intake,
   }
 }
@@ -180,6 +182,7 @@ function formSubmissionToUnified(reg: DealRegistration): UnifiedDeal {
     solutions_interested: reg.solutions_interested || undefined,
     opportunity_description: clean(reg.opportunity_description) || undefined,
     rejection_reason: clean(reg.rejection_reason) || undefined,
+    deal_name: clean(reg.deal_name) || undefined,
     original_data: reg,
   }
 }
@@ -231,6 +234,9 @@ export default function AdminDashboard() {
   const [deleting, setDeleting] = useState(false)
   const [creating, setCreating] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [showDealNameModal, setShowDealNameModal] = useState(false)
+  const [dealNameInput, setDealNameInput] = useState('')
+  const [dealNameAction, setDealNameAction] = useState<'approve' | 'resubmit'>('approve')
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -329,7 +335,7 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleSendToHubSpot = async () => {
+  const handleSendToHubSpot = async (dealName: string) => {
     if (!selectedDeal || !ZAPIER_WEBHOOK_URL) return
     setSendingToHubSpot(true)
     try {
@@ -338,21 +344,31 @@ export default function AdminDashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         mode: 'no-cors',
-        body: JSON.stringify({ ...data, source: selectedDeal.type, submitted_at: new Date().toISOString() }),
+        body: JSON.stringify({ ...data, deal_name: dealName, source: selectedDeal.type, submitted_at: new Date().toISOString() }),
       })
       if (selectedDeal.type === 'email_intake') {
-        await supabase.from('email_intakes').update({ status: 'converted', converted_at: new Date().toISOString() }).eq('id', selectedDeal.id)
+        await supabase.from('email_intakes').update({ status: 'converted', converted_at: new Date().toISOString(), deal_name: dealName }).eq('id', selectedDeal.id)
       } else {
-        await fetch(`/api/registrations/${selectedDeal.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'approve' }) })
+        await fetch(`/api/registrations/${selectedDeal.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'approve', deal_name: dealName }) })
       }
       await fetchData()
       setSelectedDeal(null)
       setEditMode(false)
+      setShowDealNameModal(false)
+      setDealNameInput('')
     } catch (err) {
       console.error('HubSpot error:', err)
     } finally {
       setSendingToHubSpot(false)
     }
+  }
+
+  const openDealNameModal = (action: 'approve' | 'resubmit') => {
+    if (!selectedDeal) return
+    setDealNameAction(action)
+    // Pre-fill with existing deal_name if available, otherwise use customer company name
+    setDealNameInput(selectedDeal.deal_name || selectedDeal.customer_company_name || '')
+    setShowDealNameModal(true)
   }
 
   const handleRequestInfo = async () => {
@@ -594,6 +610,7 @@ export default function AdminDashboard() {
                       <div>
                         <h3 style={{ fontWeight: 600, color: colors.text, margin: 0, fontSize: 15 }}>
                           {deal.customer_company_name || 'Unknown Company'}
+                          {deal.deal_name && <span style={{ fontWeight: 400, color: colors.textMuted }}> ({deal.deal_name})</span>}
                         </h3>
                         <p style={{ fontSize: 13, color: colors.textMuted, margin: '4px 0 0' }}>
                           {deal.customer_first_name} {deal.customer_last_name}
@@ -651,7 +668,10 @@ export default function AdminDashboard() {
               {/* Panel Header */}
               <div style={{ padding: '16px 24px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.bg }}>
                 <div>
-                  <h2 style={{ fontWeight: 600, margin: 0, fontSize: 18, color: colors.text }}>{selectedDeal.customer_company_name || 'Unknown Company'}</h2>
+                  <h2 style={{ fontWeight: 600, margin: 0, fontSize: 18, color: colors.text }}>
+                    {selectedDeal.customer_company_name || 'Unknown Company'}
+                    {selectedDeal.deal_name && <span style={{ fontWeight: 400, color: colors.textMuted }}> ({selectedDeal.deal_name})</span>}
+                  </h2>
                   <p style={{ fontSize: 13, color: colors.textMuted, margin: '4px 0 0' }}>
                     {selectedDeal.source_label} • {formatDate(selectedDeal.created_at)} at {formatTime(selectedDeal.created_at)}
                   </p>
@@ -896,7 +916,7 @@ export default function AdminDashboard() {
                     </p>
                     <div style={{ display: 'flex', gap: 12 }}>
                       <button
-                        onClick={handleSendToHubSpot}
+                        onClick={() => openDealNameModal('resubmit')}
                         disabled={sendingToHubSpot}
                         style={{
                           flex: 1,
@@ -974,7 +994,7 @@ export default function AdminDashboard() {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <button
-                      onClick={() => setShowApproveConfirm(true)}
+                      onClick={() => openDealNameModal('approve')}
                       disabled={!canSend || sendingToHubSpot}
                       style={{
                         width: '100%',
@@ -1008,8 +1028,8 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Approve & Send Confirmation Modal */}
-      {showApproveConfirm && selectedDeal && (
+      {/* Deal Name Modal */}
+      {showDealNameModal && selectedDeal && (
         <div
           style={{
             position: 'fixed',
@@ -1021,7 +1041,7 @@ export default function AdminDashboard() {
             zIndex: 1000,
             padding: 16,
           }}
-          onClick={() => setShowApproveConfirm(false)}
+          onClick={() => setShowDealNameModal(false)}
         >
           <div
             style={{
@@ -1035,12 +1055,12 @@ export default function AdminDashboard() {
             onClick={e => e.stopPropagation()}
           >
             <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 600, color: colors.text }}>
-              Approve & Send to HubSpot
+              {dealNameAction === 'approve' ? 'Approve & Send to HubSpot' : 'Resubmit to HubSpot'}
             </h3>
             <p style={{ margin: '0 0 16px', fontSize: 14, color: colors.textMuted }}>
-              Are you sure you want to approve this deal and send it to HubSpot?
+              Enter the deal name for HubSpot.
             </p>
-            <div style={{ padding: 12, backgroundColor: colors.bg, borderRadius: 8, marginBottom: 20, border: `1px solid ${colors.border}` }}>
+            <div style={{ padding: 12, backgroundColor: colors.bg, borderRadius: 8, marginBottom: 16, border: `1px solid ${colors.border}` }}>
               <p style={{ margin: 0, fontSize: 13, color: colors.text }}>
                 <strong>{selectedDeal.customer_first_name} {selectedDeal.customer_last_name}</strong> at {selectedDeal.customer_company_name}
               </p>
@@ -1048,9 +1068,32 @@ export default function AdminDashboard() {
                 TA: {selectedDeal.ta_full_name} ({selectedDeal.ta_company_name})
               </p>
             </div>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: colors.text, marginBottom: 8 }}>
+                Deal Name <span style={{ color: colors.error }}>*</span>
+              </label>
+              <input
+                type="text"
+                value={dealNameInput}
+                onChange={e => setDealNameInput(e.target.value)}
+                placeholder="Enter deal name..."
+                autoFocus
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  fontSize: 14,
+                  border: `1px solid ${dealNameInput.trim() ? colors.border : colors.error}`,
+                  borderRadius: 6,
+                  backgroundColor: colors.white,
+                }}
+              />
+              {!dealNameInput.trim() && (
+                <p style={{ margin: '6px 0 0', fontSize: 12, color: colors.error }}>Deal name is required</p>
+              )}
+            </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <button
-                onClick={() => setShowApproveConfirm(false)}
+                onClick={() => { setShowDealNameModal(false); setDealNameInput('') }}
                 style={{
                   flex: 1,
                   padding: '10px 20px',
@@ -1066,25 +1109,22 @@ export default function AdminDashboard() {
                 Cancel
               </button>
               <button
-                onClick={async () => {
-                  setShowApproveConfirm(false)
-                  await handleSendToHubSpot()
-                }}
-                disabled={sendingToHubSpot}
+                onClick={() => handleSendToHubSpot(dealNameInput.trim())}
+                disabled={sendingToHubSpot || !dealNameInput.trim()}
                 style={{
                   flex: 1,
                   padding: '10px 20px',
                   fontSize: 14,
                   fontWeight: 600,
-                  backgroundColor: colors.success,
+                  backgroundColor: dealNameInput.trim() ? colors.success : '#d1d5db',
                   color: colors.white,
                   border: 'none',
                   borderRadius: 6,
-                  cursor: sendingToHubSpot ? 'not-allowed' : 'pointer',
+                  cursor: (sendingToHubSpot || !dealNameInput.trim()) ? 'not-allowed' : 'pointer',
                   opacity: sendingToHubSpot ? 0.7 : 1,
                 }}
               >
-                {sendingToHubSpot ? 'Sending...' : 'Confirm & Send'}
+                {sendingToHubSpot ? 'Sending...' : 'Send to HubSpot'}
               </button>
             </div>
           </div>

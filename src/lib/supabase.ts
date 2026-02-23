@@ -55,6 +55,7 @@ export type DealRegistration = {
   webhook_sent_at: string | null
   webhook_response: string | null
   partner_id: string | null
+  deal_name: string | null
 }
 
 export type AccountExecutive = {
@@ -152,6 +153,9 @@ export type EmailIntake = {
     partner_value: unknown
   }> | null
   conflicts_resolved_at: string | null
+
+  // Deal name for HubSpot
+  deal_name: string | null
 }
 
 // Conflict type for easier use
