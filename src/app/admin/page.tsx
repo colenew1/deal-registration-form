@@ -373,7 +373,7 @@ export default function AdminDashboard() {
 
   const handleRequestInfo = async () => {
     if (!selectedDeal || selectedDeal.type !== 'email_intake') return
-    // If in edit mode, save changes first so the TA gets the latest data
+    // If in edit mode, save changes first
     if (editMode) {
       setSaving(true)
       try {
@@ -401,32 +401,15 @@ export default function AdminDashboard() {
         setSaving(false)
       }
     }
-    const data = editMode ? editData : selectedDeal
     const prefillUrl = `${window.location.origin}/register/${selectedDeal.id}?requestInfo=true`
     await navigator.clipboard.writeText(prefillUrl)
-    // Save admin snapshot so conflict detection works later
     await fetch(`/api/email-intake/${selectedDeal.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'reviewed' }) })
-    // Build mailto to TA with pre-fill link
-    const taEmail = data.ta_email || ''
-    const taFirstName = (data.ta_full_name || 'there').split(' ')[0]
-    const customerCompany = data.customer_company_name || 'a customer'
-    const subject = encodeURIComponent(`AmplifAI Deal Registration - Please Complete`)
-    const body = encodeURIComponent(
-      `Hi ${taFirstName},\n\n` +
-      `We've started a deal registration for ${customerCompany} and need your help completing the remaining details.\n\n` +
-      `Please click the link below to review and fill in any missing information:\n\n` +
-      `${prefillUrl}\n\n` +
-      `Thank you!\nAmplifAI Channel Team`
-    )
-    if (taEmail) {
-      window.open(`mailto:${taEmail}?subject=${subject}&body=${body}`, '_blank')
-    }
     await fetchData()
     if (editMode) {
       setEditMode(false)
       setSelectedDeal({ ...selectedDeal, ...editData } as UnifiedDeal)
     }
-    alert(taEmail ? 'Email draft opened and link copied to clipboard!' : 'Link copied to clipboard! (Add a TA email to auto-open an email draft)')
+    alert('Link copied! Send it to the partner.')
   }
 
   const handleReject = async () => {
@@ -964,15 +947,15 @@ export default function AdminDashboard() {
                           padding: '12px 20px',
                           fontSize: 14,
                           fontWeight: 600,
-                          backgroundColor: colors.purple,
-                          color: colors.white,
-                          border: 'none',
+                          backgroundColor: colors.purpleLight,
+                          color: colors.purple,
+                          border: `1px solid ${colors.purple}`,
                           borderRadius: 6,
                           cursor: saving ? 'not-allowed' : 'pointer',
                           opacity: saving ? 0.7 : 1,
                         }}
                       >
-                        {saving ? 'Saving & Sending...' : 'Save & Send to TA to Complete'}
+                        {saving ? 'Saving...' : 'Save & Copy Pre-filled Link'}
                       </button>
                     )}
                     <div style={{ display: 'flex', gap: 12 }}>
@@ -1084,7 +1067,7 @@ export default function AdminDashboard() {
                     <div style={{ display: 'flex', gap: 12 }}>
                       <button onClick={() => { setEditMode(true); setEditData({ ...selectedDeal }) }} style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.white, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>Edit</button>
                       {selectedDeal.type === 'email_intake' && (
-                        <button onClick={handleRequestInfo} style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.purpleLight, color: colors.purple, border: `1px solid ${colors.purple}`, borderRadius: 6, cursor: 'pointer' }}>Send to TA</button>
+                        <button onClick={handleRequestInfo} style={{ flex: 1, padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.purpleLight, color: colors.purple, border: `1px solid ${colors.purple}`, borderRadius: 6, cursor: 'pointer' }}>Copy Pre-filled Link</button>
                       )}
                       <button onClick={() => { setShowRejectModal(true); setRejectPath('choose'); setRejectCopied(false) }} style={{ padding: '10px 20px', fontSize: 14, fontWeight: 500, backgroundColor: colors.white, color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer' }}>Reject</button>
                       <button onClick={() => { setShowDeleteConfirm(true); setDeleteConfirmText('') }} title="Delete" style={{ padding: '10px 12px', fontSize: 14, backgroundColor: colors.white, color: colors.textMuted, border: `1px solid ${colors.border}`, borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
