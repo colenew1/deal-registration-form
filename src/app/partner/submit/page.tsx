@@ -156,11 +156,13 @@ export default function SubmitDeal() {
     setIsSubmitting(true)
 
     try {
+      // partner_id references the legacy partners table, not user_profiles.
+      // Use null here — the RLS policy matches by ta_email instead.
       const { data: insertData, error: insertError } = await supabase
         .from('deal_registrations')
         .insert({
           ...formData,
-          partner_id: profile?.id || null,
+          partner_id: null,
           source: 'form',
         })
         .select()
