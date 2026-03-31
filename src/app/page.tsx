@@ -790,8 +790,12 @@ export default function RegistrationForm() {
         <footer style={{ textAlign: 'center', padding: '32px 0' }}>
           <p style={{ fontSize: 13, color: colors.textMuted, margin: 0 }}>
             Need help? Contact{' '}
-            <a href="mailto:greynolds@amplifai.com" style={{ color: colors.primary, textDecoration: 'none' }}>
-              greynolds@amplifai.com
+            <a href="mailto:avalenzuela@amplifai.com,cnewman@amplifai.com" style={{ color: colors.primary, textDecoration: 'none' }}>
+              avalenzuela@amplifai.com
+            </a>
+            {' '}or{' '}
+            <a href="mailto:avalenzuela@amplifai.com,cnewman@amplifai.com" style={{ color: colors.primary, textDecoration: 'none' }}>
+              cnewman@amplifai.com
             </a>
           </p>
         </footer>

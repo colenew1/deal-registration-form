@@ -159,8 +159,12 @@ export default function ForgotPasswordPage() {
         {/* Footer */}
         <p style={{ marginTop: 24, textAlign: 'center', fontSize: 13, color: colors.textMuted }}>
           Need help? Contact{' '}
-          <a href="mailto:greynolds@amplifai.com" style={{ color: colors.primary, textDecoration: 'none' }}>
-            greynolds@amplifai.com
+          <a href="mailto:avalenzuela@amplifai.com,cnewman@amplifai.com" style={{ color: colors.primary, textDecoration: 'none' }}>
+            avalenzuela@amplifai.com
+          </a>
+          {' '}or{' '}
+          <a href="mailto:avalenzuela@amplifai.com,cnewman@amplifai.com" style={{ color: colors.primary, textDecoration: 'none' }}>
+            cnewman@amplifai.com
           </a>
         </p>
       </div>

@@ -143,8 +143,12 @@ function ThankYouContent() {
 
           <p style={{ marginTop: 16, fontSize: 13, color: colors.textMuted }}>
             Have questions? Contact{' '}
-            <a href="mailto:greynolds@amplifai.com" style={{ color: colors.primary, textDecoration: 'none' }}>
-              greynolds@amplifai.com
+            <a href="mailto:avalenzuela@amplifai.com,cnewman@amplifai.com" style={{ color: colors.primary, textDecoration: 'none' }}>
+              avalenzuela@amplifai.com
+            </a>
+            {' '}or{' '}
+            <a href="mailto:avalenzuela@amplifai.com,cnewman@amplifai.com" style={{ color: colors.primary, textDecoration: 'none' }}>
+              cnewman@amplifai.com
             </a>
           </p>
         </div>
