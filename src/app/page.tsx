@@ -368,7 +368,7 @@ export default function RegistrationForm() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => { setAuthMode('login'); setShowAuthModal(true); setAuthError('') }}
+                  onClick={() => router.push('/login')}
                   style={{
                     padding: '8px 16px',
                     fontSize: 13,
