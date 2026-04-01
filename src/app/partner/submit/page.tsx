@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSupabaseClient } from '@/lib/supabase-client'
 import type { UserProfile } from '@/lib/supabase'
+import LoomBanner from '@/components/LoomBanner'
 
 // Light mode color palette
 const colors = {
@@ -205,6 +206,7 @@ export default function SubmitDeal() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
+      <LoomBanner />
       {/* Header */}
       <header style={{ backgroundColor: colors.white, borderBottom: `1px solid ${colors.border}`, padding: '16px 24px' }}>
         <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

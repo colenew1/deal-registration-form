@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSupabaseClient } from '@/lib/supabase-client'
 import type { User } from '@supabase/supabase-js'
 import type { UserProfile } from '@/lib/supabase'
+import LoomBanner from '@/components/LoomBanner'
 
 // Light mode color palette
 const colors = {
@@ -320,6 +321,7 @@ export default function RegistrationForm() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.bg }}>
+      <LoomBanner />
       {/* Header */}
       <header style={{ backgroundColor: colors.white, borderBottom: `1px solid ${colors.border}`, padding: '16px 24px' }}>
         <div style={{ maxWidth: 800, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
