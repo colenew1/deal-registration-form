@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-const LOOM_URL = 'https://www.loom.com/share/ca0ce8b3401644b0ae55e4cd7c09ac2a'
+const LOOM_URL = 'https://www.loom.com/share/34850f8ba3f2402fb5ff452e845077e9'
 
 export default function LoomBanner() {
   const [dismissed, setDismissed] = useState(false)
